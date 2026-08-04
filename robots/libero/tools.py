@@ -760,7 +760,10 @@ class LiberoPrimitives:
         if not data.found:
             segment_blob["error"] = data.reason or "SAM3 found no mask"
         segment_blob.update(world_result)
-        segment_path.write_text(json.dumps(segment_blob, indent=2, default=str))
+        # Write via a temp file + rename so a reader never sees a partial blob.
+        _seg_tmp = segment_path.with_suffix(".json.tmp")
+        _seg_tmp.write_text(json.dumps(segment_blob, indent=2, default=str))
+        os.replace(_seg_tmp, segment_path)
 
         result = {
             "found": data.found,
@@ -829,9 +832,18 @@ def write_recipe_from_states(output_dir: str, recipe_tag: str) -> str:
         command_events.append(((step_idx, -1), command))
 
     for artifact in artifact_path(output_dir, "segments").glob("segment_*.json"):
-        with artifact.open() as f:
-            segment = json.load(f)
-        if segment.get("error"):
+        # A damaged or empty artifact must not cost the caller its transcript
+        # and episode video, which are written after this function returns.
+        try:
+            with artifact.open() as f:
+                segment = json.load(f)
+        except (json.JSONDecodeError, OSError) as exc:
+            print(f"[recipe] skipping unreadable {artifact.name}: {exc}")
+            continue
+        if not isinstance(segment, dict) or segment.get("error"):
+            continue
+        if "mode" not in segment or "source_step" not in segment:
+            print(f"[recipe] skipping incomplete {artifact.name}")
             continue
         if segment["mode"] == "text":
             command = {
@@ -1652,7 +1664,17 @@ def _next_segment_artifact_paths(out_dir: Path, nn: int):
     while True:
         segment_path = segments_dir / f"segment_{nn:02d}_{idx:02d}.json"
         overlay_path = segments_dir / f"segment_overlay_{nn:02d}_{idx:02d}.png"
-        if not segment_path.exists() and not overlay_path.exists():
+        if not overlay_path.exists():
+            # Claim the index atomically. A plain exists() check is a race:
+            # the planner issues parallel segment calls, and two of them
+            # claiming one index leaves a half-overwritten JSON file.
+            try:
+                fd = os.open(str(segment_path),
+                             os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            except FileExistsError:
+                idx += 1
+                continue
+            os.close(fd)
             return segment_path, overlay_path, idx
         idx += 1
 
