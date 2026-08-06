@@ -77,6 +77,20 @@ _READ_IMAGE_DESCRIPTION = (
     "Read a local image path returned by an RPent tool as visual input."
 )
 
+#: Under ``--no-images`` the tool cannot do what the normal description promises,
+#: so it advertises the truth instead. Keeping the original wording would spend
+#: the model's turns discovering that a described capability does not exist —
+#: worse, in a single-attempt episode, than telling it up front. The tool is kept
+#: rather than dropped because the system prompt still instructs image
+#: inspection, so a call is likely and the result should redirect rather than
+#: fail as an unknown tool.
+_READ_IMAGE_TEXT_ONLY_DESCRIPTION = (
+    "DISABLED in this run: image input is off (text-only model), so this tool "
+    "cannot return visual content and looking at a PNG is not available to you. "
+    "Localize objects instead with `segment` (SAM3 text prompt -> world_xyz) and "
+    "`back_project`, and read state from `view_driver_state`."
+)
+
 
 @tool(args_schema=ReadTextFileInput)
 def read_text_file(path: str, max_chars: int = 40000) -> dict:
@@ -133,13 +147,18 @@ def read_image(path: str) -> list[dict[str, Any]] | str:
     ]
 
 
-@tool("read_image", args_schema=ReadImageInput, description=_READ_IMAGE_DESCRIPTION)
+@tool(
+    "read_image",
+    args_schema=ReadImageInput,
+    description=_READ_IMAGE_TEXT_ONLY_DESCRIPTION,
+)
 def read_image_text_only(path: str) -> str:
-    """``read_image`` under ``--no-images``: acknowledge the path, send no bytes."""
+    """``read_image`` under ``--no-images``: redirect, send no bytes."""
     return (
         f"{path} exists, but image input is disabled (--no-images, text-only "
-        "model). Reason from textual state instead: view_driver_state, "
-        "back_project, and the numeric fields in tool results."
+        "model), so its contents are not available to you. Localize with "
+        "`segment` (SAM3 text prompt) and `back_project` instead, and read "
+        "state from `view_driver_state`."
     )
 
 

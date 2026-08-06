@@ -104,11 +104,16 @@ class DeepAgentPlanner:
         )
         context = toolkit.tool_context
         tools = toolkit.langchain_tools(no_images=self._no_images)
+        # Log the image mode explicitly. It decides which perception channels the
+        # agent actually has, so it must be visible in the run log rather than
+        # inferred from a flag nobody recorded.
         logger.info(
-            "deepagents planner: model=%s tools=%d max_turns=%d",
+            "deepagents planner: model=%s tools=%d max_turns=%d images=%s",
             self._model,
             len(tools),
             max_turns,
+            "disabled (text-only: segment + back_project are the only "
+            "perception channels)" if self._no_images else "enabled",
         )
 
         middleware = [
