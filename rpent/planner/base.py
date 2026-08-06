@@ -163,12 +163,15 @@ def build_planner(
                 "a provider prefix (e.g. 'anthropic:claude-opus-4-8', "
                 "'openai:gpt-5.5') — the same form the 'api' planner takes."
             )
-        from rpent.planner.deep_agent import DeepAgentPlanner
+        from rpent.planner.deep_agent import DeepAgentPlanner, build_chat_model
 
+        # Build the chat model here, not inside solve(): an unusable --model must
+        # fail before the env / VLA / SAM3 servers spend minutes loading.
         return DeepAgentPlanner(
             model=model,
-            base_url=base_url,
-            max_tokens=max_tokens,
+            chat_model=build_chat_model(
+                model, base_url=base_url, max_tokens=max_tokens
+            ),
             no_images=no_images,
             dashboard_events=dashboard_events,
         )

@@ -57,15 +57,19 @@ class DeepAgentPlanner:
         self,
         *,
         model: str,
-        base_url: str | None = None,
-        max_tokens: int = 8192,
+        chat_model: Any,
         no_images: bool = False,
         dashboard_events: DashboardEventSink,
     ) -> None:
-        """Store the model spec and the output-token cap."""
+        """Store the already-constructed chat model.
+
+        The model is built by :func:`build_chat_model` in ``build_planner``, not
+        here, so an unusable ``--model`` fails before the env / VLA / SAM3
+        servers spend minutes loading onto the GPU. ``model`` is kept only as the
+        human-readable spec for logs.
+        """
         self._model = model
-        self._base_url = base_url
-        self._max_tokens = max_tokens
+        self._chat_model = chat_model
         self._no_images = no_images
         self._dashboard_events = dashboard_events
 
@@ -94,7 +98,6 @@ class DeepAgentPlanner:
         from langchain.agents import create_agent
         from langchain.agents.middleware import ModelCallLimitMiddleware
 
-        chat_model = self._build_chat_model()
         recorder = TranscriptMiddleware(
             dashboard_events=self._dashboard_events,
             max_turns=max_turns,
@@ -113,7 +116,7 @@ class DeepAgentPlanner:
             recorder,
         ]
         agent = create_agent(
-            model=chat_model,
+            model=self._chat_model,
             tools=tools,
             system_prompt=system_prompt or None,
             context_schema=type(context) if context is not None else None,
@@ -156,25 +159,29 @@ class DeepAgentPlanner:
             error=last_error,
         )
 
-    # ------------------------------------------------------------------
-    # Model construction
-    # ------------------------------------------------------------------
+def build_chat_model(
+    model: str,
+    *,
+    base_url: str | None = None,
+    max_tokens: int = 8192,
+) -> Any:
+    """Build the chat model from a ``provider:id`` spec and the CLI overrides.
 
-    def _build_chat_model(self) -> Any:
-        """Build the chat model from the ``provider:id`` spec and CLI overrides.
+    Called from ``build_planner`` so an unusable model spec raises before the
+    env / VLA / SAM3 servers boot — the same failure timing the pydantic-ai
+    planner gets from ``infer_model``.
 
-        ``--model`` uses the same ``provider:id`` form the pydantic-ai planner
-        takes (``anthropic:claude-opus-4-8``), which is also what
-        ``init_chat_model`` expects, so the command line is unchanged. API keys
-        continue to come from the provider's own environment variables;
-        ``--base-url`` overrides the provider endpoint.
-        """
-        from langchain.chat_models import init_chat_model
+    ``--model`` uses the same ``provider:id`` form that planner takes
+    (``anthropic:claude-opus-4-8``), which is also what ``init_chat_model``
+    expects, so the command line is unchanged. API keys keep coming from the
+    provider's own environment variables; ``--base-url`` overrides the endpoint.
+    """
+    from langchain.chat_models import init_chat_model
 
-        kwargs: dict[str, Any] = {"max_tokens": self._max_tokens}
-        if self._base_url:
-            kwargs["base_url"] = self._base_url
-        return init_chat_model(self._model, **kwargs)
+    kwargs: dict[str, Any] = {"max_tokens": max_tokens}
+    if base_url:
+        kwargs["base_url"] = base_url
+    return init_chat_model(model, **kwargs)
 
 
 def _is_image_rejection(e: Exception) -> bool:
