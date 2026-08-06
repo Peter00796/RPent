@@ -39,6 +39,12 @@ SCHEMA_VERSION = 1
 #: re-``segment``, while a missed one can cost the episode.
 BUMP_RADIUS_M = 0.06
 
+#: Two differently-named entities closer than this are probably one object read
+#: twice. Tabletop objects measured 6-20 cm apart on real scenes, and a single
+#: object's readings agreed to millimetres, so 3 cm separates the two cases with
+#: room to spare.
+COLLISION_RADIUS_M = 0.03
+
 #: Staleness verdicts, ordered from most to least trustworthy.
 FRESH = "fresh"
 UNVERIFIED = "unverified"
@@ -131,6 +137,43 @@ def append_reading(
                     "a different object with the same appearance. Resolve before "
                     "committing a grasp."
                 )
+
+        # Cross-entity collision. Two DIFFERENT names landing on the same place
+        # means the segmentation did not distinguish them, so at most one label is
+        # right — and unlike a within-entity jump, no amount of re-reading the same
+        # noun will surface it, because each reading is individually consistent.
+        # Note the limit: this catches a collision, not a swap. Two entities at two
+        # distinct positions with their labels exchanged are geometrically
+        # self-consistent, and no measurement here can separate them; that needs
+        # corroboration from an independently-phrased query.
+        if here:
+            for other, other_history in entities.items():
+                if other == entity:
+                    continue
+                latest = next(
+                    (r for r in reversed(other_history) if r.get("world_xyz")), None
+                )
+                if latest is None:
+                    continue
+                gap = float(
+                    np.linalg.norm(
+                        np.asarray(here, dtype=np.float64)[:3]
+                        - np.asarray(latest["world_xyz"], dtype=np.float64)[:3]
+                    )
+                )
+                if gap <= COLLISION_RADIUS_M:
+                    info["collision_with"] = other
+                    info["collision_gap_m"] = round(gap, 4)
+                    info["collision_warning"] = (
+                        f"'{entity}' and '{other}' are only {gap:.3f} m apart, close "
+                        "enough to be the same object read twice under two names. "
+                        "The segmentation did not separate them, so at most one "
+                        "label is correct. Corroborate with a differently-phrased "
+                        "query — a discriminating attribute rather than the name — "
+                        "and check it lands on the same reading before committing "
+                        "a grasp."
+                    )
+                    break
 
         reading = dict(reading)
         reading.setdefault("stale_reason", FRESH)

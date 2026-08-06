@@ -50,9 +50,23 @@ order, which failure mode) and never for a value.
 choose for every task-relevant object, destination and landmark. Readings are
 append-only, and every later tool result reports each entity's latest position
 plus a `stale_reason`. Re-segment anything that is not `fresh` before committing
-a motion to it, and resolve any `identity_warning` before committing a grasp —
-two identical objects have indistinguishable names, so a warning means you may
-have bound the wrong one.
+a motion to it, and resolve every conflict the index reports before committing a
+grasp:
+- `identity_warning` — a new reading of one entity is far from its last one and
+  nothing had marked it bumped. Either it moved, or this mask is a different
+  object that looks the same.
+- `collision_warning` — two of YOUR names landed within a few centimetres, so the
+  segmentation did not separate them and at most one label is right.
+
+Neither warning can be resolved by asking the same question again — each reading
+is individually self-consistent, which is exactly why the conflict is worth
+reporting. Corroborate with an INDEPENDENTLY PHRASED query: ask for a
+discriminating attribute rather than the name ("the taller bottle", "the darker
+one", "the one nearer the plate") and check it lands on the same reading. Two
+phrasings agreeing is evidence; one high score is not. And note what geometry
+cannot do: if two objects sit at two distinct places with their labels exchanged,
+both assignments are geometrically consistent and no measurement here separates
+them — only an independent phrasing can.
 
 **Verify with geometry, not with a flag.** A primitive's own `success` field is a
 heuristic and it is known to be wrong in both directions. Confirm the world
@@ -83,6 +97,12 @@ something. `set_gripper +1` after a pick firms the grip before a carry.
 a deep or low reach it drives the wrist into an OSC/IK singularity and stalls
 (`final_dist` stays high, the eef retreats). `move_pose` co-varies xyz with wrist
 tilt every step and threads those poses; switch to it when `move_to` stalls.
+
+**A stalled `move_to` must be recovered, not built on.** Treat any `move_to`
+returning `final_dist_m > 0.02` as a FAILURE even though the call succeeded: the
+eef is not where you asked. Closing the gripper after a stall has desynchronised
+the environment in the past — the call returns ok while the world disagrees with
+your model of it. Retreat to a safe altitude, re-localize, and re-plan first.
 
 **Pi0 is for the grasp only.** `pi0_pick` with a SHORT prompt and a MODEST
 `max_chunks` does the grasp; YOU script every carry and the release. Given a long
@@ -295,7 +315,12 @@ derive in this episode, stop: that is the cheat this benchmark exists to exclude
     """READ THE GUIDES once each, for perception-compatible technique:
 - `robots/libero/guides/strict_hybrid_guide.md`
 - `robots/libero/guides/pro_hybrid_guide.md`
-- `robots/libero/guides/env_calibration.md`
+
+⛔ Do NOT read `robots/libero/guides/env_calibration.md`. It is a probe log turned
+into a lookup table — reachable-workspace bounds, per-object reference heights,
+per-frame release heights — and every value in it is either measurable here with
+`segment` / `world_extent` or specific to a scene that is not yours. The one
+non-derivable rule it held is in MECHANICS above.
 """,
     """INSPECT THE INITIAL STATE: `view_driver_state({"step": 0})`. Read
 `task_language`, `object_names` and the eef pose. Identify every target object,
