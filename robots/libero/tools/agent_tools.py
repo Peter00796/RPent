@@ -488,12 +488,25 @@ def compare_extent(
     Voxels are compared as SETS, so added and removed space are reported
     separately: a single net count can be zero while everything inside moved.
 
-    ⚠ Occlusion is the trap. Space empties either because the object left, or
-    because the arm now stands between the camera and it, and no diff of two
-    clouds can separate those. Check n_points_in_box at both steps first: a large
-    drop there alongside a large voxels_removed is as consistent with a new
-    occlusion as with a moved object. Treat a removal as evidence only when the
-    point count held up.
+    ⚠ Compare ADJACENT steps, not step 0 against the end. Across a full episode
+    the point count inside one fixed box swung 50x on real runs purely because the
+    wrist camera ended up closer, so the voxel counts tracked how much the cameras
+    saw rather than what was there. Adjacent steps share a viewpoint and the diff
+    is stable.
+
+    ⚠ Occlusion is the other trap. Space empties either because the object left, or
+    because the arm now stands between the camera and it, and no diff of two clouds
+    can separate those. Check n_points_in_box at both steps first: a large drop
+    there alongside a large voxels_removed is as consistent with a new occlusion as
+    with a moved object. Treat a removal as evidence only when the point count held
+    up.
+
+    ⚠ A change here is NOT task success — those are different claims. On four real
+    releases the signature was indistinguishable between runs that solved the task
+    and runs that never terminated: matter arrived in the container box in all
+    four, because an object perched on the rim registers like a seated one. Only
+    the environment's own checker establishes success; use this to confirm that
+    something moved where you intended, then check libero_terminated separately.
 
     Read-only: never advances the environment and never renders a new view.
     """

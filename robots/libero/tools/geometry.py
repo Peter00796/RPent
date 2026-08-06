@@ -461,6 +461,21 @@ def compare_extent(
     exactly this reason: a large drop in total points alongside a large
     ``voxels_removed`` is as consistent with a new occlusion as with a moved
     object. Treat a removal as evidence only when the point count held up.
+
+    ⚠ Compare ADJACENT steps, not the whole episode. Measured over six real runs:
+    across a full episode the point count inside one fixed box swung by 50x purely
+    because the wrist camera ended up closer, so the voxel counts tracked how much
+    the cameras happened to see rather than what was physically there, and the net
+    change did not even agree in sign with the outcome. Between adjacent steps the
+    viewpoint barely moves and the diff is stable (four releases all read +78..+146
+    voxels added against 3..14 removed).
+
+    ⚠ This measures a world-state change, not task success — they are different
+    claims. On those same four releases the signature was indistinguishable
+    between the two runs that solved the task and the two that never terminated:
+    matter arrived inside the container box in all four. An object perched on the
+    rim registers like a seated one. Only the environment's own checker can
+    establish success.
     """
     from rpent.utils.logging import get_output_dir
     from robots.libero.tools.state import _latest_step
