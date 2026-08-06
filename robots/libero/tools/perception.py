@@ -177,8 +177,8 @@ class SegmentMixin:
         # recorded in the on-disk artifact but withheld from the reply, so the
         # planner could not cite the source of a geometry claim or ask for a
         # different reduction of it. Forwarding it costs one string.
-        for _k in ("rim", "interior", "bbox_3d", "z_profile", "looks_hollow",
-                   "world_path", "n_pixels"):
+        for _k in ("rim", "interior", "bbox_3d", "shape", "z_profile",
+                   "looks_hollow", "world_path", "n_pixels"):
             if _k in segment_blob:
                 result[_k] = segment_blob[_k]
         if "error" in segment_blob:
@@ -201,6 +201,7 @@ class SegmentMixin:
                     "point": point if has_point else None,
                     "score": segment_blob["score"],
                     "world_xyz": segment_blob["world_xyz"],
+                    "shape": segment_blob.get("shape"),
                     "segment_path": str(segment_path),
                     "world_path": segment_blob.get("world_path"),
                     "stale_reason": databus.FRESH,

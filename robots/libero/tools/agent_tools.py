@@ -332,9 +332,19 @@ def segment(
       the far side of world_xyz along this direction; failures sat within
       1.3 cm of world_xyz.
     - interior.xy_median: the floor seen through the opening, when visible.
-    - bbox_3d.extent: the mask's 3D bounding box -- use this to tell a toppled
-      object (short, one long horizontal axis) from an upright one before
-      choosing a grasp height.
+    - bbox_3d.extent: the mask's 3D bounding box, AXIS-ALIGNED -- so for an
+      object lying at an angle all three extents are diagonals of a box that
+      fits nothing. Prefer `shape` below whenever it is present.
+    - shape: the box fitted to the points instead of to the world axes, which is
+      what a grasp needs. shape.footprint.short_extent_m (= graspable_width_m) is
+      the width the fingers must span, and short_axis_yaw_deg is the direction
+      they travel; long_axis_yaw_deg is the object's long axis. Yaw is an AXIS
+      folded into [-90, 90), so either way along it is equally valid. It is NOT a
+      rotate_wrist argument -- which eef axis the fingers close along is gripper
+      geometry, so verify that mapping once and reuse it. Check
+      yaw_is_meaningful first: a near-round footprint (bowl, can) has no
+      meaningful axis. shape.orientation ('upright' / 'lying' / 'ambiguous')
+      separates a toppled object from a standing one better than raw extents.
     - looks_hollow: true when the mask reads as a ring enclosing a lower
       middle (a container) rather than a solid body with a raised cap (a
       bottle) -- height alone cannot tell these apart.

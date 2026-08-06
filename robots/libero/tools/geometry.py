@@ -120,6 +120,13 @@ def _mask_to_world(mask: np.ndarray, world_map: np.ndarray,
     result["z_profile"] = [round(float(np.percentile(z, p)), 4)
                            for p in (5, 25, 50, 75, 95)]
 
+    # bbox_3d is axis-aligned, so it cannot describe a rotated object: a bottle
+    # lying at 45 degrees fills a large box whose extents are all diagonals. Fit
+    # the box to the points instead — that recovers the grasp axis.
+    shape = _principal_axes(pts, min_valid=min_valid)
+    if shape is not None:
+        result["shape"] = shape
+
     # Top ring: for a raised container this is the rim, and its xy centre is the
     # centre of the OPENING. Note a single side camera sees only the near wall
     # and part of the interior, so this estimate is biased away from the camera;
@@ -207,6 +214,121 @@ def _mask_to_world(mask: np.ndarray, world_map: np.ndarray,
                 and result["rim"]["z_mean"] - result["interior"]["z_median"] > 0.03
             )
     return result
+
+
+def _principal_axes(pts: np.ndarray, min_valid: int = 10) -> dict | None:
+    """Describe the mask's shape in the object's own frame, not the world's.
+
+    ``bbox_3d`` is axis-aligned, so a object lying at 45 degrees reports three
+    large extents that describe nothing: its long axis is a diagonal of that box.
+    Principal-component axes recover the object's own frame, which is what a
+    grasp needs — the fingers must close across the SHORT horizontal extent, and
+    that direction is only visible once the box is rotated to fit the points.
+
+    The wrist is commanded about world z, so the useful reduction is not the 3D
+    principal axis (for an upright bottle that is vertical, and its horizontal
+    projection is meaningless) but a 2D fit to the xy FOOTPRINT. Reported as an
+    axis, not a direction: an eigenvector's sign is arbitrary, so the yaw is
+    normalised to [-90, 90) degrees and a grasp is equally valid either way along
+    it.
+
+    Deliberately does not emit a ``target_yaw``. Which eef axis the fingers close
+    along is gripper geometry, and a wrong 90 degrees there would rotate every
+    grasp orthogonal to correct while looking perfectly reasonable. This reports
+    the object; mapping its axes onto ``rotate_wrist`` is a one-time measurement
+    for a given gripper, and being a hardware invariant it belongs in memory
+    rather than being re-derived per run.
+
+    Bias: these are points from one camera's surface sample, so the far side is
+    unseen and every extent is a LOWER bound on the object's true size.
+    """
+    if pts.shape[0] < min_valid:
+        return None
+
+    xy = pts[:, :2]
+    centre = xy.mean(axis=0)
+    centred = xy - centre
+    try:
+        eigenvalues, eigenvectors = np.linalg.eigh(np.cov(centred.T))
+    except np.linalg.LinAlgError:
+        return None
+    long_vec = eigenvectors[:, -1]
+    short_vec = eigenvectors[:, 0]
+    long_proj = centred @ long_vec
+    short_proj = centred @ short_vec
+    long_extent = float(long_proj.max() - long_proj.min())
+    short_extent = float(short_proj.max() - short_proj.min())
+    if long_extent <= 1e-6:
+        return None
+
+    def _axis_yaw(vec) -> float:
+        """Yaw of an undirected axis, folded into [-90, 90) degrees."""
+        angle = float(np.degrees(np.arctan2(float(vec[1]), float(vec[0]))))
+        while angle >= 90.0:
+            angle -= 180.0
+        while angle < -90.0:
+            angle += 180.0
+        return round(angle, 1)
+
+    # Shape RATIOS come from the eigenvalue spreads, not from these min-max
+    # extents. A square footprint's fitted long axis lands on a diagonal, so its
+    # min-max range overstates the side by up to sqrt(2) — enough to make a cube
+    # read as "lying". The covariance of a square is isotropic, so its
+    # eigenvalues are equal whatever the rotation, which is the property the
+    # ratio tests need. Min-max is still what gets REPORTED, because a gripper
+    # has to span the full width, not one standard deviation.
+    spread_long = float(np.sqrt(max(float(eigenvalues[-1]), 0.0)))
+    spread_short = float(np.sqrt(max(float(eigenvalues[0]), 0.0)))
+    spread_z = float(np.std(pts[:, 2]))
+    aspect = spread_short / spread_long if spread_long > 1e-9 else 1.0
+    # Below roughly 1.2:1 the footprint is round enough that the fitted axis is
+    # set by sampling noise, not by the object. Saying so stops the planner
+    # rotating the wrist to a number that means nothing for a bowl or a can.
+    meaningful = aspect < 0.83
+
+    height = float(pts[:, 2].max() - pts[:, 2].min())
+    try:
+        thickness = float(
+            np.sqrt(max(float(np.linalg.eigvalsh(np.cov(pts.T))[0]), 0.0)) * 4.0
+        )
+    except np.linalg.LinAlgError:
+        thickness = float("nan")
+
+    if spread_z > 1.3 * spread_long:
+        orientation = "upright"
+    elif spread_long > 1.3 * spread_z:
+        orientation = "lying"
+    else:
+        orientation = "ambiguous"
+
+    return {
+        "footprint": {
+            "long_axis_yaw_deg": _axis_yaw(long_vec),
+            "short_axis_yaw_deg": _axis_yaw(short_vec),
+            "long_extent_m": round(long_extent, 4),
+            "short_extent_m": round(short_extent, 4),
+            "aspect_short_over_long": round(aspect, 3),
+            "yaw_is_meaningful": bool(meaningful),
+            "xy_center": [round(float(centre[0]), 4), round(float(centre[1]), 4)],
+        },
+        "height_m": round(height, 4),
+        "orientation": orientation,
+        "planar": bool(np.isfinite(thickness) and thickness < 0.006),
+        "graspable_width_m": round(short_extent, 4),
+        "n": int(pts.shape[0]),
+        "note": (
+            "Axes fitted to the xy footprint, in the object's own frame. The "
+            "gripper must close ACROSS the short axis, spanning graspable_width_m "
+            "(= short_extent_m); the direction it travels is short_axis_yaw_deg. "
+            "Yaw is an AXIS folded into [-90, 90): a grasp is equally valid "
+            "either way along it. This is object geometry, NOT a rotate_wrist "
+            "argument — which eef axis the fingers close along is gripper "
+            "geometry, so verify that mapping once and reuse it. When "
+            "yaw_is_meaningful is false the footprint is near-round and any yaw "
+            "is as good as another. Extents come from one camera's surface "
+            "sample, so each is a LOWER bound on the true size."
+        ),
+    }
 
 
 def _camera_origin_world() -> np.ndarray | None:
