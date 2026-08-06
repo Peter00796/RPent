@@ -14,6 +14,7 @@ from robots.libero import tools as libero_tools
 from robots.libero.tools import perception as libero_perception
 from robots.libero.tools import state as libero_state
 from rpent.dashboard.events import DashboardEventSink, ToolResultEvent
+from rpent.tools import tool_log
 from rpent.tools.toolkit import ToolCancelled, Toolkit
 from rpent.utils.logging import get_logger, get_output_dir
 
@@ -148,6 +149,10 @@ class LiberoToolkit(Toolkit):
             libero_tools.artifact_path(out_dir, "states"),
             libero_tools.artifact_path(out_dir, "metadata", camera="agentview", resolution="low"),
             libero_tools.artifact_path(out_dir, "episode_video"),
+            # Per-run append-only records: a stale one left in place would make the
+            # new episode's log read as a continuation of the previous run's.
+            libero_tools.artifact_path(out_dir, "entities"),
+            tool_log.path_for(out_dir),
         ):
             if target.exists():
                 target.unlink()

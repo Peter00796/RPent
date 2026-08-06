@@ -9,10 +9,11 @@ position in the chain.
 :data:`MIDDLEWARE_ORDER` is that declaration. It is part of the run's identity —
 a different order is a different method — so it is recorded, not implicit.
 
-Only :class:`TranscriptMiddleware` is implemented. The remaining entries are
-named on purpose: they are the concerns known to be missing, and naming them
-here is cheaper than rediscovering them later. Where LangChain already ships a
-prebuilt middleware for one, it is noted so we adopt rather than reinvent.
+:class:`TranscriptMiddleware` and :class:`ToolCallLogMiddleware` are implemented.
+The remaining entries are named on purpose: they are the concerns known to be
+missing, and naming them here is cheaper than rediscovering them later. Where
+LangChain already ships a prebuilt middleware for one, it is noted so we adopt
+rather than reinvent.
 
 Hooks available on ``AgentMiddleware`` (langchain 1.3):
 
@@ -25,6 +26,7 @@ Hooks available on ``AgentMiddleware`` (langchain 1.3):
   ``tool``, ``state`` and ``runtime``. This is the anchor for gates.
 """
 
+import time
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware
@@ -35,6 +37,7 @@ from rpent.dashboard.events import (
     TranscriptEvent,
     UsageEvent,
 )
+from rpent.tools import tool_log
 from rpent.utils.logging import get_logger
 
 logger = get_logger("planner_middleware")
@@ -49,6 +52,7 @@ _TOOL_LOG_LIMIT = 350
 MIDDLEWARE_ORDER: tuple[tuple[str, str], ...] = (
     ("ModelCallLimitMiddleware", "turn budget (prebuilt: langchain)"),
     ("TranscriptMiddleware", "transcript + usage + dashboard projection"),
+    ("ToolCallLogMiddleware", "run-evidence record of every tool call"),
     ("InjectionLedgerMiddleware", "not implemented — per-component token accounting"),
     ("GateMiddleware", "not implemented — hard gates + shadow mode on advancing tools"),
     ("ProvenanceMiddleware", "not implemented — argument-level evidence provenance"),
@@ -213,6 +217,65 @@ class TranscriptMiddleware(AgentMiddleware):
                 tool_calls=self.tool_calls,
             )
         )
+
+
+class ToolCallLogMiddleware(AgentMiddleware):
+    """Record every tool call into the run's evidence, not just the transcript.
+
+    Separate from :class:`TranscriptMiddleware` on purpose: that one feeds the
+    planner's own output and the dashboard, this one writes a run artifact whose
+    consumers are diagnostics and any later reflection pass. They have different
+    audiences and different retention, so they are different concerns — and this
+    one has to be independently toggleable, because it is the input to any
+    attribution done after the fact.
+
+    Environment-agnostic: the step index is read off the run context only if that
+    context happens to expose one, so nothing here knows what a LIBERO step is.
+    """
+
+    def __init__(self, *, output_dir: Any) -> None:
+        super().__init__()
+        self._output_dir = output_dir
+        tool_log.reset_sequence()
+
+    def wrap_tool_call(self, request: Any, handler: Any) -> Any:
+        call = request.tool_call
+        name = call.get("name", "")
+        args = call.get("args") or {}
+        before = self._step_index(request)
+        started = time.monotonic()
+        try:
+            result = handler(request)
+        except Exception as exc:
+            tool_log.append(
+                self._output_dir,
+                tool=name,
+                args=args,
+                result={"exception": f"{type(exc).__name__}: {exc}"},
+                elapsed_s=time.monotonic() - started,
+                step_idx_before=before,
+                step_idx_after=self._step_index(request),
+                status="raised",
+            )
+            raise
+        content = getattr(result, "content", result)
+        tool_log.append(
+            self._output_dir,
+            tool=name,
+            args=args,
+            result=content,
+            elapsed_s=time.monotonic() - started,
+            step_idx_before=before,
+            step_idx_after=self._step_index(request),
+            status=getattr(result, "status", "success") or "success",
+        )
+        return result
+
+    @staticmethod
+    def _step_index(request: Any) -> int | None:
+        context = getattr(getattr(request, "runtime", None), "context", None)
+        value = getattr(context, "step_idx", None)
+        return int(value) if isinstance(value, int) else None
 
 
 # ---------------------------------------------------------------------------

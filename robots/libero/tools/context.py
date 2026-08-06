@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from rpent.tools import tool_log
 from rpent.tools.toolkit import ToolCancelled
 from rpent.utils.logging import get_logger
 
@@ -76,6 +77,11 @@ class LiberoContext:
                 self.output_dir, "metadata", camera="agentview", resolution="low"
             ),
             artifact_path(self.output_dir, "episode_video"),
+            # Both are per-run, append-only records. Left behind, a re-run in the
+            # same output directory appends to the previous episode's log with the
+            # sequence restarted, which makes the file unreadable as a single run.
+            artifact_path(self.output_dir, "entities"),
+            tool_log.path_for(self.output_dir),
         ):
             if target.exists():
                 target.unlink()
