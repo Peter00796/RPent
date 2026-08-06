@@ -106,6 +106,11 @@ class Toolkit:
     :meth:`close` to release env-side primitives / servers at the end of the run.
     """
 
+    #: Per-run context handed to native LangChain tools through ``ToolRuntime``.
+    #: Environments with live handles (env, policy, perception) set this in their
+    #: subclass; the base toolkit has nothing to hand over.
+    tool_context: Any = None
+
     def __init__(self, *, dashboard_events: DashboardEventSink) -> None:
         # name -> (spec, handler)
         self._tools: dict[str, tuple[dict[str, Any], Callable[..., dict[str, Any]]]] = {}
@@ -152,6 +157,22 @@ class Toolkit:
         return substitute(
             [spec for spec, _ in self._tools.values()]
         )
+
+    def langchain_tools(self, *, no_images: bool = False) -> list[Any]:
+        """Return this toolkit's tools as native LangChain tools.
+
+        The LangChain planner consumes these instead of the
+        ``get_tools_spec`` / ``execute_tool`` pair: dispatch is the tool's own
+        body, so there is no schema-to-handler lookup in this path. Subclasses
+        extend the list with their environment's tools.
+
+        Args:
+            no_images: Select the byte-free ``read_image`` variant for
+                text-only models.
+        """
+        from rpent.tools.langchain_common import common_tools
+
+        return common_tools(no_images=no_images)
 
     def execute_tool(self, name: str, input_dict: dict[str, Any]) -> ToolResult:
         """Dispatch a tool call to its registered handler."""

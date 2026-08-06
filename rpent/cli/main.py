@@ -91,8 +91,8 @@ def _build_argparser() -> argparse.ArgumentParser:
 
     # models
     ap.add_argument("--planner", default="api",
-                    choices=["api", "claude_code", "codex"],
-                    help="LLM backend: api | claude_code | codex.")
+                    choices=["api", "deepagents", "claude_code", "codex"],
+                    help="LLM backend: api | deepagents | claude_code | codex.")
     ap.add_argument("--model", default=None,
                     help="Model id. For the 'api' planner, prefix the provider "
                          "(e.g. anthropic:claude-opus-4-8, openai:gpt-5.5, "

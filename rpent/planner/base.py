@@ -156,6 +156,22 @@ def build_planner(
             dashboard_events=dashboard_events,
             no_images=no_images,
         )
+    if planner_type == "deepagents":
+        if not model:
+            raise ValueError(
+                "the 'deepagents' planner requires a model id; pass --model with "
+                "a provider prefix (e.g. 'anthropic:claude-opus-4-8', "
+                "'openai:gpt-5.5') — the same form the 'api' planner takes."
+            )
+        from rpent.planner.deep_agent import DeepAgentPlanner
+
+        return DeepAgentPlanner(
+            model=model,
+            base_url=base_url,
+            max_tokens=max_tokens,
+            no_images=no_images,
+            dashboard_events=dashboard_events,
+        )
     if planner_type == "claude_code":
         from rpent.planner.claude_code import ClaudeCodePlanner
 

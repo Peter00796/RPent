@@ -38,6 +38,29 @@ class LiberoToolkit(Toolkit):
         self._video_path: str | None = video_path
         self.init_primitives_clean(primitives_kwargs=primitives_kwargs)
         self._register_libero_tools()
+        # Context for the native LangChain tools. It wraps the primitives this
+        # toolkit already built and reset, so it starts at step 0 and must not
+        # call begin_episode() — init_primitives_clean did that work.
+        self.tool_context = libero_tools.LiberoContext(
+            primitives=self._primitives,
+            output_dir=get_output_dir(),
+            check_cancelled=self.raise_if_cancelled,
+            record_action_videos=dashboard_events.enabled,
+            on_step=self._emit_step_view,
+        )
+
+    def _emit_step_view(self, view: dict[str, Any]) -> None:
+        """Project one rendered state view to the Dashboard."""
+        self._dashboard_events.emit(
+            ToolResultEvent(name="view_driver_state", result=view)
+        )
+
+    def langchain_tools(self, *, no_images: bool = False) -> list[Any]:
+        """Common tools plus the twelve LIBERO tools, as native LangChain tools."""
+        return [
+            *super().langchain_tools(no_images=no_images),
+            *libero_tools.LIBERO_TOOLS,
+        ]
 
     # ------------------------------------------------------------------
     # Registration
