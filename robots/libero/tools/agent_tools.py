@@ -30,6 +30,7 @@ from robots.libero.tools import catalog, geometry, perception, state
 from robots.libero.tools.context import LiberoContext
 from robots.libero.tools.schemas import (
     BackProjectInput,
+    CompareExtentInput,
     MovePoseInput,
     MoveToInput,
     Pi0DoubledInput,
@@ -456,6 +457,58 @@ def world_extent(
     )
 
 
+@tool(args_schema=CompareExtentInput)
+def compare_extent(
+    x_range: list[float] | None = None,
+    y_range: list[float] | None = None,
+    z_range: list[float] | None = None,
+    step_a: int | None = None,
+    step_b: int | None = None,
+    cameras: str = "fused",
+    voxel: float = 0.01,
+    exclude_arm_radius: float = 0.12,
+) -> dict:
+    """Diff the occupied space inside a world-frame box between two steps.
+
+    Use this to VERIFY that an action did what you intended, without going
+    through segmentation. Every step's world map is already on disk, so "did
+    anything change here" is a geometry question, not a recognition one — it does
+    not depend on SAM3 grounding a noun, and it works when you cannot inspect the
+    images yourself.
+
+    What it answers well:
+    - did the object I released actually land inside the container? Box the
+      container's interior and compare the step before the release with the step
+      after; look for voxels_added there.
+    - did the object I meant to pick actually leave the table? Box where it was
+      and look for voxels_removed.
+    - did I disturb something I was not aiming at? Box that thing and check that
+      the delta is near zero.
+
+    Voxels are compared as SETS, so added and removed space are reported
+    separately: a single net count can be zero while everything inside moved.
+
+    ⚠ Occlusion is the trap. Space empties either because the object left, or
+    because the arm now stands between the camera and it, and no diff of two
+    clouds can separate those. Check n_points_in_box at both steps first: a large
+    drop there alongside a large voxels_removed is as consistent with a new
+    occlusion as with a moved object. Treat a removal as evidence only when the
+    point count held up.
+
+    Read-only: never advances the environment and never renders a new view.
+    """
+    return geometry.compare_extent(
+        x_range=x_range,
+        y_range=y_range,
+        z_range=z_range,
+        step_a=step_a,
+        step_b=step_b,
+        cameras=cameras,
+        voxel=voxel,
+        exclude_arm_radius=exclude_arm_radius,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Collections, grouped by kind
 # ---------------------------------------------------------------------------
@@ -463,7 +516,8 @@ def world_extent(
 STATE_TOOLS = [view_driver_state]
 MOTION_TOOLS = [move_to, move_pose, rotate_wrist, rotate_pitch, release, set_gripper]
 VLA_TOOLS = [pi0_pick, pi0_doubled]
-PERCEPTION_TOOLS = [view_camera_meta, segment, back_project, world_extent]
+PERCEPTION_TOOLS = [view_camera_meta, segment, back_project, world_extent,
+                    compare_extent]
 
 #: Tools that advance the environment. Anything here mutates world state, so a
 #: gate or a fresh-observation obligation belongs on this set, not on the rest.

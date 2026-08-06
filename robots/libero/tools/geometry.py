@@ -245,19 +245,42 @@ def _principal_axes(pts: np.ndarray, min_valid: int = 10) -> dict | None:
     if pts.shape[0] < min_valid:
         return None
 
+    # Trim the farthest 1% from the mask's 3D median before fitting. A mask's
+    # boundary pixels straddle the object edge, and their depth bleeds onto
+    # whatever is behind, so a handful of points land metres away — measured on 14
+    # real readings, untrimmed min-max extents were inflated up to 6x (a soup can
+    # read as 0.40 m across, a bottle as 0.24 m). One percent is enough because
+    # those points are very few and very extreme: at 1% the same can reads 0.067 m
+    # and going to 5% moves it only 0.003 m further, while legitimate geometry
+    # barely moves (a real 0.142 m bottle loses 2 mm). The task prompt warns about
+    # the same effect for hand-picked pixels; a fitted box has to defend itself.
+    distances = np.linalg.norm(pts - np.median(pts, axis=0), axis=1)
+    kept = pts[distances <= np.percentile(distances, 99.0)]
+    n_trimmed = int(pts.shape[0] - kept.shape[0])
+    if kept.shape[0] < min_valid:
+        return None
+    pts = kept
+
     xy = pts[:, :2]
     centre = xy.mean(axis=0)
     centred = xy - centre
     try:
-        eigenvalues, eigenvectors = np.linalg.eigh(np.cov(centred.T))
+        _, eigenvectors = np.linalg.eigh(np.cov(centred.T))
     except np.linalg.LinAlgError:
         return None
-    long_vec = eigenvectors[:, -1]
-    short_vec = eigenvectors[:, 0]
-    long_proj = centred @ long_vec
-    short_proj = centred @ short_vec
-    long_extent = float(long_proj.max() - long_proj.min())
-    short_extent = float(short_proj.max() - short_proj.min())
+    # Order the two axes by the extent actually REPORTED, not by variance. The
+    # higher-variance axis is not always the one with the wider min-max range —
+    # variance follows the bulk, range follows the tails — and when they disagreed
+    # the reply labelled the narrow axis "long", so graspable_width_m came out as
+    # the larger number and told the planner a 6 cm bottle needed a 24 cm span.
+    measured = []
+    for vec in (eigenvectors[:, -1], eigenvectors[:, 0]):
+        projection = centred @ vec
+        measured.append(
+            (float(projection.max() - projection.min()), float(np.std(projection)), vec)
+        )
+    measured.sort(key=lambda item: -item[0])
+    (long_extent, long_std, long_vec), (short_extent, short_std, short_vec) = measured
     if long_extent <= 1e-6:
         return None
 
@@ -270,15 +293,15 @@ def _principal_axes(pts: np.ndarray, min_valid: int = 10) -> dict | None:
             angle += 180.0
         return round(angle, 1)
 
-    # Shape RATIOS come from the eigenvalue spreads, not from these min-max
-    # extents. A square footprint's fitted long axis lands on a diagonal, so its
-    # min-max range overstates the side by up to sqrt(2) — enough to make a cube
-    # read as "lying". The covariance of a square is isotropic, so its
-    # eigenvalues are equal whatever the rotation, which is the property the
-    # ratio tests need. Min-max is still what gets REPORTED, because a gripper
-    # has to span the full width, not one standard deviation.
-    spread_long = float(np.sqrt(max(float(eigenvalues[-1]), 0.0)))
-    spread_short = float(np.sqrt(max(float(eigenvalues[0]), 0.0)))
+    # Shape RATIOS come from the projections' standard deviations, not from the
+    # min-max extents. A square footprint's fitted axes land on its diagonals, so
+    # its min-max range overstates the side by up to sqrt(2) — enough to make a
+    # cube read as "lying". The covariance of a square is isotropic, so its
+    # spreads are equal whatever the rotation, which is the property the ratio
+    # tests need. Min-max is still what gets REPORTED, because a gripper has to
+    # span the full width, not one standard deviation.
+    spread_long = max(long_std, short_std)
+    spread_short = min(long_std, short_std)
     spread_z = float(np.std(pts[:, 2]))
     aspect = spread_short / spread_long if spread_long > 1e-9 else 1.0
     # Below roughly 1.2:1 the footprint is round enough that the fitted axis is
@@ -316,6 +339,7 @@ def _principal_axes(pts: np.ndarray, min_valid: int = 10) -> dict | None:
         "planar": bool(np.isfinite(thickness) and thickness < 0.006),
         "graspable_width_m": round(short_extent, 4),
         "n": int(pts.shape[0]),
+        "n_outliers_trimmed": n_trimmed,
         "note": (
             "Axes fitted to the xy footprint, in the object's own frame. The "
             "gripper must close ACROSS the short axis, spanning graspable_width_m "
@@ -326,7 +350,9 @@ def _principal_axes(pts: np.ndarray, min_valid: int = 10) -> dict | None:
             "geometry, so verify that mapping once and reuse it. When "
             "yaw_is_meaningful is false the footprint is near-round and any yaw "
             "is as good as another. Extents come from one camera's surface "
-            "sample, so each is a LOWER bound on the true size."
+            "sample with the farthest 1% of points trimmed (mask edges bleed "
+            "onto the background behind), so each is a LOWER bound on the true "
+            "size."
         ),
     }
 
@@ -354,6 +380,207 @@ def _camera_origin_world() -> np.ndarray | None:
         return ext[:3, 3]
     except Exception:
         return None
+
+
+def _step_cloud(nn: int, cameras: str) -> tuple[np.ndarray | None, list[str], list[str]]:
+    """Load and fuse one step's world map(s). Returns ``(points, used, missing)``.
+
+    Both maps already hold WORLD coordinates -- each camera's intrinsics and
+    cam2world extrinsic were applied when the map was written -- so fusing them is
+    a concatenation with no registration step.
+    """
+    from robots.libero.tools.artifacts import artifact_path
+    from rpent.utils.logging import get_output_dir
+
+    wanted = ("agentview", "wrist") if cameras == "fused" else (cameras,)
+    clouds: list[np.ndarray] = []
+    used: list[str] = []
+    missing: list[str] = []
+    for cam in wanted:
+        loaded = False
+        for res in ("high", "low"):
+            try:
+                arr = np.load(
+                    artifact_path(get_output_dir(), "world", step=nn, camera=cam,
+                                  resolution=res)
+                )
+            except Exception:
+                continue
+            pts = arr.reshape(-1, arr.shape[2]).astype(np.float64)[:, :3]
+            pts = pts[np.isfinite(pts).all(axis=1) & (np.abs(pts).sum(axis=1) > 1e-6)]
+            if pts.shape[0]:
+                clouds.append(pts)
+                used.append(f"{cam}:{res}")
+                loaded = True
+            break
+        if not loaded:
+            missing.append(cam)
+    if not clouds:
+        return None, used, missing
+    return np.vstack(clouds), used, missing
+
+
+def _step_eef(nn: int) -> np.ndarray | None:
+    """End-effector position recorded at step ``nn``, or None."""
+    from robots.libero.tools.state import _load_step
+
+    try:
+        state = _load_step(nn).get("state") or {}
+    except Exception:
+        return None
+    eef = state.get("robot0_eef_pos")
+    if eef is None or len(eef) < 3:
+        return None
+    return np.asarray(eef, dtype=np.float64)[:3]
+
+
+def compare_extent(
+    x_range: list | None = None,
+    y_range: list | None = None,
+    z_range: list | None = None,
+    step_a: int | None = None,
+    step_b: int | None = None,
+    cameras: str = "fused",
+    voxel: float = 0.01,
+    exclude_arm_radius: float = 0.12,
+) -> dict:
+    """Diff the occupied space inside a world-frame box between two steps.
+
+    Answers "did that action change anything here" without going through
+    segmentation. Every step's world map is on disk, so the question is geometry,
+    not recognition -- which matters because it makes verification independent of
+    the one channel that can fail to ground a noun.
+
+    Voxels are compared as sets, so the reply separates space that became
+    occupied from space that emptied, rather than reporting a single count that
+    could net to zero while everything moved.
+
+    ⚠ Occlusion is the trap. Points vanish from a box either because the object
+    left or because the arm moved between the camera and it, and no diff of two
+    clouds can tell those apart. ``n_points_in_box`` is reported per step for
+    exactly this reason: a large drop in total points alongside a large
+    ``voxels_removed`` is as consistent with a new occlusion as with a moved
+    object. Treat a removal as evidence only when the point count held up.
+    """
+    from rpent.utils.logging import get_output_dir
+    from robots.libero.tools.state import _latest_step
+
+    if cameras not in ("fused", "agentview", "wrist"):
+        return {"error": f"bad cameras '{cameras}' (use 'fused', 'agentview' or 'wrist')"}
+    try:
+        voxel = float(voxel)
+    except Exception:
+        return {"error": "voxel must be a number, in metres"}
+    if not 0.002 <= voxel <= 0.05:
+        return {"error": f"voxel {voxel} out of range (use 0.002 .. 0.05 m)"}
+
+    latest = _latest_step()
+    if latest is None:
+        return {"error": "no world-map files available"}
+    nb = latest if step_b is None else int(step_b)
+    na = 0 if step_a is None else int(step_a)
+    if na == nb:
+        return {"error": f"step_a and step_b are both {na}; pick two different steps"}
+
+    def _rng(r, lo, hi):
+        if r is None:
+            return lo, hi
+        try:
+            a, b = float(r[0]), float(r[1])
+        except Exception:
+            return None
+        return min(a, b), max(a, b)
+
+    bounds = []
+    for r, lo, hi in ((x_range, -1.0, 1.0), (y_range, -1.0, 1.0),
+                      (z_range, 0.012, 1.0)):
+        got = _rng(r, lo, hi)
+        if got is None:
+            return {"error": "x_range/y_range/z_range must each be [min, max] numbers"}
+        bounds.append(got)
+    (x0, x1), (y0, y1), (z0, z1) = bounds
+
+    sides: dict[int, dict[str, Any]] = {}
+    keysets: dict[int, set] = {}
+    for nn in (na, nb):
+        pts, used, missing = _step_cloud(nn, cameras)
+        if pts is None:
+            return {"error": f"no world map loadable for step {nn} (missing: {missing})"}
+        eef = _step_eef(nn)
+        n_arm = 0
+        if eef is not None and exclude_arm_radius and exclude_arm_radius > 0:
+            keep = np.linalg.norm(pts - eef, axis=1) > float(exclude_arm_radius)
+            n_arm = int((~keep).sum())
+            pts = pts[keep]
+        pts = pts[pts[:, 2] > 0.012]
+        inside = pts[
+            (pts[:, 0] >= x0) & (pts[:, 0] <= x1)
+            & (pts[:, 1] >= y0) & (pts[:, 1] <= y1)
+            & (pts[:, 2] >= z0) & (pts[:, 2] <= z1)
+        ]
+        keys = (
+            set(map(tuple, np.unique(np.floor(inside / voxel).astype(np.int64), axis=0)))
+            if inside.shape[0]
+            else set()
+        )
+        keysets[nn] = keys
+        side = {
+            "cameras_used": used,
+            "eef_pos": [round(float(v), 4) for v in eef] if eef is not None else None,
+            "arm_points_removed": n_arm,
+            "n_points_in_box": int(inside.shape[0]),
+            "occupied_voxels": len(keys),
+        }
+        if inside.shape[0]:
+            side["centroid"] = [round(float(inside[:, i].mean()), 4) for i in range(3)]
+            side["z_range"] = [round(float(inside[:, 2].min()), 4),
+                               round(float(inside[:, 2].max()), 4)]
+        sides[nn] = side
+
+    ka, kb = keysets[na], keysets[nb]
+    added, removed, common = kb - ka, ka - kb, ka & kb
+    union = ka | kb
+    result: dict[str, Any] = {
+        "box": {"x": [round(x0, 4), round(x1, 4)], "y": [round(y0, 4), round(y1, 4)],
+                "z": [round(z0, 4), round(z1, 4)]},
+        "voxel_m": voxel,
+        f"step_{na}": sides[na],
+        f"step_{nb}": sides[nb],
+        "step_a": na,
+        "step_b": nb,
+        "delta": {
+            "voxels_added": len(added),
+            "voxels_removed": len(removed),
+            "voxels_unchanged": len(common),
+            "occupied_voxels_net": len(kb) - len(ka),
+            "iou": round(len(common) / len(union), 3) if union else None,
+        },
+    }
+    ca, cb = sides[na].get("centroid"), sides[nb].get("centroid")
+    if ca and cb:
+        shift = np.asarray(cb) - np.asarray(ca)
+        result["delta"]["centroid_shift"] = [round(float(v), 4) for v in shift]
+        result["delta"]["centroid_shift_m"] = round(float(np.linalg.norm(shift)), 4)
+    if added:
+        pts_added = np.asarray(sorted(added), dtype=np.float64) * voxel + voxel / 2.0
+        result["delta"]["added_centroid"] = [round(float(pts_added[:, i].mean()), 4)
+                                            for i in range(3)]
+    if removed:
+        pts_removed = np.asarray(sorted(removed), dtype=np.float64) * voxel + voxel / 2.0
+        result["delta"]["removed_centroid"] = [round(float(pts_removed[:, i].mean()), 4)
+                                              for i in range(3)]
+    drop = sides[na]["n_points_in_box"] - sides[nb]["n_points_in_box"]
+    result["caveat"] = (
+        "Voxels can empty because the object left OR because the arm now occludes "
+        "the view; a cloud diff cannot separate those. Compare n_points_in_box "
+        f"across the two steps first (here: {sides[na]['n_points_in_box']} -> "
+        f"{sides[nb]['n_points_in_box']}, change {-drop:+d}). Trust "
+        "voxels_removed only when the point count held up. Points are one "
+        "camera's surface sample, so an object hidden behind another is absent "
+        "from both steps and invisible to this diff."
+    )
+    result["output_dir"] = str(get_output_dir())
+    return result
 
 
 def world_extent(
@@ -466,6 +693,52 @@ def world_extent(
                            "is held or the object is occluded from both cameras"
                            % int(held.shape[0]))
             return out
+        # The candidate window is a cylinder 2-20 cm below the eef, so when the eef
+        # is low it necessarily swallows the table, and the "held object" becomes a
+        # slab of tabletop. Measured over 25 closed-gripper steps in 6 real runs,
+        # 12 readings were of a surface rather than an object. Three geometric
+        # facts separate them, and they separated every case cleanly here: a real
+        # grasp measured 3-6 cm across and 9-18 cm tall, while the false ones were
+        # 12 cm across (the full window), or 1 cm thick and 7 cm wide (a stove
+        # top), or reached the window's own floor clamp.
+        xy_extent = float(max(np.ptp(held[:, 0]), np.ptp(held[:, 1])))
+        z_extent = float(np.ptp(held[:, 2]))
+        bottom = float(held[:, 2].min())
+        reasons = []
+        if z_extent < 0.012 and xy_extent > 0.04:
+            reasons.append(
+                f"only {z_extent:.3f} m thick over {xy_extent:.3f} m — a surface, "
+                "not a body"
+            )
+        if bottom <= 0.0125:
+            reasons.append(
+                "reaches the window's floor clamp, so the window included the table"
+            )
+        out["xy_extent_m"] = round(xy_extent, 4)
+        out["z_extent_m"] = round(z_extent, 4)
+        # Reported, not acted on. A blob wider than the gripper's span is suspect,
+        # but on the 25 real readings this fired inconsistently on marginal cases
+        # and there is no ground truth here for which steps were truly holding —
+        # so it warns instead of overriding. Falsely reporting "not holding" is
+        # its own harm.
+        if xy_extent > 0.09:
+            out["shape_warning"] = (
+                f"these points span {xy_extent:.3f} m across, wider than the "
+                "gripper can hold — they may include the container or the table "
+                "rather than only the grasped object, so treat the offset as "
+                "approximate and cross-check it after the next move"
+            )
+        if reasons:
+            out["holding"] = False
+            out["object_z_range"] = [round(bottom, 4), round(float(held[:, 2].max()), 4)]
+            out["note"] = (
+                "the points below the eef are geometry, not a grasped object: "
+                + "; ".join(reasons)
+                + ". Gripper width alone cannot tell these apart — it read the "
+                "same on steps that were holding and steps that were not."
+            )
+            return out
+
         cen = held.mean(axis=0)
         out["holding"] = True
         out["object_centroid"] = [round(float(v), 4) for v in cen]

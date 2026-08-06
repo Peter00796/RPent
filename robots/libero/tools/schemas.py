@@ -277,6 +277,57 @@ class BackProjectInput(BaseModel):
     )
 
 
+class CompareExtentInput(BaseModel):
+    """A world-frame box, and the two steps to compare occupancy between."""
+
+    x_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world x bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    y_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world y bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    z_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world z bound in metres. Default excludes the table.",
+        min_length=2,
+        max_length=2,
+    )
+    step_a: int | None = Field(
+        default=None,
+        description="Earlier step to compare from. Default 0, the initial scene.",
+    )
+    step_b: int | None = Field(
+        default=None,
+        description="Later step to compare to. Default is the latest step.",
+    )
+    cameras: Literal["fused", "agentview", "wrist"] = Field(
+        default="fused",
+        description=(
+            "Which camera's world map(s) to compare. 'fused' concatenates both "
+            "clouds with no registration step (they already share the world "
+            "frame)."
+        ),
+    )
+    voxel: float = Field(
+        default=0.01,
+        description="Voxel edge length in metres for the comparison (0.002-0.05).",
+    )
+    exclude_arm_radius: float = Field(
+        default=0.12,
+        description=(
+            "Drop points within this many metres of that step's end-effector "
+            "position before comparing, so the manipulator's own body is not "
+            "counted as a change. Applied per step with each step's own pose."
+        ),
+    )
+
+
 class WorldExtentInput(BaseModel):
     """A world-frame box to query for occupied space, fusing both cameras."""
 
