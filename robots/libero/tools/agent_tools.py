@@ -26,7 +26,7 @@ langchain-core 1.5.3 / langgraph 1.2.10. Keep the annotations eager here —
 
 from langchain.tools import ToolRuntime, tool
 
-from robots.libero.tools import catalog, perception, state
+from robots.libero.tools import catalog, geometry, perception, state
 from robots.libero.tools.context import LiberoContext
 from robots.libero.tools.schemas import (
     BackProjectInput,
@@ -41,6 +41,7 @@ from robots.libero.tools.schemas import (
     SetGripperInput,
     ViewCameraMetaInput,
     ViewDriverStateInput,
+    WorldExtentInput,
 )
 
 
@@ -318,7 +319,29 @@ def segment(
     """SAM3 visual segmentation over an existing run artifact. It never renders a
     new camera view. Provide exactly one text prompt or single positive point. A
     successful top-ranked mask is projected through the matching world map to
-    produce world_xyz.
+    produce world_xyz, plus geometry that world_xyz alone cannot carry:
+
+    world_xyz is a per-axis median of the mask's visible points -- for a hollow
+    container (basket, bowl, drawer) this sits on the visible near wall, not the
+    opening centre, and using it as a drop-off point biases the release toward
+    the camera. When present, prefer these instead:
+    - rim.xy_bbox_center + rim.retreat_direction: the opening's bounding-box
+      centre, plus which way to move off the wall nearest the camera. Measured
+      on 23 finished placement attempts: successful releases sat 1.2-9.3 cm on
+      the far side of world_xyz along this direction; failures sat within
+      1.3 cm of world_xyz.
+    - interior.xy_median: the floor seen through the opening, when visible.
+    - bbox_3d.extent: the mask's 3D bounding box -- use this to tell a toppled
+      object (short, one long horizontal axis) from an upright one before
+      choosing a grasp height.
+    - looks_hollow: true when the mask reads as a ring enclosing a lower
+      middle (a container) rather than a solid body with a raised cap (a
+      bottle) -- height alone cannot tell these apart.
+
+    Call world_extent(mode="held_object") after a pick and before a release to
+    get the grasped object's actual offset from the end-effector; move_to
+    commands the end-effector, not the object, and the offset is not constant
+    across grasps.
     """
     ctx = _context(runtime)
     return ctx.primitives.segment(
@@ -375,6 +398,44 @@ def back_project(
     )
 
 
+@tool(args_schema=WorldExtentInput)
+def world_extent(
+    x_range: list[float] | None = None,
+    y_range: list[float] | None = None,
+    z_range: list[float] | None = None,
+    step: int | None = None,
+    cameras: str = "fused",
+    voxel: float = 0.01,
+    exclude_arm_radius: float = 0.12,
+    mode: str = "occupancy",
+) -> dict:
+    """Query occupied space inside a world-frame box, fusing both cameras.
+
+    Both world maps already hold WORLD coordinates, so fusing them is a
+    concatenation with no registration step (measured agreement on the shared
+    table plane is ~3 mm). Use mode='occupancy' to locate a container wall or
+    check reachable space before a move -- it reports the nearest occupied
+    surface along each axis from the box centre, which is what a container's
+    wall position looks like in this representation. Use mode='held_object'
+    after a pick, before a release, to get the grasped object's actual offset
+    from the end-effector: move_to commands the end-effector, not the object,
+    and that offset is not a fixed constant across grasps.
+
+    This is read-only and never advances the environment or renders a new
+    view, the same as back_project.
+    """
+    return geometry.world_extent(
+        x_range=x_range,
+        y_range=y_range,
+        z_range=z_range,
+        step=step,
+        cameras=cameras,
+        voxel=voxel,
+        exclude_arm_radius=exclude_arm_radius,
+        mode=mode,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Collections, grouped by kind
 # ---------------------------------------------------------------------------
@@ -382,7 +443,7 @@ def back_project(
 STATE_TOOLS = [view_driver_state]
 MOTION_TOOLS = [move_to, move_pose, rotate_wrist, rotate_pitch, release, set_gripper]
 VLA_TOOLS = [pi0_pick, pi0_doubled]
-PERCEPTION_TOOLS = [view_camera_meta, segment, back_project]
+PERCEPTION_TOOLS = [view_camera_meta, segment, back_project, world_extent]
 
 #: Tools that advance the environment. Anything here mutates world state, so a
 #: gate or a fresh-observation obligation belongs on this set, not on the rest.
