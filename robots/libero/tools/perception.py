@@ -8,6 +8,7 @@ client, so it ships as :class:`SegmentMixin`; ``view_camera_meta`` and
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -144,7 +145,12 @@ class SegmentMixin:
         if not data.found:
             segment_blob["error"] = data.reason or "SAM3 found no mask"
         segment_blob.update(world_result)
-        segment_path.write_text(json.dumps(segment_blob, indent=2, default=str))
+        # Write via a temp file + rename so a concurrent reader (or a crash
+        # mid-write) never sees a partial blob -- see _next_segment_artifact_paths
+        # for why concurrent writers are expected here.
+        _seg_tmp = segment_path.with_suffix(".json.tmp")
+        _seg_tmp.write_text(json.dumps(segment_blob, indent=2, default=str))
+        os.replace(_seg_tmp, segment_path)
 
         result = {
             "found": data.found,
@@ -157,6 +163,22 @@ class SegmentMixin:
             "world_xyz": segment_blob["world_xyz"],
             "world_error": segment_blob.get("world_error"),
         }
+        # The geometry fields _mask_to_world computes were being written to the
+        # on-disk segment JSON but never forwarded here, so the planner only ever
+        # saw world_xyz -- a per-axis median that for a hollow container sits on
+        # the visible near wall. Four runs in a row commanded move_to at exactly
+        # that median plus a z, and three dropped the object outside the basket.
+        # Forward them: rim.xy_bbox_center is the drop point for a container,
+        # bbox_3d gives the graspable height and long axis of a toppled object,
+        # and looks_hollow says which of the two readings applies.
+        # world_path names the (H, W, 3) world map this reading came from. It was
+        # recorded in the on-disk artifact but withheld from the reply, so the
+        # planner could not cite the source of a geometry claim or ask for a
+        # different reduction of it. Forwarding it costs one string.
+        for _k in ("rim", "interior", "bbox_3d", "z_profile", "looks_hollow",
+                   "world_path", "n_pixels"):
+            if _k in segment_blob:
+                result[_k] = segment_blob[_k]
         if "error" in segment_blob:
             result["error"] = segment_blob["error"]
             result["fallback"] = "Use manual visual localization and back_project."
@@ -190,7 +212,22 @@ def _next_segment_artifact_paths(out_dir: Path, nn: int):
     while True:
         segment_path = segments_dir / f"segment_{nn:02d}_{idx:02d}.json"
         overlay_path = segments_dir / f"segment_overlay_{nn:02d}_{idx:02d}.png"
-        if not segment_path.exists() and not overlay_path.exists():
+        if not overlay_path.exists():
+            # Claim the index atomically. A plain exists() check is a race: the
+            # planner can emit several segment tool calls in one assistant turn
+            # and the agent loop executes a turn's tool calls concurrently, so
+            # two calls can both see this index as free, both claim it, and both
+            # write it -- write_text() is truncating and unlocked, so the file
+            # ends up holding one complete JSON object with another's tail
+            # appended. Neither writer errors; the corruption only surfaces
+            # later, when something tries to json.load() the file.
+            try:
+                fd = os.open(str(segment_path),
+                             os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            except FileExistsError:
+                idx += 1
+                continue
+            os.close(fd)
             return segment_path, overlay_path, idx
         idx += 1
 

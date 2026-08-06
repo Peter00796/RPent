@@ -262,3 +262,62 @@ class BackProjectInput(BaseModel):
         default=None,
         description="Region mode: keep only pixels with world z <= z_max.",
     )
+
+
+class WorldExtentInput(BaseModel):
+    """A world-frame box to query for occupied space, fusing both cameras."""
+
+    x_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world x bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    y_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world y bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    z_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world z bound in metres. Default excludes the table.",
+        min_length=2,
+        max_length=2,
+    )
+    step: int | None = Field(
+        default=None,
+        description="World-map step to use (default latest). 0 for initial.",
+    )
+    cameras: Literal["fused", "agentview", "wrist"] = Field(
+        default="fused",
+        description=(
+            "Which camera's world map(s) to query. 'fused' concatenates both "
+            "clouds with no registration step (they already share the world "
+            "frame); use it unless you have a reason to isolate one camera."
+        ),
+    )
+    voxel: float = Field(
+        default=0.01,
+        description="Voxel edge length in metres for occupancy counting (0.002-0.05).",
+    )
+    exclude_arm_radius: float = Field(
+        default=0.12,
+        description=(
+            "Drop points within this many metres of the current end-effector "
+            "position before counting occupancy, so the manipulator's own body "
+            "is not reported as an obstacle."
+        ),
+    )
+    mode: Literal["occupancy", "held_object"] = Field(
+        default="occupancy",
+        description=(
+            "'occupancy': voxel-count the box and report the nearest occupied "
+            "surface along each axis from the box centre -- use this to locate "
+            "a container wall or check reachable space before a move. "
+            "'held_object': estimate the grasped object's centroid and its xy "
+            "offset from the end-effector -- use this before releasing, since "
+            "move_to commands the end-effector, not the object it is holding, "
+            "and the offset is not a fixed constant."
+        ),
+    )

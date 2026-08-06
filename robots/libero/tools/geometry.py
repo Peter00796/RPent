@@ -103,4 +103,341 @@ def _mask_to_world(mask: np.ndarray, world_map: np.ndarray,
         round(float(np.median(pts[:, 1])), 4),
         round(float(np.median(pts[:, 2])), 4),
     ]
+
+    # world_xyz is a PER-AXIS median, so for a non-convex mask (an L-shape, a
+    # ring, a hollow container) the three medians need not describe any point on
+    # the surface. One number also cannot serve grasping, placing-inside and
+    # placing-on-top, which want different points. Expose the mask's actual 3D
+    # extent so the caller can pick the reduction its task needs.
+    z = pts[:, 2]
+    z_lo, z_hi = float(z.min()), float(z.max())
+    result["bbox_3d"] = {
+        "min": [round(float(pts[:, i].min()), 4) for i in range(3)],
+        "max": [round(float(pts[:, i].max()), 4) for i in range(3)],
+        "extent": [round(float(pts[:, i].max() - pts[:, i].min()), 4)
+                   for i in range(3)],
+    }
+    result["z_profile"] = [round(float(np.percentile(z, p)), 4)
+                           for p in (5, 25, 50, 75, 95)]
+
+    # Top ring: for a raised container this is the rim, and its xy centre is the
+    # centre of the OPENING. Note a single side camera sees only the near wall
+    # and part of the interior, so this estimate is biased away from the camera;
+    # it is a bound on the opening centre, not the centre itself.
+    top = pts[z >= np.percentile(z, 85)]
+    if top.shape[0] >= min_valid:
+        # No single reduction of a one-camera cloud recovers a hollow container's
+        # true opening centre, so this reports BOUNDS instead of another candidate
+        # point. Scored against 23 finished runs of a basket-placement task: the 9
+        # releases that succeeded all sat 1.2-9.3 cm on the -x side of world_xyz,
+        # while all 14 that failed sat within +-1.3 cm of it. Distance to the
+        # successful drop was 4.1 cm for world_xyz, 3.7 cm for the ring mean and
+        # 3.9 cm for the range midpoint -- none is the answer, and the range
+        # midpoint over-corrects (6.3 cm on the basket measured here). What
+        # actually separates success from failure is DIRECTION: stay off the rim
+        # edge nearest the camera. camera_near_axis names it.
+        x0, x1 = float(top[:, 0].min()), float(top[:, 0].max())
+        y0, y1 = float(top[:, 1].min()), float(top[:, 1].max())
+        rim = {
+            "xy_range": {"x": [round(x0, 4), round(x1, 4)],
+                         "y": [round(y0, 4), round(y1, 4)]},
+            "xy_span": [round(x1 - x0, 4), round(y1 - y0, 4)],
+            "xy_center": [round(float(top[:, 0].mean()), 4),
+                          round(float(top[:, 1].mean()), 4)],
+            "xy_bbox_center": [round((x0 + x1) / 2.0, 4), round((y0 + y1) / 2.0, 4)],
+            "z_mean": round(float(top[:, 2].mean()), 4),
+            "n": int(top.shape[0]),
+        }
+        # Which rim edge faces the camera: that edge is over-represented in the
+        # cloud AND is the edge an object bounces off when released too close.
+        cam = _camera_origin_world()
+        if cam is not None:
+            # Which edge faces the camera is set by the DIRECTION from the
+            # opening to the camera, not by which coordinate happens to be
+            # numerically closer. Comparing |cam - edge| per axis independently
+            # can pick the wrong edge when the camera is far along one axis and
+            # only slightly offset along the other.
+            cx = (x0 + x1) / 2.0
+            cy = (y0 + y1) / 2.0
+            vx, vy = float(cam[0]) - cx, float(cam[1]) - cy
+            if abs(vx) >= abs(vy):
+                rim["camera_near_axis"] = "x"
+                rim["camera_near_edge"] = round(x1 if vx > 0 else x0, 4)
+                rim["retreat_direction"] = "-x" if vx > 0 else "+x"
+            else:
+                rim["camera_near_axis"] = "y"
+                rim["camera_near_edge"] = round(y1 if vy > 0 else y0, 4)
+                rim["retreat_direction"] = "-y" if vy > 0 else "+y"
+            rim["note"] = (
+                "Pick a release xy inside xy_range, at least 0.02 m away from "
+                "camera_near_edge along camera_near_axis (i.e. move in "
+                "retreat_direction). Clearance either side is about "
+                "(xy_span - object_width) / 2.")
+        result["rim"] = rim
+
+    # Interior: points well below the top ring but above the table. For a hollow
+    # container these are the floor seen through the opening.
+    span = z_hi - z_lo
+    if span > 0.02:
+        inner = pts[(z < z_lo + 0.35 * span) & (z > 0.012)]
+        if inner.shape[0] >= min_valid:
+            result["interior"] = {
+                "xy_median": [round(float(np.median(inner[:, 0])), 4),
+                              round(float(np.median(inner[:, 1])), 4)],
+                "z_median": round(float(np.median(inner[:, 2])), 4),
+                "n": int(inner.shape[0]),
+            }
+        # A container reads as a high ring ENCLOSING a low middle. Height alone
+        # is not enough: an upright bottle also has a high cap above low mask
+        # pixels near the table and passes a pure height test. What separates
+        # them is containment -- for a basket essentially all interior points
+        # fall inside the rim's xy footprint (measured 1.00 on one scene), for a
+        # bottle almost none do (measured 0.07 and 0.00) because the cap is a
+        # small patch offset from the body below it.
+        if "rim" in result and "interior" in result and inner.shape[0] >= min_valid:
+            rx0, rx1 = float(top[:, 0].min()), float(top[:, 0].max())
+            ry0, ry1 = float(top[:, 1].min()), float(top[:, 1].max())
+            enclosed = float(
+                ((inner[:, 0] >= rx0) & (inner[:, 0] <= rx1)
+                 & (inner[:, 1] >= ry0) & (inner[:, 1] <= ry1)).mean()
+            )
+            result["interior_enclosed_frac"] = round(enclosed, 3)
+            result["looks_hollow"] = bool(
+                enclosed > 0.6
+                and result["rim"]["z_mean"] - result["interior"]["z_median"] > 0.03
+            )
+    return result
+
+
+def _camera_origin_world() -> np.ndarray | None:
+    """World-frame position of the static agentview camera, or None.
+
+    Read from the run's camera_meta.json: the translation column of
+    extrinsic_cam2world is the camera origin. Used only to decide which rim edge
+    faces the camera -- the edge that is over-represented in a one-camera cloud
+    and the edge an object bounces off when released too close to it.
+    """
+    import json
+
+    from robots.libero.tools.artifacts import artifact_path
+    from rpent.utils.logging import get_output_dir
+
+    try:
+        p = artifact_path(get_output_dir(), "metadata", camera="agentview",
+                          resolution="low")
+        if not p.exists():
+            return None
+        meta = json.loads(p.read_text())
+        ext = np.asarray(meta["extrinsic_cam2world"], dtype=np.float64)
+        return ext[:3, 3]
+    except Exception:
+        return None
+
+
+def world_extent(
+    x_range: list | None = None,
+    y_range: list | None = None,
+    z_range: list | None = None,
+    step: int | None = None,
+    cameras: str = "fused",
+    voxel: float = 0.01,
+    exclude_arm_radius: float = 0.12,
+    mode: str = "occupancy",
+) -> dict:
+    """Query occupied space inside a world-frame box, fusing both cameras.
+
+    Both world maps already hold WORLD coordinates -- each camera's own
+    intrinsics and cam2world extrinsic were applied when the map was written --
+    so fusing them is a concatenation with no registration step. Measured
+    agreement on the shared table plane is ~3 mm.
+
+    The manipulator appears in both clouds (18% of wrist points sit within 10 cm
+    of the eef at close range), so a naive map reports the robot's own body as an
+    obstacle. Points within ``exclude_arm_radius`` of the current eef are dropped.
+    """
+    from robots.libero.tools.artifacts import artifact_path
+    from rpent.utils.logging import get_output_dir
+    from robots.libero.tools.state import _latest_step, _load_step
+
+    if mode not in ("occupancy", "held_object"):
+        return {"error": f"bad mode '{mode}' (use 'occupancy' or 'held_object')"}
+    if cameras not in ("fused", "agentview", "wrist"):
+        return {"error": f"bad cameras '{cameras}' (use 'fused', 'agentview' or 'wrist')"}
+    try:
+        voxel = float(voxel)
+    except Exception:
+        return {"error": "voxel must be a number, in metres"}
+    if not 0.002 <= voxel <= 0.05:
+        return {"error": f"voxel {voxel} out of range (use 0.002 .. 0.05 m)"}
+
+    latest = _latest_step()
+    nn = latest if step is None else int(step)
+    if nn is None:
+        return {"error": "no world-map files available"}
+    try:
+        data = _load_step(nn)
+    except Exception as e:
+        return {"error": f"step {nn} not present in state trace: {e}"}
+
+    wanted = ("agentview", "wrist") if cameras == "fused" else (cameras,)
+    clouds, used, missing = [], [], []
+    for cam in wanted:
+        loaded = False
+        for res in ("high", "low"):
+            try:
+                p = artifact_path(get_output_dir(), "world", step=nn,
+                                  camera=cam, resolution=res)
+                arr = np.load(p)
+            except Exception:
+                continue
+            pts = arr.reshape(-1, arr.shape[2]).astype(np.float64)[:, :3]
+            pts = pts[np.isfinite(pts).all(axis=1) & (np.abs(pts).sum(axis=1) > 1e-6)]
+            if pts.shape[0]:
+                clouds.append(pts)
+                used.append(f"{cam}:{res}")
+                loaded = True
+            break
+        if not loaded:
+            missing.append(cam)
+    if not clouds:
+        return {"error": f"no world map loadable for step {nn} (missing: {missing})"}
+    pts = np.vstack(clouds)
+
+    eef = None
+    grip_w = None
+    state = data.get("state") if isinstance(data, dict) else None
+    if isinstance(state, dict):
+        e = state.get("robot0_eef_pos")
+        if e is not None and len(e) >= 3:
+            eef = np.asarray(e, dtype=np.float64)[:3]
+        q = state.get("robot0_gripper_qpos")
+        if q is not None and len(q) >= 2:
+            grip_w = abs(float(q[0])) + abs(float(q[1]))
+
+    if mode == "held_object":
+        # move_to commands the END-EFFECTOR, but a task predicate is about where
+        # the OBJECT lands, and a grasped object does not sit on the eef axis.
+        # Measured on four runs of the same scene: the same bottle sat 1.8, 2.4,
+        # 2.7 and 2.9 cm along +x of the eef -- the same grasp width every time,
+        # yet a different offset, so no constant can be right. Both cameras
+        # agree to a millimetre, and with the gripper OPEN this window reads ~0,
+        # which is how we know it is the object and not gripper geometry.
+        if eef is None:
+            return {"error": "no eef pose recorded for step %d" % nn}
+        if grip_w is not None and grip_w > 0.06:
+            return {"step": nn, "mode": "held_object", "holding": False,
+                    "gripper_width": round(grip_w, 4),
+                    "eef_pos": [round(float(v), 4) for v in eef],
+                    "note": ("gripper is open (width %.4f) -- nothing held, so "
+                             "there is no offset to apply" % grip_w)}
+        d_xy = np.linalg.norm(pts[:, :2] - eef[:2], axis=1)
+        m = ((pts[:, 2] < eef[2] - 0.02) & (pts[:, 2] > eef[2] - 0.20)
+             & (d_xy < 0.06) & (pts[:, 2] > 0.012))
+        held = pts[m]
+        out = {"step": nn, "mode": "held_object", "cameras_used": used,
+               "gripper_width": round(grip_w, 4) if grip_w is not None else None,
+               "eef_pos": [round(float(v), 4) for v in eef],
+               "n_points": int(held.shape[0])}
+        if held.shape[0] < 30:
+            out["holding"] = False
+            out["note"] = ("only %d points hang below the eef -- either nothing "
+                           "is held or the object is occluded from both cameras"
+                           % int(held.shape[0]))
+            return out
+        cen = held.mean(axis=0)
+        out["holding"] = True
+        out["object_centroid"] = [round(float(v), 4) for v in cen]
+        out["offset_from_eef"] = [round(float(cen[0] - eef[0]), 4),
+                                  round(float(cen[1] - eef[1]), 4)]
+        out["object_z_range"] = [round(float(held[:, 2].min()), 4),
+                                 round(float(held[:, 2].max()), 4)]
+        out["how_to_use"] = ("To land the object at target xy, command move_to "
+                             "at (target_x - offset_from_eef[0], target_y - "
+                             "offset_from_eef[1]). Re-query after any re-grasp: "
+                             "the offset changes every grasp.")
+        return out
+
+    n_before = int(pts.shape[0])
+    n_arm = 0
+    if eef is not None and exclude_arm_radius and exclude_arm_radius > 0:
+        keep = np.linalg.norm(pts - eef, axis=1) > float(exclude_arm_radius)
+        n_arm = int((~keep).sum())
+        pts = pts[keep]
+
+    # The table plane is not an obstacle for reasoning about reachable space.
+    pts = pts[pts[:, 2] > 0.012]
+
+    def _rng(r, lo, hi):
+        if r is None:
+            return lo, hi
+        try:
+            a, b = float(r[0]), float(r[1])
+        except Exception:
+            return None
+        return min(a, b), max(a, b)
+
+    bounds = []
+    for r, lo, hi in ((x_range, -1.0, 1.0), (y_range, -1.0, 1.0), (z_range, 0.012, 1.0)):
+        got = _rng(r, lo, hi)
+        if got is None:
+            return {"error": "x_range/y_range/z_range must each be [min, max] numbers"}
+        bounds.append(got)
+    (x0, x1), (y0, y1), (z0, z1) = bounds
+
+    m = ((pts[:, 0] >= x0) & (pts[:, 0] <= x1)
+         & (pts[:, 1] >= y0) & (pts[:, 1] <= y1)
+         & (pts[:, 2] >= z0) & (pts[:, 2] <= z1))
+    box = pts[m]
+    result = {
+        "step": nn,
+        "cameras_used": used,
+        "cameras_missing": missing,
+        "voxel_m": voxel,
+        "box": {"x": [round(x0, 4), round(x1, 4)],
+                "y": [round(y0, 4), round(y1, 4)],
+                "z": [round(z0, 4), round(z1, 4)]},
+        "eef_pos": [round(float(v), 4) for v in eef] if eef is not None else None,
+        "arm_points_removed": n_arm,
+        "n_points_total": n_before,
+        "n_points_in_box": int(box.shape[0]),
+    }
+    if box.shape[0] < 8:
+        result["occupied_voxels"] = 0
+        result["note"] = ("box is empty of geometry above the table -- either free "
+                          "space, or outside the cameras' field of view")
+        return result
+
+    keys = np.floor(box / voxel).astype(np.int64)
+    uniq = np.unique(keys, axis=0)
+    result["occupied_voxels"] = int(uniq.shape[0])
+    result["extent"] = {
+        "min": [round(float(box[:, i].min()), 4) for i in range(3)],
+        "max": [round(float(box[:, i].max()), 4) for i in range(3)],
+    }
+    result["z_profile"] = [round(float(np.percentile(box[:, 2], p)), 4)
+                           for p in (5, 25, 50, 75, 95)]
+
+    # Nearest occupied surface along each axis from the box centre. This is
+    # what locates a container wall.
+    cx = (x0 + x1) / 2.0
+    cy = (y0 + y1) / 2.0
+    walls = {}
+    band = max(voxel * 3, 0.02)
+    for axis, name, c, other_c, oa in ((0, "x", cx, cy, 1), (1, "y", cy, cx, 0)):
+        near = box[np.abs(box[:, oa] - other_c) <= band]
+        if near.shape[0] < 8:
+            continue
+        lower = near[near[:, axis] < c]
+        upper = near[near[:, axis] > c]
+        walls[f"-{name}"] = (round(float(lower[:, axis].max()), 4)
+                             if lower.shape[0] else None)
+        walls[f"+{name}"] = (round(float(upper[:, axis].min()), 4)
+                             if upper.shape[0] else None)
+    result["nearest_surface_from_box_center"] = walls
+    result["caveat"] = ("Static scene geometry only. It does NOT predict OSC "
+                        "undershoot or a pose broken by rotate_wrist -- on the "
+                        "one run measured, occupancy explained 1 of 3 stalled "
+                        "moves. Fusion gain also depends on eef height: +46% "
+                        "occupied voxels at eef z=0.29, +2% at z=0.075, because "
+                        "the gripper occludes the wrist view at close range.")
     return result
