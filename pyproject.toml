@@ -32,6 +32,9 @@ dependencies = [
     # brings langchain-core and langgraph, which the tool layer relies on for
     # runtime injection.
     "langchain>=1.3.14",
+    # DeepSeek chat models for the deepagents planner. `init_chat_model` routes
+    # any `deepseek*` model id here, including without a provider prefix.
+    "langchain-deepseek>=1.1.0",
     "pydantic>=2",
     "fastapi>=0.110",
     "uvicorn>=0.27",

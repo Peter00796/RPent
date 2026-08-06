@@ -52,7 +52,13 @@ MIDDLEWARE_ORDER: tuple[tuple[str, str], ...] = (
     ("InjectionLedgerMiddleware", "not implemented — per-component token accounting"),
     ("GateMiddleware", "not implemented — hard gates + shadow mode on advancing tools"),
     ("ProvenanceMiddleware", "not implemented — argument-level evidence provenance"),
-    ("CompactionMiddleware", "not implemented — env-unsafe; prebuilt: Summarization"),
+    (
+        "CompactionMiddleware",
+        "not implemented — env-unsafe, and cache-hostile: rewriting the middle of "
+        "the message list invalidates every automatic prefix cache from that "
+        "point on, so its token saving is partly offset. Prebuilt: Summarization, "
+        "ContextEditing",
+    ),
 )
 
 
@@ -185,8 +191,12 @@ class TranscriptMiddleware(AgentMiddleware):
         self.input_tokens += int(usage.get("input_tokens") or 0)
         self.output_tokens += int(usage.get("output_tokens") or 0)
         details = usage.get("input_token_details") or {}
-        self.cache_read_tokens += int(details.get("cache_read") or 0)
-        self.cache_write_tokens += int(details.get("cache_creation") or 0)
+        read = int(details.get("cache_read") or 0)
+        written = int(details.get("cache_creation") or 0)
+        if not read and not written:
+            read, written = _provider_cache_tokens(message)
+        self.cache_read_tokens += read
+        self.cache_write_tokens += written
 
     def _usage_summary(self) -> str:
         return (
@@ -208,6 +218,46 @@ class TranscriptMiddleware(AgentMiddleware):
 # ---------------------------------------------------------------------------
 # Serialisation helpers
 # ---------------------------------------------------------------------------
+
+
+#: Provider-native cache field names to fall back on, as
+#: ``(read_field, written_field)`` pairs searched in ``response_metadata``.
+#: LangChain normalises OpenAI's ``cached_tokens`` and Anthropic's cache fields
+#: into ``usage_metadata.input_token_details``, but a provider that reports cache
+#: usage under its own names is normalised to nothing — and silently reading
+#: zero cache hits is worse than reading none, because the ledger then claims the
+#: cache never worked. DeepSeek is the case in point: its context cache is
+#: automatic server-side prefix caching (there is nothing to enable client-side),
+#: and it reports the outcome as ``prompt_cache_hit_tokens`` /
+#: ``prompt_cache_miss_tokens``, which no adapter maps today.
+_PROVIDER_CACHE_FIELDS: tuple[tuple[str, str | None], ...] = (
+    ("prompt_cache_hit_tokens", None),  # DeepSeek
+    ("cached_tokens", None),  # OpenAI-compatible, if left unmapped
+)
+
+
+def _provider_cache_tokens(message: AIMessage) -> tuple[int, int]:
+    """Recover cache token counts from provider-native usage fields.
+
+    Returns ``(read, written)``. Providers with automatic prefix caching report
+    only hits, so ``written`` stays 0 for them — there is no client-controlled
+    cache write to attribute.
+    """
+    meta = message.response_metadata or {}
+    candidates: list[dict[str, Any]] = [meta]
+    for key in ("token_usage", "usage", "prompt_tokens_details"):
+        value = meta.get(key)
+        if isinstance(value, dict):
+            candidates.append(value)
+            nested = value.get("prompt_tokens_details")
+            if isinstance(nested, dict):
+                candidates.append(nested)
+    for read_field, write_field in _PROVIDER_CACHE_FIELDS:
+        for blob in candidates:
+            if read_field in blob:
+                written = int(blob.get(write_field) or 0) if write_field else 0
+                return int(blob.get(read_field) or 0), written
+    return 0, 0
 
 
 def _serialize_ai_message(message: AIMessage) -> dict[str, Any]:
