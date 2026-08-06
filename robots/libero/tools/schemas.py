@@ -213,6 +213,19 @@ class SegmentInput(BaseModel):
         default=0.2,
         description="Minimum accepted mask score (default 0.2).",
     )
+    entity: str = Field(
+        default="",
+        description=(
+            "Optional name to register this reading under, e.g. "
+            "'bowl_on_cookie_box' or 'basket_cavity'. Name it for what it IS and "
+            "where it is, not by an internal object id — two identical objects "
+            "have indistinguishable names but different relations. Registering "
+            "adds the reading to the run's entity index (append-only: a later "
+            "segment adds a reading, never overwrites one), so subsequent tool "
+            "results report its position and how stale that position is. Omit to "
+            "run a one-off lookup that is not registered."
+        ),
+    )
 
 
 class BackProjectInput(BaseModel):

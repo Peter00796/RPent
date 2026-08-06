@@ -22,6 +22,7 @@ from typing import Any
 from rpent.tools.toolkit import ToolCancelled
 from rpent.utils.logging import get_logger
 
+from robots.libero.tools import databus
 from robots.libero.tools.artifacts import ARTIFACT_DIRECTORIES, artifact_path
 from robots.libero.tools.primitives import LiberoPrimitives
 from robots.libero.tools.state import dump_state, view_driver_state
@@ -114,6 +115,7 @@ class LiberoContext:
         command = {"action": name, **args}
         t0 = time.time()
         start_frame = self.primitives.recorded_frame_count()
+        eef_before = self.primitives._last_obs_eef_pos
         try:
             result = primitive(**args)
             self.check_cancelled()
@@ -140,6 +142,18 @@ class LiberoContext:
                 )
             except Exception as e:
                 logger.warning("failed to save action clip to %s: %s", video_path, e)
+
+        # The world just changed, so every registered reading loses its
+        # freshness. The harness decides how much: proximity to where the
+        # end-effector went separates "possibly bumped" from merely "no longer
+        # verified". Interpreting that is the planner's job, not ours.
+        if eef_before is not None:
+            databus.mark_after_motion(
+                self.output_dir,
+                eef_before=eef_before,
+                eef_after=self.primitives._last_obs_eef_pos,
+                gripper_open=(self.primitives._last_obs_gripper or 0.0) > 0.06,
+            )
 
         dump_state(
             self.primitives,

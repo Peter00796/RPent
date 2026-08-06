@@ -23,6 +23,7 @@ from robots.libero.tools.artifacts import (
     _artifact_relative_path,
     artifact_path,
 )
+from robots.libero.tools import databus
 from robots.libero.tools.catalog import PRIMITIVE_TOOL_NAMES
 from robots.libero.tools.geometry import _metric_depth, _world_from_depth
 
@@ -485,4 +486,12 @@ def view_driver_state(step: int | None = None) -> dict:
         image_path = artifact_path(get_output_dir(), "image", step=nn, camera=camera, resolution="high")
         if image_path.exists():
             out[field] = str(image_path)
+    # Ride the entity index along here rather than injecting it into the prompt.
+    # Appended tool results leave the request prefix byte-stable, so automatic
+    # server-side prefix caching still hits; rewriting the system message every
+    # turn would miss it from byte 0. It also surfaces exactly when the planner is
+    # looking at state, which is when it is about to choose a target.
+    entity_index = databus.index(get_output_dir())
+    if entity_index is not None:
+        out["entity_index"] = entity_index
     return out

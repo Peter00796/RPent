@@ -315,6 +315,7 @@ def segment(
     step: int | None = None,
     point: list[int] | None = None,
     min_score: float = 0.2,
+    entity: str = "",
 ) -> dict:
     """SAM3 visual segmentation over an existing run artifact. It never renders a
     new camera view. Provide exactly one text prompt or single positive point. A
@@ -342,6 +343,14 @@ def segment(
     get the grasped object's actual offset from the end-effector; move_to
     commands the end-effector, not the object, and the offset is not constant
     across grasps.
+
+    Pass `entity` to register this reading under a name you choose. Readings are
+    append-only: a later segment of the same entity adds to its history instead of
+    replacing it, so a motion can always cite the reading it was planned from.
+    Every subsequent tool result then carries that entity's latest position and a
+    stale_reason for it. Re-segment anything whose stale_reason is not 'fresh'
+    before committing a motion to it, and resolve any identity_warning before
+    committing a grasp.
     """
     ctx = _context(runtime)
     return ctx.primitives.segment(
@@ -350,6 +359,7 @@ def segment(
         step=step,
         point=point,
         min_score=min_score,
+        entity=entity,
     )
 
 

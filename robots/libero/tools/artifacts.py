@@ -28,6 +28,10 @@ ARTIFACT_LAYOUT: dict[tuple[str | None, str | None, str], str] = {
     (None, None, "episode_video"): "episode.mp4",
     (None, None, "segments"): "segments",
     (None, None, "action_videos"): "action_videos",
+    # Derived, not raw: an index over the segment artifacts, written by the
+    # tool layer and safe to regenerate. Lives under analysis/ to keep it
+    # distinct from the immutable per-step evidence above.
+    (None, None, "entities"): "analysis/entities.json",
 }
 ARTIFACT_DIRECTORIES: tuple[str, ...] = (
     "images",
@@ -44,6 +48,7 @@ ARTIFACT_DIRECTORIES: tuple[str, ...] = (
     "world_wrist_hi",
     "segments",
     "action_videos",
+    "analysis",
 )
 
 

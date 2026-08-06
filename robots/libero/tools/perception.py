@@ -17,6 +17,7 @@ import numpy as np
 
 from rpent.utils.logging import get_output_dir
 
+from robots.libero.tools import databus
 from robots.libero.tools.artifacts import artifact_path
 from robots.libero.tools.geometry import _mask_to_world
 from robots.libero.tools.state import (
@@ -43,6 +44,7 @@ class SegmentMixin:
         step: int | None = None,
         point: list[int] | None = None,
         min_score: float = 0.2,
+        entity: str = "",
     ) -> dict:
         """Call SAM3 on an existing image artifact without advancing the env.
 
@@ -184,6 +186,31 @@ class SegmentMixin:
             result["fallback"] = "Use manual visual localization and back_project."
         if overlay_path is not None and overlay_path.exists():
             result["overlay_path"] = str(overlay_path)
+
+        # Register the reading if the caller named an entity. Unnamed calls stay
+        # one-off lookups: this is purely additive, and whether a reading is worth
+        # tracking is the planner's judgement, not the tool's.
+        if entity.strip():
+            registered = databus.append_reading(
+                out_dir,
+                entity,
+                {
+                    "step": nn,
+                    "camera": camera,
+                    "prompt": prompt if has_prompt else None,
+                    "point": point if has_point else None,
+                    "score": segment_blob["score"],
+                    "world_xyz": segment_blob["world_xyz"],
+                    "segment_path": str(segment_path),
+                    "world_path": segment_blob.get("world_path"),
+                    "stale_reason": databus.FRESH,
+                },
+            )
+            if registered:
+                result["registered"] = registered
+        entity_index = databus.index(out_dir)
+        if entity_index is not None:
+            result["entity_index"] = entity_index
         return result
 
 
