@@ -14,7 +14,7 @@ from robots.libero import tools as libero_tools
 from robots.libero.tools import perception as libero_perception
 from robots.libero.tools import state as libero_state
 from rpent.dashboard.events import DashboardEventSink, ToolResultEvent
-from rpent.tools import tool_log
+from rpent.tools import sandbox, tool_log
 from rpent.tools.toolkit import ToolCancelled, Toolkit
 from rpent.utils.logging import get_logger, get_output_dir
 
@@ -49,6 +49,15 @@ class LiberoToolkit(Toolkit):
             record_action_videos=dashboard_events.enabled,
             on_step=self._emit_step_view,
         )
+        # The run's evidence is read-only to the agent: everything the
+        # artifact layout owns, the tool-call log, and the run log itself.
+        _out = get_output_dir()
+        sandbox.add_write_protection([
+            *libero_tools.artifacts.protected_paths(_out),
+            tool_log.path_for(_out),
+            _out / "run.log",
+            _out / "sandbox.json",
+        ])
 
     def _emit_step_view(self, view: dict[str, Any]) -> None:
         """Project one rendered state view to the Dashboard."""

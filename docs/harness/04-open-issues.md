@@ -2,7 +2,16 @@
 
 ## 1. Stop the HuggingFace sync; make the prior level a configuration
 
-**Decided by the project owner, not yet implemented.**
+**IMPLEMENTED** as `--sandbox <profile>` (profiles in `configs/sandbox/`,
+enforcement in `rpent/tools/sandbox.py` + `rpent/tools/common.py`, tests in
+`tests/harness/test_sandbox.py`). The owner renamed the flag from the
+`--priors` shape recorded below; see the Sandbox section of
+[02-decisions.md](02-decisions.md) for the full decision record. Remaining
+tail: the system prompt's WORKFLOW steps 1-2 still instruct memory/guide
+reads verbatim — under `--sandbox none` those reads are refused (correct
+behaviour, stale instruction). Prompt leveling is deliberately a separate
+change so the two injection channels stay individually attributable. The
+original issue text follows for context.
 
 `ensure_resources` (`rpent/utils/resources.py`) pulls `RLinf/RPent-memory` into
 `resources/libero/` on **every run**, with `local_dir` set so it **overwrites what is

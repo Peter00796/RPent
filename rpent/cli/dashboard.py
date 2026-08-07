@@ -18,7 +18,8 @@ from rpent.dashboard.events import RunStartedEvent
 from rpent.envs import get_toolkit
 from rpent.planner.base import build_planner
 from rpent.utils.logging import get_logger, init_output_dir
-from rpent.utils.resources import ensure_resources
+from rpent.tools.sandbox import init_run_sandbox
+from rpent.utils.resources import ensure_staged_priors
 
 if TYPE_CHECKING:
     from rpent.dashboard.state import ClaimedTask, DashboardState
@@ -73,7 +74,10 @@ def run_dashboard_session(
     logger.info("launcher Session config applied: %s", launch_config)
     logger.info("physical agent cmd: %s", shlex.join([sys.executable, *sys.argv]))
 
-    ensure_resources(args.env_name)
+    # Session-level sandbox: task output dirs live under session_root, so one
+    # policy bound to the session root covers every TaskRun in this process.
+    sandbox_policy = init_run_sandbox(args.sandbox, args.env_name, session_root)
+    ensure_staged_priors(args.env_name, enabled=sandbox_policy.uses_staging)
     state = DashboardState(
         run_id=f"dashboard-session/{session_root.name}",
         output_dir=session_root,

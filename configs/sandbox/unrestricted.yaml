@@ -1,0 +1,11 @@
+# Declared-unsandboxed debugging profile. NEVER an experiment arm: a run
+# under this profile carries its name in sandbox.json and its results do not
+# measure anything. Exists so "no sandbox" is a deliberate, fingerprinted
+# state instead of an off switch. Note write protection still applies:
+# harness-owned evidence files are read-only to the agent even here.
+name: unrestricted
+description: debugging only — whole repo readable; results measure nothing
+read_roots:
+  - "{repo_root}"
+write_roots:
+  - "{output_dir}"

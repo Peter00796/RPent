@@ -32,8 +32,36 @@ def get_resources_dir(env_name: str) -> Path:
 
 
 def get_memory_dir(env_name: str) -> Path:
-    """Return the persistent, cross-run memory directory for an env."""
+    """Return the persistent, cross-run memory directory for an env.
+
+    Legacy location under ``resources/`` — still handed to the external
+    CLI planners (claude_code/codex). The sandboxed planners use the
+    decoupled library below.
+    """
     return get_resources_dir(env_name) / "memory"
+
+
+# ============================================================================
+# The decoupled memory library (see configs/sandbox/*.yaml)
+# ============================================================================
+
+def get_memory_common_dir() -> Path:
+    """Cross-environment harness memory: transferable operating wisdom."""
+    return get_repo_root() / "memory" / "common"
+
+
+def get_memory_env_dir(env_name: str) -> Path:
+    """Per-environment memory library."""
+    return get_repo_root() / "memory" / env_name
+
+
+def get_staging_dir(env_name: str) -> Path:
+    """Where the legacy priors payload syncs to (``--sandbox full`` only).
+
+    Deliberately NOT ``resources/`` — the sync must never overwrite curated
+    local state again.
+    """
+    return get_repo_root() / ".staging" / env_name
 
 
 def get_pi05_checkpoint_path() -> str:

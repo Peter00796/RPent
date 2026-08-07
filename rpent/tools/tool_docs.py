@@ -70,6 +70,10 @@ COMMON_TOOL_DOCS: dict[str, dict[str, object]] = {
                 "content beyond max_chars is cut with a trailing "
                 "[TRUNCATED ...] marker"
             ),
+            (
+                "a path outside this run's sandbox is refused with "
+                '{"error": ..., "allowed_roots": [...]}'
+            ),
         ],
     },
     "write_text_file": {
@@ -83,6 +87,11 @@ COMMON_TOOL_DOCS: dict[str, dict[str, object]] = {
                 "silently overwrites an existing file — read it first if "
                 "unsure what is there"
             ),
+            (
+                "a path outside this run's sandbox, or a harness-owned run "
+                "artifact (states.json, tool_calls.jsonl, the image/world "
+                "dumps), is refused with a structured error"
+            ),
         ],
     },
     "list_dir": {
@@ -93,6 +102,10 @@ COMMON_TOOL_DOCS: dict[str, dict[str, object]] = {
         ),
         "failure_modes": [
             'returns {"error": ...} if the directory does not exist',
+            (
+                "a directory outside this run's sandbox is refused with "
+                '{"error": ..., "allowed_roots": [...]}'
+            ),
         ],
     },
     "finish": {
@@ -110,6 +123,7 @@ COMMON_TOOL_DOCS: dict[str, dict[str, object]] = {
         "need": "an image path produced by an earlier tool call in this run.",
         "failure_modes": [
             "returns a plain-text error if the path does not exist",
+            "a path outside this run's sandbox is refused with a structured error",
         ],
     },
     "read_image_text_only": {

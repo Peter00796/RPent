@@ -251,6 +251,66 @@ The prompt says **when and why** (procedure, regime, non-recoverable invariants)
 tool description says **what and with which caveats**. Before, `|Δxy| > 0.30` appeared in
 both. Now the tool description owns it.
 
+## Sandbox
+
+### `--sandbox <profile>`, not `--priors {none,memory,full}` — an owner reversal
+
+The handoff recorded `--priors` as the decided shape. The owner reversed the
+naming on 2026-08-07: the flag selects a *sandbox profile*, and calling it that
+makes the mechanism legible to a reader who has not seen the experiment design.
+The three arms keep their names — as profile *files*, not as an enum. Code never
+special-cases a profile name; `configs/sandbox/<name>.yaml` is the whole story,
+and a custom path can be passed for one-off arms.
+
+### The sandbox is always on; permissiveness is a declared profile
+
+There is no `--sandbox off`. Debugging without a boundary is
+`configs/sandbox/unrestricted.yaml` — a fingerprinted state whose runs
+self-identify as measuring nothing. Until `set_sandbox()` runs, every check
+fails closed. Rationale: a leak must not be reachable by forgetting a flag.
+
+### Profile = shape, env = binding
+
+Profiles reference placeholders (`{output_dir}`, `{memory_common}`,
+`{memory_env}`, `{staging_root}`, `{repo_root}`); `default_bindings()` resolves
+them per run from `--env`. One `memory.yaml` therefore serves libero, robocasa,
+and whatever comes next, and "the memory arm" stays the same experimental
+condition across environments. Per-env profile copies were considered and
+rejected: they drift, and they silently fork the arm's meaning.
+
+### Config declares intent; code owns invariants
+
+`write_denied` — the harness-owned evidence inside the output dir
+(`states.json`, `tool_calls.jsonl`, the world/image dumps, `sandbox.json`
+itself) — is registered from `ARTIFACT_LAYOUT` by the toolkit
+(`artifacts.protected_paths`), never loaded from a profile. An agent that can
+rewrite its own evidence log invalidates every attribution claim, so that
+boundary is not configuration. Writes are `{output_dir}`-only in every shipped
+profile, including `unrestricted`; the memory library is reachable only through
+the promotion gate (agent proposals go to `{output_dir}/memory_proposals/`).
+
+### `read_image` is sandboxed too
+
+Without the check it is a generic byte-exfiltration channel (any file, base64,
+straight to the model), not an image viewer.
+
+### The sync is opt-in and staged
+
+`ensure_staged_priors` replaces `ensure_resources`: nothing downloads unless
+the active profile references `{staging_root}` (only `full.yaml` does), the
+target is `.staging/<env>/` rather than `resources/`, an existing staging copy
+is reused, and a partial sync raises instead of warning — a comparison arm on a
+silently partial payload measures nothing. The decoupled library under
+`memory/` is never a sync target.
+
+### Known limit
+
+The `claude_code` / `codex` planners are external CLI agents with their own
+filesystem access; the sandbox governs the in-process tool layer only. They
+also still receive the legacy `resources/<env>/memory` path via
+`get_memory_dir` — untouched, per the standing decision not to modify those
+planners.
+
 ## Comparison with OpenETA
 
 OpenMOSS/OpenETA (arXiv 2608.03924) covers much of the same governance ground. Read it

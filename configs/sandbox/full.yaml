@@ -1,0 +1,14 @@
+# Comparison arm ONLY: exposes the legacy priors payload (per-cell recipes,
+# probe-log lookup tables) synced from HuggingFace into the staging dir.
+# A run under this profile does not measure the harness — it measures what
+# the priors are worth. Referencing {staging_root} is what triggers the
+# opt-in resource sync; no other profile syncs anything.
+name: full
+description: comparison arm — memory plus the legacy per-cell priors payload
+read_roots:
+  - "{output_dir}"
+  - "{memory_common}"
+  - "{memory_env}"
+  - "{staging_root}"
+write_roots:
+  - "{output_dir}"

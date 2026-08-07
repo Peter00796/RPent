@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from rpent.tools import sandbox
 from rpent.tools.tool_docs import render_description
 from rpent.utils.config import get_repo_root
 from rpent.utils.logging import get_output_dir
@@ -84,6 +85,10 @@ def _truncate(text: str, max_chars: int) -> str:
 
 def read_text_file(path: str, max_chars: int = 40000) -> dict:
     p = _resolve(path)
+    try:
+        sandbox.check_read(p)
+    except sandbox.SandboxDenied as denied:
+        return denied.as_error()
     if not p.exists():
         return {"error": f"file not found: {p}"}
     if p.is_dir():
@@ -97,6 +102,10 @@ def read_text_file(path: str, max_chars: int = 40000) -> dict:
 
 def write_text_file(path: str, content: str) -> dict:
     p = _resolve(path)
+    try:
+        sandbox.check_write(p)
+    except sandbox.SandboxDenied as denied:
+        return denied.as_error()
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content)
     return {"path": str(p), "bytes_written": len(content.encode("utf-8"))}
@@ -105,6 +114,10 @@ def write_text_file(path: str, content: str) -> dict:
 def list_dir(path: str = "") -> dict:
     # Default to the current output dir (so parallel agents see their own).
     p = _resolve(path) if path else get_output_dir()
+    try:
+        sandbox.check_read(p)
+    except sandbox.SandboxDenied as denied:
+        return denied.as_error()
     if not p.exists():
         return {"error": f"directory not found: {p}"}
     files = sorted(os.listdir(p))

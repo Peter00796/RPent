@@ -39,8 +39,9 @@ from rpent.dashboard.events import (
 )
 from rpent.envs import get_env_spec, get_toolkit
 from rpent.planner.base import build_planner
+from rpent.tools.sandbox import init_run_sandbox
 from rpent.utils.logging import get_logger, init_output_dir
-from rpent.utils.resources import ensure_resources
+from rpent.utils.resources import ensure_staged_priors
 
 logger = get_logger("agent")
 
@@ -116,6 +117,15 @@ def _build_argparser() -> argparse.ArgumentParser:
                          "Defaults to MAX_BUDGET_USD env or 10.")
 
     # other config
+    ap.add_argument("--sandbox", default="none",
+                    help="Sandbox profile governing what the agent's file "
+                         "tools may read and write: a name resolved in "
+                         "configs/sandbox/ (none | memory | full | "
+                         "unrestricted | any custom profile) or a path to a "
+                         "profile .yaml. The sandbox is always on; the "
+                         "resolved boundary is dumped to "
+                         "{output_dir}/sandbox.json. Default: none (the "
+                         "run's workspace only).")
     ap.add_argument("--output-dir", default=None)
     ap.add_argument("--dashboard", action="store_true",
                     help="Start a local dashboard server for this single run.")
@@ -163,7 +173,13 @@ def main() -> int:
     output_dir = init_output_dir(output_dir, verbose=args.verbose)
     logger.info("physical agent cmd: %s", shlex.join([sys.executable, *sys.argv]))
 
-    ensure_resources(env_name)
+    sandbox_policy = init_run_sandbox(args.sandbox, env_name, output_dir)
+    logger.info(
+        "sandbox profile '%s': read %s",
+        sandbox_policy.name,
+        [str(p) for p in sandbox_policy.read_roots],
+    )
+    ensure_staged_priors(env_name, enabled=sandbox_policy.uses_staging)
 
     dashboard_events = NullDashboardEventSink()
 

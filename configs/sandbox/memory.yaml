@@ -1,0 +1,13 @@
+# The growth arm: run workspace plus the promoted memory library.
+# {memory_common} holds cross-environment harness wisdom; {memory_env} the
+# current --env's library. Entries reach those roots only through the
+# promotion gate — the agent's own writes stay inside {output_dir}
+# (proposals go to {output_dir}/memory_proposals/ for the gate to judge).
+name: memory
+description: run workspace + promoted memory library (common + env)
+read_roots:
+  - "{output_dir}"
+  - "{memory_common}"
+  - "{memory_env}"
+write_roots:
+  - "{output_dir}"

@@ -20,6 +20,7 @@ one-line change turning into a runtime-only failure.
 """
 
 import base64
+import json
 import mimetypes
 from pathlib import Path
 from typing import Any
@@ -27,7 +28,7 @@ from typing import Any
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
-from rpent.tools import common
+from rpent.tools import common, sandbox
 from rpent.tools.tool_docs import render_description
 
 # ---------------------------------------------------------------------------
@@ -106,8 +107,17 @@ def finish(status: str, summary: str) -> dict:
     description=render_description("read_image"),
 )
 def read_image(path: str) -> list[dict[str, Any]] | str:
-    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    """Model-facing text renders from ``tool_docs`` — edit it there.
+
+    Sandboxed like every other read: without the check this would be a
+    generic byte-exfiltration channel (any file, base64, straight to the
+    model), not just an image viewer.
+    """
     file_path = Path(path)
+    try:
+        sandbox.check_read(file_path)
+    except sandbox.SandboxDenied as denied:
+        return json.dumps(denied.as_error())
     if not file_path.exists():
         return f"image not found: {path}"
     media_type = mimetypes.guess_type(file_path.name)[0] or "image/png"

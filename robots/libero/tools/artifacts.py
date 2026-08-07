@@ -52,6 +52,19 @@ ARTIFACT_DIRECTORIES: tuple[str, ...] = (
 )
 
 
+def protected_paths(output_dir: str | os.PathLike[str]) -> tuple[Path, ...]:
+    """Every top-level path the toolkit owns inside the output dir.
+
+    These are the run's evidence — the sandbox registers them as read-only to
+    the agent (``sandbox.add_write_protection``), so a run's record cannot be
+    rewritten by the agent it records. Derived from ``ARTIFACT_LAYOUT`` so a
+    new artifact kind is protected by construction, not by remembering.
+    """
+    out = Path(output_dir)
+    names = {template.split("/")[0] for template in ARTIFACT_LAYOUT.values()}
+    return tuple(sorted(out / name for name in names))
+
+
 def artifact_path(
     output_dir: str | os.PathLike[str],
     kind: str,

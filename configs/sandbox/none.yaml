@@ -1,0 +1,8 @@
+# gen-0 control arm. The canonical clean environment: the agent sees only
+# what this run produced. Every growth curve starts from here.
+name: none
+description: run workspace only — no priors of any kind
+read_roots:
+  - "{output_dir}"
+write_roots:
+  - "{output_dir}"
