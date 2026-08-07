@@ -1,0 +1,190 @@
+2026-08-07 10:11:34 I [deep_agent] deepagents planner: model=scripted tools=19 max_turns=20 images=enabled
+2026-08-07 10:11:34 I [planner_middleware] === turn 1/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] localizing
+2026-08-07 10:11:34 I [planner_middleware] [tool>] back_project({"row": 10, "col": 20})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1200 out=60 cache_read=600 cache_write=10 requests=1
+2026-08-07 10:11:34 I [planner_middleware] [tool<] back_project: {"error": "no depth/world-map files available"}
+2026-08-07 10:11:34 I [planner_middleware] === turn 2/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] moving in
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0.1, 0.2, 0.9], "gripper": 1.0})
+2026-08-07 10:11:34 I [planner_middleware] [tool>] pi0_pick({"prompt": "grasp the yellow mug", "max_chunks": 8})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=2800 out=150 cache_read=1400 cache_write=20 requests=2
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 1, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] [tool<] pi0_pick: {"step": 2, "libero_terminated": false, "result": {"name": "pick", "success": true, "chunks_used": 6}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 3/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] writing audit
+2026-08-07 10:11:34 I [planner_middleware] [tool>] finish({"status": "success", "summary": "solved"})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=4700 out=190 cache_read=2350 cache_write=30 requests=3
+2026-08-07 10:11:34 I [planner_middleware] [tool<] finish: {"_finish": true, "status": "success", "summary": "solved"}
+2026-08-07 10:11:34 I [planner_middleware] === turn 4/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] done
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=6700 out=200 cache_read=3350 cache_write=40 requests=4
+2026-08-07 10:11:34 I [deep_agent] FINISH called: {'_finish': True, 'status': 'success', 'summary': 'solved'}
+2026-08-07 10:11:34 I [deep_agent] deepagents planner: model=scripted tools=19 max_turns=1 images=enabled
+2026-08-07 10:11:34 I [planner_middleware] === turn 1/1 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 1
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=100 out=10 cache_read=50 cache_write=10 requests=1
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 1, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [deep_agent] reached max_turns=1. Stopping.
+2026-08-07 10:11:34 I [deep_agent] deepagents planner: model=scripted tools=19 max_turns=3 images=enabled
+2026-08-07 10:11:34 I [planner_middleware] === turn 1/3 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 1
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=100 out=10 cache_read=50 cache_write=10 requests=1
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 1, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 2/3 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 2
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=200 out=20 cache_read=100 cache_write=20 requests=2
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 2, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 3/3 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 3
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=300 out=30 cache_read=150 cache_write=30 requests=3
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 3, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [deep_agent] reached max_turns=3. Stopping.
+2026-08-07 10:11:34 I [deep_agent] deepagents planner: model=scripted tools=19 max_turns=8 images=enabled
+2026-08-07 10:11:34 I [planner_middleware] === turn 1/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 1
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=100 out=10 cache_read=50 cache_write=10 requests=1
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 1, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 2/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 2
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=200 out=20 cache_read=100 cache_write=20 requests=2
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 2, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 3/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 3
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=300 out=30 cache_read=150 cache_write=30 requests=3
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 3, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 4/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 4
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=400 out=40 cache_read=200 cache_write=40 requests=4
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 4, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 5/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 5
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=500 out=50 cache_read=250 cache_write=50 requests=5
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 5, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 6/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 6
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=600 out=60 cache_read=300 cache_write=60 requests=6
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 6, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 7/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 7
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=700 out=70 cache_read=350 cache_write=70 requests=7
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 7, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 8/8 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 8
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=800 out=80 cache_read=400 cache_write=80 requests=8
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 8, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [deep_agent] reached max_turns=8. Stopping.
+2026-08-07 10:11:34 I [deep_agent] deepagents planner: model=scripted tools=19 max_turns=20 images=enabled
+2026-08-07 10:11:34 I [planner_middleware] === turn 1/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 1
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=100 out=10 cache_read=50 cache_write=10 requests=1
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 1, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 2/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 2
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=200 out=20 cache_read=100 cache_write=20 requests=2
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 2, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 3/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 3
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=300 out=30 cache_read=150 cache_write=30 requests=3
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 3, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 4/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 4
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=400 out=40 cache_read=200 cache_write=40 requests=4
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 4, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 5/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 5
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=500 out=50 cache_read=250 cache_write=50 requests=5
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 5, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 6/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 6
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=600 out=60 cache_read=300 cache_write=60 requests=6
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 6, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 7/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 7
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=700 out=70 cache_read=350 cache_write=70 requests=7
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 7, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 8/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 8
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=800 out=80 cache_read=400 cache_write=80 requests=8
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 8, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 9/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 9
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=900 out=90 cache_read=450 cache_write=90 requests=9
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 9, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 10/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 10
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1000 out=100 cache_read=500 cache_write=100 requests=10
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 10, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 11/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 11
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1100 out=110 cache_read=550 cache_write=110 requests=11
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 11, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 12/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 12
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1200 out=120 cache_read=600 cache_write=120 requests=12
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 12, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 13/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 13
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1300 out=130 cache_read=650 cache_write=130 requests=13
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 13, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 14/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 14
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1400 out=140 cache_read=700 cache_write=140 requests=14
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 14, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 15/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 15
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1500 out=150 cache_read=750 cache_write=150 requests=15
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 15, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 16/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 16
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1600 out=160 cache_read=800 cache_write=160 requests=16
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 16, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 17/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 17
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1700 out=170 cache_read=850 cache_write=170 requests=17
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 17, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 18/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 18
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1800 out=180 cache_read=900 cache_write=180 requests=18
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 18, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 19/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 19
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=1900 out=190 cache_read=950 cache_write=190 requests=19
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 19, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [planner_middleware] === turn 20/20 ===
+2026-08-07 10:11:34 I [planner_middleware] [model] turn 20
+2026-08-07 10:11:34 I [planner_middleware] [tool>] move_to({"xyz": [0, 0, 1]})
+2026-08-07 10:11:34 I [planner_middleware] [usage] in=2000 out=200 cache_read=1000 cache_write=200 requests=20
+2026-08-07 10:11:34 I [planner_middleware] [tool<] move_to: {"step": 20, "libero_terminated": false, "result": {"name": "move_to", "final_dist_m": 0.004}}
+2026-08-07 10:11:34 I [deep_agent] reached max_turns=20. Stopping.

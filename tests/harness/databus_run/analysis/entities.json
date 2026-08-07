@@ -1,0 +1,431 @@
+{
+  "schema_version": 1,
+  "entities": {
+    "e0": [
+      {
+        "step": 0,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.0,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_0.json",
+        "world_path": "world/world_00.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 3,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.30000000000000004,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_3.json",
+        "world_path": "world/world_03.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 6,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.6000000000000001,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_6.json",
+        "world_path": "world/world_06.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 9,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.9,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_9.json",
+        "world_path": "world/world_09.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 12,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.2000000000000002,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_12.json",
+        "world_path": "world/world_12.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 15,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.5,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_15.json",
+        "world_path": "world/world_15.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 18,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.8,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_18.json",
+        "world_path": "world/world_18.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 21,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.1,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_21.json",
+        "world_path": "world/world_21.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 24,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.4000000000000004,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_24.json",
+        "world_path": "world/world_24.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 27,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.7,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_27.json",
+        "world_path": "world/world_27.npy",
+        "stale_reason": "fresh"
+      }
+    ],
+    "e1": [
+      {
+        "step": 1,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.1,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_1.json",
+        "world_path": "world/world_01.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 4,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.4,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_4.json",
+        "world_path": "world/world_04.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 7,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.7000000000000001,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_7.json",
+        "world_path": "world/world_07.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 10,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.0,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_10.json",
+        "world_path": "world/world_10.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 13,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.3,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_13.json",
+        "world_path": "world/world_13.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 16,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.6,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_16.json",
+        "world_path": "world/world_16.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 19,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.9000000000000001,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_19.json",
+        "world_path": "world/world_19.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 22,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.2,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_22.json",
+        "world_path": "world/world_22.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 25,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.5,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_25.json",
+        "world_path": "world/world_25.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 28,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.8000000000000003,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_28.json",
+        "world_path": "world/world_28.npy",
+        "stale_reason": "fresh"
+      }
+    ],
+    "e2": [
+      {
+        "step": 2,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.2,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_2.json",
+        "world_path": "world/world_02.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 5,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.5,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_5.json",
+        "world_path": "world/world_05.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 8,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          0.8,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_8.json",
+        "world_path": "world/world_08.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 11,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.1,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_11.json",
+        "world_path": "world/world_11.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 14,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.4000000000000001,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_14.json",
+        "world_path": "world/world_14.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 17,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          1.7000000000000002,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_17.json",
+        "world_path": "world/world_17.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 20,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.0,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_20.json",
+        "world_path": "world/world_20.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 23,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.3000000000000003,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_23.json",
+        "world_path": "world/world_23.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 26,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.6,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_26.json",
+        "world_path": "world/world_26.npy",
+        "stale_reason": "fresh"
+      },
+      {
+        "step": 29,
+        "camera": "agentview",
+        "prompt": "the woven basket",
+        "score": 0.81,
+        "world_xyz": [
+          2.9000000000000004,
+          0.2,
+          0.9
+        ],
+        "segment_path": "segments/s_29.json",
+        "world_path": "world/world_29.npy",
+        "stale_reason": "fresh"
+      }
+    ]
+  }
+}
