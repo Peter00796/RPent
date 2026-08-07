@@ -172,6 +172,14 @@ check("default_bindings resolves under the repo root",
       str(get_repo_root()) in json.dumps(
           sandbox.default_bindings("libero", OUT)))
 
+# The recorded fingerprint must track write protection registered later
+# (the toolkit registers it AFTER init_run_sandbox's first dump).
+sandbox.add_write_protection([OUT / "states.json"])
+fp2 = json.loads((OUT / "sandbox.json").read_text())
+check("fingerprint re-dumped when write protection registers",
+      any(p.endswith("states.json") for p in fp2["write_denied"]),
+      json.dumps(fp2["write_denied"]))
+
 sandbox.clear_sandbox()
 if failures:
     print(f"\nFAILED ({len(failures)}): {failures}")

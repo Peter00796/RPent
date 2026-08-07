@@ -110,6 +110,50 @@ blocked", do not block. That gives the trigger rate and the false-positive rate 
 anything is enforced, and it also produces the matched-pair data that makes a later
 A/B interpretable.
 
+## 5b. Gen-0 sweep findings (2026-08-07, t0-t6 completed at time of analysis)
+
+Measured per-component error rates, seven completed prior-free runs:
+
+| component | faults/calls | rate |
+|---|---|---|
+| SAM3 collapse (one xyz claimed by mutually exclusive prompts) | 66/168 | **39%** |
+| SAM3 no-detection (`found: false` — may be legitimate occlusion) | 61/168 | 36% |
+| Pi0.5 `success=false` | 2/11 | 18% |
+| `move_to` stalled (`final_dist_m > 0.02`) | 4/57 | 7% |
+| harness crash (400) | 1/7 | 14% |
+
+Three conclusions that survive the numbers:
+
+1. **SAM3 is the least reliable component but not the decisive one** —
+   collapse rate vs solve is r = −0.10 (t3 solved at 0.52 collapse, t2 solved
+   at 0.00, t1 failed at 0.18). The redundancy stack (collision_warning,
+   independent phrasing, back_project fallback) is doing its job, so fixing
+   SAM3 has a capped marginal return.
+2. **The real solve/fail discriminators**: `back_project` call count (all
+   three solves: 0; perception-heavy failures: 54/34/12 — the fingerprint of
+   falling back to hand-rolled geometry, which eats the turn budget), and two
+   DISTINCT exhaustion modes (t4: 23 motions, ran out moving; t5-class: 0
+   motions, never moved). Lumping both into "issue 2 perception loop"
+   misdiagnoses.
+3. **One prompt rule is anti-helpful under collapse**: "Two phrasings
+   agreeing is evidence; one high score is not." When SAM3 collapses, two
+   phrasings agreeing is the same bug reported twice (t5: six bottle nouns on
+   one xyz, wrong candidates scoring 0.930-0.949 ABOVE the target's 0.734).
+   The mechanism form: the databus already computes "N mutually exclusive
+   prompts on one xyz" — promote it from a warning to a rejection condition
+   (a GateMiddleware candidate, shadow mode first per issue 5), and fix the
+   prompt sentence in the same changepoint.
+
+**Resolved from the same sweep**: the t5 400
+(`insufficient tool messages following tool_calls` after a 16-parallel-call
+turn; transcript held a paired 50/50 record, so the corruption was in the
+outbound request nobody dumped) → `ToolCallIntegrityMiddleware` now repairs
+orphan tool_calls pre-flight and dumps the outbound request on provider
+rejection. Root cause still open; the next occurrence will carry a full
+crime scene. Also fixed: `sandbox.json` recorded an empty `write_denied`
+(fingerprint dumped before the toolkit registered protection) — the
+fingerprint now re-dumps when protection registers.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —

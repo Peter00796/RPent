@@ -53,6 +53,9 @@ MIDDLEWARE_ORDER: tuple[tuple[str, str], ...] = (
     ("ModelCallLimitMiddleware", "turn budget (prebuilt: langchain)"),
     ("TranscriptMiddleware", "transcript + usage + dashboard projection"),
     ("ToolCallLogMiddleware", "run-evidence record of every tool call"),
+    ("ToolCallIntegrityMiddleware",
+     "innermost: repair orphan tool_calls pre-flight; dump the outbound "
+     "request on provider rejection (gen-0 t5 400 incident)"),
     ("InjectionLedgerMiddleware", "not implemented — per-component token accounting"),
     ("GateMiddleware", "not implemented — hard gates + shadow mode on advancing tools"),
     ("ProvenanceMiddleware", "not implemented — argument-level evidence provenance"),
@@ -388,3 +391,125 @@ def _clip(text: str, limit: int) -> str:
     if len(text) <= limit:
         return text
     return text[:limit] + "...(+%d)" % (len(text) - limit)
+
+
+class ToolCallIntegrityMiddleware(AgentMiddleware):
+    """Repair the one provider-fatal state invariant before each model call.
+
+    Field incident (gen-0 t5, 2026-08-07): DeepSeek rejected the 8th request
+    with 400 ``insufficient tool messages following tool_calls`` after a
+    16-parallel-call turn, killing the run — while the transcript held a
+    perfectly paired 50/50 record. The corruption was in the outbound message
+    list, which nothing dumped, so the root cause is still open. Two
+    mechanisms follow, both valid whatever that root cause turns out to be:
+
+    - **Pre-flight repair**: before the request leaves, every assistant
+      ``tool_call`` id must be answered by a ``ToolMessage``. An orphan gets a
+      synthesized error ToolMessage (telling the model the result was lost and
+      to re-issue the call), an ERROR log line, and a record in
+      ``analysis/anomalies.jsonl`` — a run-killing 400 becomes a recorded,
+      recoverable anomaly.
+    - **Crime-scene dump**: if the provider still rejects the request, the
+      exact outbound message list is written to
+      ``analysis/request_failure.json`` before the exception propagates, so
+      the next occurrence is a full diagnosis, not a guess.
+
+    Innermost in the chain on purpose: it must see the final request, after
+    every other middleware has had its say.
+    """
+
+    def __init__(self, *, output_dir: Any) -> None:
+        super().__init__()
+        self._output_dir = output_dir
+
+    # -- helpers ---------------------------------------------------------
+
+    def _analysis_dir(self):
+        from pathlib import Path
+
+        path = Path(self._output_dir) / "analysis"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def _record_anomaly(self, record: dict) -> None:
+        import json
+
+        with open(self._analysis_dir() / "anomalies.jsonl", "a") as f:
+            f.write(json.dumps(record, default=str) + "\n")
+
+    def _repair(self, messages: list) -> tuple[list, int]:
+        answered = {
+            m.tool_call_id for m in messages if isinstance(m, ToolMessage)
+        }
+        repaired: list = []
+        synthesized = 0
+        for message in messages:
+            repaired.append(message)
+            if not isinstance(message, AIMessage) or not message.tool_calls:
+                continue
+            for call in message.tool_calls:
+                call_id = call.get("id")
+                if not call_id or call_id in answered:
+                    continue
+                synthesized += 1
+                answered.add(call_id)
+                logger.error(
+                    "orphan tool_call %s (%s): no ToolMessage in state — "
+                    "synthesizing an error result so the request stays valid",
+                    call_id, call.get("name"),
+                )
+                self._record_anomaly({
+                    "kind": "orphan_tool_call",
+                    "tool_call_id": call_id,
+                    "tool": call.get("name"),
+                    "time": time.time(),
+                })
+                repaired.append(ToolMessage(
+                    content='{"error": "this tool result was lost by the '
+                            'framework; treat the call as failed and re-issue '
+                            'it if still needed"}',
+                    tool_call_id=call_id,
+                    name=call.get("name") or "unknown",
+                ))
+        return repaired, synthesized
+
+    def _dump_failure(self, messages: list, error: Exception) -> None:
+        import json
+
+        payload = {
+            "error": f"{type(error).__name__}: {error}",
+            "time": time.time(),
+            "messages": [
+                {
+                    "type": type(m).__name__,
+                    "tool_call_id": getattr(m, "tool_call_id", None),
+                    "tool_calls": [
+                        {"id": c.get("id"), "name": c.get("name")}
+                        for c in (getattr(m, "tool_calls", None) or ())
+                    ],
+                    "content": str(getattr(m, "content", ""))[:2000],
+                }
+                for m in messages
+            ],
+        }
+        target = self._analysis_dir() / "request_failure.json"
+        target.write_text(json.dumps(payload, indent=2, default=str))
+        logger.error("provider rejected the request; outbound state dumped to %s",
+                     target)
+
+    # -- hook --------------------------------------------------------------
+
+    def wrap_model_call(self, request: Any, handler: Any) -> Any:
+        messages = list(getattr(request, "messages", None) or ())
+        repaired, synthesized = self._repair(messages)
+        if synthesized:
+            if hasattr(request, "override"):
+                request = request.override(messages=repaired)
+            else:
+                request.messages = repaired
+        try:
+            return handler(request)
+        except Exception as exc:
+            if "tool" in str(exc).lower() or "400" in str(exc):
+                self._dump_failure(repaired, exc)
+            raise

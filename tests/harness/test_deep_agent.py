@@ -240,6 +240,54 @@ check("every other tool's description is unchanged", all(
     with_img[n]["function"]["description"] == no_img[n]["function"]["description"]
     for n in with_img if n != "read_image"))
 
+print("\n=== E. ToolCallIntegrityMiddleware repairs orphan tool_calls ===")
+from types import SimpleNamespace  # noqa: E402
+
+from langchain_core.messages import ToolMessage  # noqa: E402
+
+from rpent.planner.middleware import ToolCallIntegrityMiddleware  # noqa: E402
+
+integrity = ToolCallIntegrityMiddleware(output_dir=OUT)
+orphaned = AIMessage(content="parallel burst", tool_calls=[
+    {"name": "back_project", "args": {"row": 1, "col": 1}, "id": "kept"},
+    {"name": "back_project", "args": {"row": 2, "col": 2}, "id": "lost"},
+])
+state = [orphaned, ToolMessage(content="{}", tool_call_id="kept")]
+seen = {}
+
+
+def fake_handler(req):
+    seen["messages"] = list(req.messages)
+    return "ok"
+
+
+result_e = integrity.wrap_model_call(SimpleNamespace(messages=state), fake_handler)
+repaired_ids = [m.tool_call_id for m in seen["messages"]
+                if isinstance(m, ToolMessage)]
+check("orphan gets a synthesized ToolMessage", "lost" in repaired_ids,
+      str(repaired_ids))
+check("synthesized result tells the model to re-issue",
+      any("re-issue" in str(m.content) for m in seen["messages"]
+          if isinstance(m, ToolMessage) and m.tool_call_id == "lost"))
+check("intact pair untouched", repaired_ids.count("kept") == 1)
+check("anomaly recorded in run evidence",
+      "orphan_tool_call" in (OUT / "analysis" / "anomalies.jsonl").read_text())
+check("handler result passes through", result_e == "ok")
+
+# A request that the provider rejects dumps the outbound state first.
+def rejecting_handler(req):
+    raise RuntimeError("Error code: 400 - insufficient tool messages")
+
+
+try:
+    integrity.wrap_model_call(SimpleNamespace(messages=state), rejecting_handler)
+except RuntimeError:
+    pass
+check("provider rejection dumps the outbound request",
+      (OUT / "analysis" / "request_failure.json").exists()
+      and "insufficient tool messages"
+      in (OUT / "analysis" / "request_failure.json").read_text())
+
 print()
 if failures:
     print(f"{len(failures)} CHECK(S) FAILED")

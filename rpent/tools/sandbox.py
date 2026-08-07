@@ -140,6 +140,11 @@ class SandboxPolicy:
 
 _POLICY: SandboxPolicy | None = None
 
+#: Where init_run_sandbox dumped the fingerprint; add_write_protection re-dumps
+#: there so the recorded boundary always matches the live one (the write_denied
+#: list is registered by the toolkit AFTER the initial dump).
+_FINGERPRINT_PATH: Path | None = None
+
 
 def set_sandbox(policy: SandboxPolicy) -> None:
     global _POLICY
@@ -147,8 +152,9 @@ def set_sandbox(policy: SandboxPolicy) -> None:
 
 
 def clear_sandbox() -> None:
-    global _POLICY
+    global _POLICY, _FINGERPRINT_PATH
     _POLICY = None
+    _FINGERPRINT_PATH = None
 
 
 def active_policy() -> SandboxPolicy | None:
@@ -166,6 +172,11 @@ def add_write_protection(paths) -> None:
         return
     merged = {*_POLICY.write_denied, *(Path(p).resolve() for p in paths)}
     _POLICY = replace(_POLICY, write_denied=tuple(sorted(merged)))
+    # Keep the recorded fingerprint equal to the live boundary: a
+    # sandbox.json with an empty write_denied while protection is active
+    # would misdescribe the run (found on the first gen-0 sweep).
+    if _FINGERPRINT_PATH is not None:
+        _FINGERPRINT_PATH.write_text(json.dumps(_POLICY.fingerprint(), indent=2))
 
 
 def memory_exposed(env_name: str) -> bool:
@@ -226,10 +237,12 @@ def init_run_sandbox(profile: str, env_name: str, output_dir) -> SandboxPolicy:
     profile name, source hash, and the resolved absolute roots — so every
     run is attributable to its input surface.
     """
+    global _FINGERPRINT_PATH
     policy = load_profile(profile, default_bindings(env_name, output_dir))
     set_sandbox(policy)
     fp = Path(output_dir) / "sandbox.json"
     fp.write_text(json.dumps(policy.fingerprint(), indent=2))
+    _FINGERPRINT_PATH = fp
     return policy
 
 

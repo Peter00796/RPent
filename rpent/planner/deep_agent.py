@@ -24,7 +24,11 @@ from typing import Any
 from rpent.dashboard.events import DashboardEventSink
 from rpent.dashboard.interaction import DashboardInteractionPort
 from rpent.planner.base import PlannerResult
-from rpent.planner.middleware import ToolCallLogMiddleware, TranscriptMiddleware
+from rpent.planner.middleware import (
+    ToolCallIntegrityMiddleware,
+    ToolCallLogMiddleware,
+    TranscriptMiddleware,
+)
 from rpent.tools.toolkit import Toolkit
 from rpent.utils.logging import get_logger, get_output_dir
 
@@ -120,6 +124,8 @@ class DeepAgentPlanner:
             ModelCallLimitMiddleware(run_limit=max_turns, exit_behavior="end"),
             recorder,
             ToolCallLogMiddleware(output_dir=get_output_dir()),
+            # Innermost: sees the final outbound request (gen-0 t5 incident).
+            ToolCallIntegrityMiddleware(output_dir=get_output_dir()),
         ]
         agent = create_agent(
             model=self._chat_model,
