@@ -355,7 +355,8 @@ function frameFor(step) {
   var out = "", lastTurn = null;
   panel.forEach(function(e) {
     if (e.turn !== lastTurn) {
-      out += '<div class="turnhead">turn ' + (e.turn || "?") + '</div>';
+      out += '<div class="turnhead">turn ' + (e.turn || "?")
+          + ' <span style="color:#a5aec2">· world @ step ' + e.step + '</span></div>';
       lastTurn = e.turn;
     }
     if (e.reasoning_html) out += '<div class="reason">' + e.reasoning_html + '</div>';
