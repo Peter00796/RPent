@@ -7,8 +7,14 @@ from robots.libero.prompts import user as user_parts
 from rpent.context.prompt_utils import Numbered, PromptNode
 
 
-def system_prompt() -> PromptNode:
-    """Assemble the LIBERO system prompt tree."""
+def system_prompt(*, memory: bool = False) -> PromptNode:
+    """Assemble the LIBERO system prompt tree.
+
+    ``memory`` is a CAPABILITY, not a profile name: main.py sets it iff the
+    active sandbox actually exposes the memory-library roots, so the prompt
+    and the enforcement can never disagree (a custom profile that exposes the
+    library gets the library instructions, whatever it is called).
+    """
     return {
         "ROLE AND EVALUATION": system_parts.ROLE_AND_EVALUATION,
         "EVIDENCE DISCIPLINE (NON-NEGOTIABLE)": system_parts.EVIDENCE_DISCIPLINE,
@@ -22,17 +28,17 @@ def system_prompt() -> PromptNode:
         "PERCEPTION PASS — agentview = IDENTITY, wrist = GEOMETRY": (
             system_parts.PERCEPTION_ALGORITHM
         ),
-        "WORKFLOW": Numbered(system_parts.WORKFLOW_STEPS),
+        "WORKFLOW": Numbered(system_parts.workflow_steps(memory=memory)),
         "OUTPUT DISCIPLINE": system_parts.OUTPUT_DISCIPLINE,
     }
 
 
-def user_prompt() -> PromptNode:
-    """Assemble the LIBERO user prompt tree."""
+def user_prompt(*, memory: bool = False) -> PromptNode:
+    """Assemble the LIBERO user prompt tree (same capability flag as system)."""
     return {
         "CELL": user_parts.CELL,
         "MODE": user_parts.MODE,
-        "BEGIN": user_parts.BEGIN,
+        "BEGIN": user_parts.BEGIN_MEMORY if memory else user_parts.BEGIN,
     }
 
 

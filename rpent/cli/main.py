@@ -39,7 +39,8 @@ from rpent.dashboard.events import (
 )
 from rpent.envs import get_env_spec, get_toolkit
 from rpent.planner.base import build_planner
-from rpent.tools.sandbox import init_run_sandbox
+from rpent.tools.sandbox import init_run_sandbox, memory_exposed
+from rpent.utils.config import get_memory_common_dir, get_memory_env_dir
 from rpent.utils.logging import get_logger, init_output_dir
 from rpent.utils.resources import ensure_staged_priors
 
@@ -197,14 +198,24 @@ def main() -> int:
         no_images=args.no_images,
     )
     prompt_bundle = env_spec.prompts
-    prompt_vars = {**prompt_vars, "output_dir": output_dir}
+    prompt_vars = {
+        **prompt_vars,
+        "output_dir": output_dir,
+        "memory_common": get_memory_common_dir(),
+        "memory_env": get_memory_env_dir(env_name),
+    }
+    # The prompt varies with the sandbox's CAPABILITIES, not its name: the
+    # library step exists iff the library is actually readable this run.
+    memory_on = memory_exposed(env_name)
     system_prompt = prompt_bundle.render(
         "system",
         variables=prompt_vars,
+        memory=memory_on,
     )
     user_msg = prompt_bundle.render(
         "user",
         variables=prompt_vars,
+        memory=memory_on,
     )
 
     input_queue: "queue.Queue[str | None] | None" = None

@@ -18,7 +18,8 @@ from rpent.dashboard.events import RunStartedEvent
 from rpent.envs import get_toolkit
 from rpent.planner.base import build_planner
 from rpent.utils.logging import get_logger, init_output_dir
-from rpent.tools.sandbox import init_run_sandbox
+from rpent.tools.sandbox import init_run_sandbox, memory_exposed
+from rpent.utils.config import get_memory_common_dir, get_memory_env_dir
 from rpent.utils.resources import ensure_staged_priors
 
 if TYPE_CHECKING:
@@ -171,14 +172,22 @@ def _run_dashboard_task(
                 no_images=args.no_images,
             )
 
-            prompt_vars = {**run_config.prompt_vars, "output_dir": output_dir}
+            prompt_vars = {
+                **run_config.prompt_vars,
+                "output_dir": output_dir,
+                "memory_common": get_memory_common_dir(),
+                "memory_env": get_memory_env_dir(args.env_name),
+            }
+            memory_on = memory_exposed(args.env_name)
             system_prompt = env_spec.prompts.render(
                 "system",
                 variables=prompt_vars,
+                memory=memory_on,
             )
             user_message = env_spec.prompts.render(
                 "user",
                 variables=prompt_vars,
+                memory=memory_on,
             )
             if not state.task_replacement_requested:
                 state.emit(RunStartedEvent())

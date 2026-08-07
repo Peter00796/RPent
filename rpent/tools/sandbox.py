@@ -112,6 +112,14 @@ class SandboxPolicy:
                     "is read-only to the agent",
                 )
 
+    def can_read(self, p: Path) -> bool:
+        """Boolean form of :meth:`check_read`, for capability probes."""
+        try:
+            self.check_read(p)
+        except SandboxDenied:
+            return False
+        return True
+
     def fingerprint(self) -> dict:
         """What goes into the run's sandbox.json: the exact live boundary."""
         return {
@@ -158,6 +166,20 @@ def add_write_protection(paths) -> None:
         return
     merged = {*_POLICY.write_denied, *(Path(p).resolve() for p in paths)}
     _POLICY = replace(_POLICY, write_denied=tuple(sorted(merged)))
+
+
+def memory_exposed(env_name: str) -> bool:
+    """Does the active sandbox expose the memory library?
+
+    This is what the prompt layer keys its variants on — a capability read
+    off the live policy, never a profile name, so prompt and enforcement
+    cannot disagree.
+    """
+    if _POLICY is None:
+        return False
+    return _POLICY.can_read(get_memory_common_dir()) or _POLICY.can_read(
+        get_memory_env_dir(env_name)
+    )
 
 
 def check_read(p: Path) -> None:

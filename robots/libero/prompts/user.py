@@ -16,6 +16,10 @@ entity you localize. Every coordinate you command must come from a tool result i
 this episode."""
 
 
-BEGIN = """read `MEMORY.md` and the guides for technique — not for values, and not from any
-file recording a previous attempt at this cell. Then `view_driver_state({"step":0})`,
-run the perception pass, and only then plan and execute."""
+BEGIN = """`view_driver_state({"step":0})`, run the perception pass, and only then plan
+and execute."""
+
+#: Used instead of BEGIN when the sandbox exposes the memory library.
+BEGIN_MEMORY = """consult the memory library for technique — never for values. Then
+`view_driver_state({"step":0})`, run the perception pass, and only then plan
+and execute."""

@@ -38,13 +38,10 @@ this episode. This is the core discipline of this benchmark, and it is what the
 tools exist to support.
 
 **Measure, do not recall.** If a tool can compute a value, call the tool. A
-coordinate, an object size, a grasp offset or a container centre taken from
-memory, from a past run, or from any file describing a previous attempt is
-inadmissible here — scenes differ, and several of those quantities have been
-measured to vary between two grasps of the SAME object in the SAME run. Files
-under `resources/` may contain answers to specific cells; using them is cheating
-and it makes the run worthless. Read them for TECHNIQUE (which primitive, which
-order, which failure mode) and never for a value.
+coordinate, an object size, a grasp offset or a container centre that you did
+not derive in THIS episode is inadmissible — scenes differ, and several of
+those quantities have been measured to vary between two grasps of the SAME
+object in the SAME run.
 
 **Register what you localize.** Call `segment(entity="...")` with a name you
 choose for every task-relevant object, destination and landmark. Readings are
@@ -295,33 +292,25 @@ rim bias rather than mistaken identity.
    too ambiguous to identify, SAY SO before acting — do not let Pi0 or the wrist
    make a semantic choice for you. If the check fails, keep perceiving."""
 
-WORKFLOW_STEPS = (
-    """READ THE GENERAL SKILL LIBRARY. `resources/libero/memory/MEMORY.md` indexes
-reusable operating wisdom — techniques, failure modes, parameter RANGES. Scan the
-index, then `read_text_file` the few leaf memories whose objects, container,
-fixture or motion match your scene; `list_dir` the memory directory to see them
-all, and grep it if a shell tool is available. Take the TECHNIQUE and re-derive
-every coordinate by perception here. In your final `strategy_notes`, record which
-memory files you read (or state that none matched) so the consultation is
-auditable.
+#: The memory-library step. Included ONLY when the run's sandbox actually
+#: exposes the library roots — the prompt never instructs a read the sandbox
+#: would refuse, and under a prior-free profile the library is not mentioned
+#: at all. Note what is deliberately absent: the verbal prohibitions that used
+#: to follow this step. A file the sandbox blocks does not exist as far as
+#: this prompt is concerned; naming it just to forbid it advertises it.
+WORKFLOW_STEP_MEMORY = """READ THE MEMORY LIBRARY. Two roots are readable this run:
+- `{{memory_common}}` — cross-environment operating wisdom
+- `{{memory_env}}` — this environment's library
 
-⛔ Do NOT read, and do not use, any file that records a previous attempt at a
-specific cell — audits, recipes and result JSONs under `resources/libero/results_*`
-are off-limits. They contain answers rather than knowledge, and a solve that
-leans on them measures nothing. If you find yourself about to reuse a coordinate,
-a `max_chunks`, a carry height or an object identification that you did not
-derive in this episode, stop: that is the cheat this benchmark exists to exclude.
-""",
-    """READ THE GUIDES once each, for perception-compatible technique:
-- `robots/libero/guides/strict_hybrid_guide.md`
-- `robots/libero/guides/pro_hybrid_guide.md`
+`list_dir` each root and `read_text_file` the few entries whose objects,
+container, fixture or motion match your scene. The library holds TECHNIQUE
+(which primitive, which order, which failure mode) — take the technique and
+re-derive every coordinate by perception here; a value copied from a memory
+entry is not evidence. In your final `strategy_notes`, record which entries
+you read (or state that none matched) so the consultation is auditable.
+"""
 
-⛔ Do NOT read `robots/libero/guides/env_calibration.md`. It is a probe log turned
-into a lookup table — reachable-workspace bounds, per-object reference heights,
-per-frame release heights — and every value in it is either measurable here with
-`segment` / `world_extent` or specific to a scene that is not yours. The one
-non-derivable rule it held is in MECHANICS above.
-""",
+WORKFLOW_STEPS_CORE = (
     """INSPECT THE INITIAL STATE: `view_driver_state({"step": 0})`. Read
 `task_language`, `object_names` and the eef pose. Identify every target object,
 destination surface and relation landmark the task names.
@@ -350,10 +339,20 @@ unrecoverable within this episode, write an honest stuck-audit and `finish`.
     """WHEN `state.libero_terminated == true` (or your single attempt is spent):
 a. Write `{{output_dir}}/{{recipe_tag}}.json` with suite, task_id, seed,
    regime:"strict_perception", `strategy_notes` (how you localized, which tool
-   results each commanded coordinate came from, which memory files you read),
-   pick_result, final_state, and the honest `libero_terminated`.
+   results each commanded coordinate came from), pick_result, final_state, and
+   the honest `libero_terminated`.
 b. Call `finish`.""",
 )
+
+
+def workflow_steps(*, memory: bool) -> tuple[str, ...]:
+    """The WORKFLOW step list for this run's sandbox capabilities.
+
+    ``memory=True`` prepends the library step; ``memory=False`` yields a
+    prompt in which the library is never mentioned — not instructed, not
+    forbidden, not named.
+    """
+    return (WORKFLOW_STEP_MEMORY, *WORKFLOW_STEPS_CORE) if memory else WORKFLOW_STEPS_CORE
 
 OUTPUT_DISCIPLINE = """- One or two sentences of reasoning before each tool call: observation -> decision.
 - Cite your evidence when you commit a coordinate: which tool result, which step.

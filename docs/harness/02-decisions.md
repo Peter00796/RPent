@@ -303,6 +303,28 @@ is reused, and a partial sync raises instead of warning — a comparison arm on 
 silently partial payload measures nothing. The decoupled library under
 `memory/` is never a sync target.
 
+### The prompt levels on capabilities, not profile names
+
+`system_prompt(memory=...)` / `user_prompt(memory=...)` take a boolean that
+main.py reads off the LIVE policy (`sandbox.memory_exposed`), never the
+profile's name. A custom profile that exposes the library roots gets the
+library instructions automatically; one that does not gets a prompt in which
+the library was never mentioned. Consequences that were deliberate:
+
+- **Every verbal file prohibition was deleted**, in every variant. The ⛔
+  blocks ("do NOT read `results_*`", "do NOT read `env_calibration.md`") were
+  discipline standing in for a missing mechanism; with the sandbox they became
+  pure advertisement — naming a blocked file tells the model it exists and
+  what it contains. The prior-free prompt now reads as if those files never
+  existed, which is the test (`test_prompt_leveling.py`) not a metaphor.
+- The guides step is gone from all variants: no shipped profile exposes
+  `robots/libero/guides/`. If the guides are later seeded into the memory
+  library, the generic "scan the library roots" step picks them up with no
+  prompt change — prompt and library contents are decoupled.
+- `EVIDENCE_DISCIPLINE` keeps "measure, do not recall" (positive epistemics,
+  true in every arm) but no longer names `resources/`; the technique-not-values
+  rule moved into the memory step, its single owner.
+
 ### Known limit
 
 The `claude_code` / `codex` planners are external CLI agents with their own
