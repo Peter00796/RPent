@@ -11,6 +11,7 @@ import html as html_escape
 from pathlib import Path
 
 from rpent.replay.loader import RunReplay
+from rpent.replay.markdown import render_markdown
 from rpent.replay.render import Card, Marker, Panel, render_call
 
 _CSS = """
@@ -21,7 +22,9 @@ header .meta { font-size: 12px; color: #9fb0c9; margin-top: 4px; }
 main { max-width: 1080px; margin: 0 auto; padding: 18px; }
 .turn { margin: 26px 0 10px; }
 .reason { border-left: 3px solid #7a8cff; background: #eef0ff; padding: 8px 12px;
-          white-space: pre-wrap; border-radius: 0 6px 6px 0; }
+          border-radius: 0 6px 6px 0; color: #2c3550; }
+.reason p { margin: 3px 0; } .reason ul { margin: 3px 0; padding-left: 18px; }
+.reason code { background: #dde2f2; border-radius: 3px; padding: 0 3px; font-size: 12px; }
 .card { background: #fff; border: 1px solid #dde3ec; border-radius: 8px;
         margin: 10px 0; padding: 10px 14px; }
 .card:target { border-color: #7a8cff; box-shadow: 0 0 0 3px #7a8cff44; }
@@ -137,7 +140,7 @@ def render_html(run: RunReplay) -> str:
             body.append(f'<div class="turn"><b>turn {call.turn or "?"}</b></div>')
             last_turn = call.turn
         if call.reasoning:
-            body.append(f'<div class="reason">{_esc(call.reasoning)}</div>')
+            body.append(f'<div class="reason">{render_markdown(call.reasoning)}</div>')
         card = render_call(call, run)
         body.append(_card_html(call.seq, call.advanced, call.elapsed_s, card))
 

@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 
 from rpent.replay.loader import Call, RunReplay
+from rpent.replay.markdown import render_markdown
 from rpent.replay.render import render_call
 
 _PLOTLY_CDN = "https://cdn.plot.ly/plotly-2.35.2.min.js"
@@ -124,23 +125,30 @@ def _grip_width(entry: dict) -> float | None:
 
 
 # ---------------------------------------------------------------------------
-# The evidence panel: calls grouped by the world state they were issued in
+# The evidence panel: the FULL call timeline, in run order
 # ---------------------------------------------------------------------------
+#
+# The panel is the navigator, not a per-step footnote: an env-step slider
+# alone hides the story, because a perception-heavy run issues dozens of
+# calls while the world sits in one state (and a step may have no stored
+# world map at all). Every call is always listed; selecting one drives the
+# 3D view to the nearest stored frame, and moving the slider highlights and
+# scrolls to the calls issued in that state.
 
-def _panel_entries(run: RunReplay) -> dict[int, list[dict]]:
-    by_step: dict[int, list[dict]] = {}
+def _panel_entries(run: RunReplay) -> list[dict]:
+    entries = []
     for call in run.calls:
-        step = call.step_before if call.step_before is not None else 0
         card = render_call(call, run)
-        by_step.setdefault(step, []).append({
+        entries.append({
             "seq": call.seq,
-            "tool": call.tool,
+            "step": call.step_before if call.step_before is not None else 0,
+            "turn": call.turn,
             "title": card.title,
             "lines": card.lines,
-            "reasoning": call.reasoning,
+            "reasoning_html": render_markdown(call.reasoning) if call.reasoning else "",
             "advanced": call.advanced,
         })
-    return by_step
+    return entries
 
 
 # ---------------------------------------------------------------------------
@@ -286,64 +294,120 @@ _TEMPLATE = """<!doctype html><meta charset="utf-8">
 <title>3D replay %(name)s</title>
 <script src="%(cdn)s"></script>
 <style>
-body { margin:0; font:13px/1.45 system-ui,sans-serif; }
+body { margin:0; font:13px/1.5 system-ui,sans-serif; color:#1c2330; }
 header { background:#1c2330; color:#eef1f6; padding:10px 16px; }
 header .meta { font-size:11px; color:#9fb0c9; margin-top:2px; }
 header a { color:#9fb0c9; }
 .ok { color:#35c26a; font-weight:600; } .bad { color:#ff7a6e; font-weight:600; }
 #wrap { display:flex; height:calc(100vh - 58px); }
 #p { flex:1 1 auto; min-width:0; }
-#side { width:360px; flex:0 0 360px; overflow-y:auto; border-left:1px solid #dde3ec;
-        padding:10px 12px; background:#f6f7f9; }
-#side h4 { margin:2px 0 8px; font-size:12px; color:#67718a; }
-.call { background:#fff; border:1px solid #dde3ec; border-radius:6px;
-        padding:6px 9px; margin:8px 0; }
-.call .t { font-weight:600; font-size:12px; }
-.call .t .seq { color:#8a94a6; font-weight:400; }
+#side { width:430px; flex:0 0 430px; overflow-y:auto; border-left:1px solid #dde3ec;
+        padding:10px 14px; background:#f6f7f9; scroll-behavior:smooth; }
+.turnhead { font-size:11px; font-weight:600; color:#67718a; margin:14px 0 2px;
+            text-transform:uppercase; letter-spacing:.4px; }
+.call { background:#fff; border:1px solid #dde3ec; border-left:3px solid #dde3ec;
+        border-radius:6px; padding:7px 10px; margin:7px 0; cursor:pointer; }
+.call:hover { border-color:#b9c4de; }
+.call.current { border-left-color:#ff7f0e; background:#fff9f2; }
+.call .t { font-weight:600; font-size:13px; }
+.call .t .seq { color:#8a94a6; font-weight:400; font-size:11px; }
 .call .t .adv { background:#ffe6c9; color:#8a5200; font-size:10px;
                 border-radius:4px; padding:0 5px; margin-left:6px; }
-.call ul { margin:3px 0 0; padding-left:16px; font-size:11px; color:#3c4557; }
-.reason { border-left:3px solid #7a8cff; background:#eef0ff; padding:5px 8px;
-          font-size:11px; white-space:pre-wrap; border-radius:0 4px 4px 0; margin:8px 0 4px; }
+.call .t .st { float:right; font-size:10px; color:#8a94a6; }
+.call ul { margin:4px 0 0; padding-left:17px; font-size:12px; color:#3c4557; }
+.call li { margin:1px 0; }
+.reason { border-left:3px solid #7a8cff; background:#eef0ff; padding:7px 10px;
+          font-size:12px; border-radius:0 5px 5px 0; margin:8px 0 4px; color:#2c3550; }
+.reason p { margin:3px 0; } .reason ul { margin:3px 0; padding-left:17px; }
+.reason code, .call code { background:#e3e7f2; border-radius:3px; padding:0 3px;
+                           font-size:11px; }
 .call a { font-size:10px; color:#7a8cff; text-decoration:none; }
 </style>
 <header>
   <b>%(name)s</b> &nbsp; %(task)s &nbsp; <span class="%(status_class)s">%(status)s</span>
-  <div class="meta">%(meta)s · %(link_2d)sdrag the slider; the panel follows the selected step.
-  green = segment readings known at that step, red x = motion target, orange = eef now.</div>
+  <div class="meta">%(meta)s · %(link_2d)sclick a call to drive the 3D view; the slider and
+  play sync back. green = segment readings known at that step, red x = motion target,
+  orange = eef now.</div>
 </header>
 <div id="wrap">
   <div id="p"></div>
-  <div id="side"><h4>calls at this step</h4><div id="calls"></div></div>
+  <div id="side"><div id="calls"></div></div>
 </div>
 <script>
 var frames = %(frames)s;
 var layout = %(layout)s;
 var panel = %(panel)s;
+var frameSteps = frames.map(function(f) { return parseInt(f.name, 10); });
+
 function esc(s) { return String(s).replace(/[&<>"]/g, function(c) {
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
-function showStep(step) {
-  var entries = panel[step] || [];
-  var out = "";
-  entries.forEach(function(e) {
-    if (e.reasoning) out += '<div class="reason">' + esc(e.reasoning) + '</div>';
-    out += '<div class="call"><div class="t"><span class="seq">#' + e.seq + '</span> '
-        + esc(e.title) + (e.advanced ? '<span class="adv">env step</span>' : '')
-        + ' <a href="replay.html#seq-' + e.seq + '">2D card ↗</a></div><ul>'
+
+// Nearest stored frame at-or-before the step a call was issued in (a step
+// with no dumped world map falls back to the closest earlier view).
+function frameFor(step) {
+  var best = frameSteps[0];
+  frameSteps.forEach(function(s) { if (s <= step) best = s; });
+  return best;
+}
+
+// Build the full timeline once: every turn, every call — nothing hidden.
+(function() {
+  var out = "", lastTurn = null;
+  panel.forEach(function(e) {
+    if (e.turn !== lastTurn) {
+      out += '<div class="turnhead">turn ' + (e.turn || "?") + '</div>';
+      lastTurn = e.turn;
+    }
+    if (e.reasoning_html) out += '<div class="reason">' + e.reasoning_html + '</div>';
+    out += '<div class="call" id="pcall-' + e.seq + '" data-step="' + e.step + '">'
+        + '<div class="t"><span class="seq">#' + e.seq + '</span> ' + esc(e.title)
+        + (e.advanced ? '<span class="adv">env step</span>' : '')
+        + ' <a href="replay.html#seq-' + e.seq + '" onclick="event.stopPropagation()">2D ↗</a>'
+        + '<span class="st">@ step ' + e.step + '</span></div><ul>'
         + e.lines.map(function(l) { return '<li>' + esc(l) + '</li>'; }).join('')
         + '</ul></div>';
   });
-  document.getElementById("calls").innerHTML =
-      out || '<i style="font-size:11px;color:#8a94a6">no calls issued at this step</i>';
-  document.querySelector("#side h4").textContent =
-      "calls issued while the world was at step " + step;
-}
-Plotly.newPlot("p", frames[0].data, layout).then(function(gd) {
-  Plotly.addFrames("p", frames);
-  gd.on("plotly_sliderchange", function(e) { showStep(e.step.label); });
-  gd.on("plotly_animated", function() {
-    var s = gd.layout.sliders[0]; showStep(s.steps[s.active].label);
+  document.getElementById("calls").innerHTML = out;
+})();
+
+var gdRef = null, suppressScroll = false;
+
+function highlight(frameStep, scroll) {
+  var first = null;
+  document.querySelectorAll(".call").forEach(function(el) {
+    var on = frameFor(parseInt(el.dataset.step, 10)) === frameStep;
+    el.classList.toggle("current", on);
+    if (on && first === null) first = el;
   });
-  showStep(frames[0].name);
+  if (scroll && first) first.scrollIntoView({block: "center"});
+}
+
+function goToFrame(frameStep, scroll) {
+  if (gdRef) Plotly.animate(gdRef, [String(frameStep)],
+      {mode: "immediate", frame: {duration: 0, redraw: true},
+       transition: {duration: 0}});
+  highlight(frameStep, scroll);
+}
+
+document.getElementById("calls").addEventListener("click", function(ev) {
+  var el = ev.target.closest(".call");
+  if (!el) return;
+  suppressScroll = true;   // the user is already looking at this entry
+  goToFrame(frameFor(parseInt(el.dataset.step, 10)), false);
+  suppressScroll = false;
+});
+
+Plotly.newPlot("p", frames[0].data, layout).then(function(gd) {
+  gdRef = gd;
+  Plotly.addFrames("p", frames);
+  gd.on("plotly_sliderchange", function(e) {
+    highlight(parseInt(e.step.label, 10), true);
+  });
+  // fires per frame during play, so the panel follows the animation
+  gd.on("plotly_animatingframe", function(e) {
+    var name = e.name || (e.frame && e.frame.name);
+    if (name !== undefined && !suppressScroll) highlight(parseInt(name, 10), true);
+  });
+  highlight(frameSteps[0], false);
 });
 </script>"""
