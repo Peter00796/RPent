@@ -146,6 +146,20 @@ check("move_to target projected onto before-image",
       any(m.kind == "target" and (m.row, m.col) == (3, 4) for m in move_markers),
       str([(m.kind, m.row, m.col) for m in move_markers]))
 
+# --- 3d ---------------------------------------------------------------------
+print("\n=== 3d ===")
+from rpent.replay import three_d  # noqa: E402
+
+html3d = three_d.build_3d_html(run)
+check("3d builds from stored world maps", html3d is not None)
+if html3d:
+    check("3d: per-step call panel embedded",
+          '"localize the cube, then approach it"' in html3d)
+    check("3d: segment reading carries seq + entity",
+          "#2 cube" in html3d, html3d[html3d.find("segment readings"):][:120])
+    check("3d: deep-links to the 2D card", "replay.html#seq-" in html3d)
+    check("3d: two frames (two world maps)", html3d.count('"name": "') >= 2)
+
 # --- html ------------------------------------------------------------------
 print("\n=== html ===")
 out = replay_html.write_replay(run)
