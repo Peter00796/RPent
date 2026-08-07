@@ -52,9 +52,14 @@ bad `--model` fails in a second rather than after minutes of loading.
 `artifacts.py` | The run-artifact path layout (`ARTIFACT_LAYOUT` is the single source) |
 `legacy_specs.py` | Migration shim: renders the native tools back into Anthropic dicts |
 
-**Two files hold everything the model reads about a LIBERO tool**: `agent_tools.py`
-(descriptions) and `schemas.py` (argument descriptions). That is deliberate — it is the
-surface that gets hashed and diffed.
+**Two files hold everything the model reads about a LIBERO tool**: `tool_docs.py`
+(descriptions, authored as structured template fields — what / need / returns / when /
+how / failure_modes — and rendered deterministically; `agent_tools.py` injects the
+rendered string via `@tool(description=...)`, its docstrings are dev notes) and
+`schemas.py` (argument descriptions). That is deliberate — it is the surface that gets
+hashed, diffed, and linted (`tests/harness/test_tool_docs.py`). The template and
+renderer live in `rpent/tools/tool_docs.py`, which also holds the common tools'
+entries; content was migrated verbatim from the pre-migration docstrings.
 
 ### The 14 tools by kind
 

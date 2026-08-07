@@ -2,12 +2,14 @@
 
 Environment-independent counterpart of :mod:`robots.libero.tools.agent_tools`:
 the handlers stay in :mod:`rpent.tools.common` (plain functions, callable without
-a graph) and this module wraps them as ``@tool``. Descriptions are the
-docstrings; argument descriptions are the ``Field(description=...)`` below.
+a graph) and this module wraps them as ``@tool``. Model-facing descriptions
+render from the structured entries in :mod:`rpent.tools.tool_docs` (docstrings
+here are developer notes only); argument descriptions are the
+``Field(description=...)`` below.
 
 ``read_image`` exists in two variants under the same tool name — one that sends
 image bytes and one that only acknowledges the path — so ``--no-images`` changes
-what a text-only model receives without changing the tool surface it sees.
+what a text-only model receives without changing the tool names it sees.
 Pick with :func:`common_tools`.
 
 ⚠ Do not add ``from __future__ import annotations`` here. LangChain resolves a
@@ -26,6 +28,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from rpent.tools import common
+from rpent.tools.tool_docs import render_description
 
 # ---------------------------------------------------------------------------
 # Input schemas
@@ -73,63 +76,37 @@ class ReadImageInput(BaseModel):
 # Tools
 # ---------------------------------------------------------------------------
 
-_READ_IMAGE_DESCRIPTION = (
-    "Read a local image path returned by an RPent tool as visual input."
-)
-
-#: Under ``--no-images`` the tool cannot do what the normal description promises,
-#: so it advertises the truth instead. Keeping the original wording would spend
-#: the model's turns discovering that a described capability does not exist —
-#: worse, in a single-attempt episode, than telling it up front. The tool is kept
-#: rather than dropped because the system prompt still instructs image
-#: inspection, so a call is likely and the result should redirect rather than
-#: fail as an unknown tool.
-_READ_IMAGE_TEXT_ONLY_DESCRIPTION = (
-    "DISABLED in this run: image input is off (text-only model), so this tool "
-    "cannot return visual content and looking at a PNG is not available to you. "
-    "Localize objects instead with `segment` (SAM3 text prompt -> world_xyz) and "
-    "`back_project`, and read state from `view_driver_state`."
-)
-
-
-@tool(args_schema=ReadTextFileInput)
+@tool(args_schema=ReadTextFileInput, description=render_description("read_text_file"))
 def read_text_file(path: str, max_chars: int = 40000) -> dict:
-    """Read a UTF-8 text file. Use for past recipe JSONLs, audit JSONs, and
-    memory files. Large files are truncated.
-    """
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
     return common.read_text_file(path, max_chars)
 
 
-@tool(args_schema=WriteTextFileInput)
+@tool(args_schema=WriteTextFileInput, description=render_description("write_text_file"))
 def write_text_file(path: str, content: str) -> dict:
-    """Write a UTF-8 text file (creates parent dirs). Use this to save the
-    working recipe JSONL and the final audit JSON at the end of a successful run.
-    """
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
     return common.write_text_file(path, content)
 
 
-@tool(args_schema=ListDirInput)
+@tool(args_schema=ListDirInput, description=render_description("list_dir"))
 def list_dir(path: str = "") -> dict:
-    """List files in a directory (non-recursive). Defaults to the run's output
-    directory. Use to inspect the working directory or to discover existing
-    recipes in resources/libero/results_*_pert/.
-    """
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
     return common.list_dir(path)
 
 
-@tool(args_schema=FinishInput)
+@tool(args_schema=FinishInput, description=render_description("finish"))
 def finish(status: str, summary: str) -> dict:
-    """Call when the task is complete or unrecoverable. Halts the agent loop.
-    Save any artifacts (recipe, audit) BEFORE calling finish.
-    """
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
     return common.finish(status, summary)
 
 
-@tool("read_image", args_schema=ReadImageInput, description=_READ_IMAGE_DESCRIPTION)
+@tool(
+    "read_image",
+    args_schema=ReadImageInput,
+    description=render_description("read_image"),
+)
 def read_image(path: str) -> list[dict[str, Any]] | str:
-    """See ``_READ_IMAGE_DESCRIPTION`` — the model-facing text is passed
-    explicitly so both variants advertise themselves identically.
-    """
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
     file_path = Path(path)
     if not file_path.exists():
         return f"image not found: {path}"
@@ -150,10 +127,12 @@ def read_image(path: str) -> list[dict[str, Any]] | str:
 @tool(
     "read_image",
     args_schema=ReadImageInput,
-    description=_READ_IMAGE_TEXT_ONLY_DESCRIPTION,
+    description=render_description("read_image_text_only"),
 )
 def read_image_text_only(path: str) -> str:
-    """``read_image`` under ``--no-images``: redirect, send no bytes."""
+    """``read_image`` under ``--no-images``: redirect, send no bytes. The
+    rationale for the honest variant lives with its docs entry in ``tool_docs``.
+    """
     return (
         f"{path} exists, but image input is disabled (--no-images, text-only "
         "model), so its contents are not available to you. Localize with "
@@ -166,9 +145,9 @@ def common_tools(*, no_images: bool = False) -> list[BaseTool]:
     """Return the environment-independent tools every planner gets.
 
     Args:
-        no_images: Swap ``read_image`` for the byte-free variant. Both advertise
-            the same name and description, so the model's tool surface is
-            unchanged; only the result differs.
+        no_images: Swap ``read_image`` for the byte-free variant. Both expose
+            the same name and schema; the text-only variant advertises the
+            truth (no visual content available) and sends no bytes.
     """
     return [
         read_text_file,
