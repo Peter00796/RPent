@@ -144,6 +144,32 @@ stored world maps (no camera math; occluded points are reported, not drawn).
 Every call anchors as `#seq-N`, which is the evidence deep-link format that
 memory proposals and the promotion gate cite. Stdlib + numpy only.
 
+## Promotion gate (`rpent/gate/`)
+
+```bash
+python -m rpent.gate observe    RUN...   # per-run, LIBRARY-BLIND observations (LLM)
+python -m rpent.gate synthesize RUN...   # sweep-wide proposals + HARNESS_REVIEW.md (LLM)
+python -m rpent.gate review     RUN... --proposals <dir>   # five checks -> report + verdicts
+#   human edits verdicts.yaml            <- the interrupt
+python -m rpent.gate apply      verdicts.yaml               # the ONLY writer of memory/
+python -m rpent.gate ledger     RUN...   # consumption track record per entry
+```
+
+Layered digestion: observers see exactly what one run recorded (independent
+accounts — support is counted from independent discovery); the synthesizer
+sees everything (observations, outcomes, the CURRENT library, the ledger)
+and triages each issue cluster into ``add`` / ``revise`` / ``evict`` /
+``endorse``, plus a human-facing memo for what a memory entry cannot fix.
+Evidence grounds to ``run:<name>#seq=N`` tokens resolved straight into
+``tool_calls.jsonl`` (never to observation files), and the gate report deep
+links every citation into that run's ``replay.html``. The five checks:
+contract/citation resolution, number-traceability against cited records,
+per-cell-answer naming (against the cited runs' ``object_names``), scope
+vocabulary, dedup/support counting. Consumption in the ledger is read
+mechanically from ``read_text_file`` records, never from strategy notes.
+Everything except the two LLM stages is stdlib+yaml
+(`tests/harness/test_gate.py` runs the whole chain locally).
+
 ## Prompt layer
 
 `robots/libero/prompts/system.py` sections, assembled by
