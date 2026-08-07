@@ -136,19 +136,35 @@ def _grip_width(entry: dict) -> float | None:
 # scrolls to the calls issued in that state.
 
 def _panel_entries(run: RunReplay) -> list[dict]:
-    entries = []
-    for call in run.calls:
-        card = render_call(call, run)
-        entries.append({
-            "seq": call.seq,
-            "step": call.step_before if call.step_before is not None else 0,
-            "turn": call.turn,
-            "title": card.title,
-            "lines": card.lines,
-            "reasoning_html": render_markdown(call.reasoning) if call.reasoning else "",
-            "advanced": call.advanced,
-        })
-    return entries
+    """The full message flow, flattened: text and call items in written order."""
+    by_seq = {c.seq: c for c in run.calls}
+    items: list[dict] = []
+    for turn in run.turns:
+        turn_step = next(
+            (by_seq[v].step_before or 0 for k, v in turn.segments
+             if k == "call" and v in by_seq), None,
+        )
+        first = True
+        for kind, value in turn.segments:
+            base = {"turn": turn.index, "new_turn": first, "turn_step": turn_step}
+            first = False
+            if kind == "text":
+                items.append({**base, "kind": "text",
+                              "html": render_markdown(str(value))})
+                continue
+            call = by_seq.get(value)
+            if call is None:
+                continue
+            card = render_call(call, run)
+            items.append({
+                **base, "kind": "call",
+                "seq": call.seq,
+                "step": call.step_before if call.step_before is not None else 0,
+                "title": card.title,
+                "lines": card.lines,
+                "advanced": call.advanced,
+            })
+    return items
 
 
 # ---------------------------------------------------------------------------
@@ -350,16 +366,21 @@ function frameFor(step) {
   return best;
 }
 
-// Build the full timeline once: every turn, every call — nothing hidden.
+// Build the full message flow once: every turn's prose and calls in the
+// order the model wrote them — nothing hidden, nothing reordered.
 (function() {
-  var out = "", lastTurn = null;
+  var out = "";
   panel.forEach(function(e) {
-    if (e.turn !== lastTurn) {
+    if (e.new_turn) {
       out += '<div class="turnhead">turn ' + (e.turn || "?")
-          + ' <span style="color:#a5aec2">· world @ step ' + e.step + '</span></div>';
-      lastTurn = e.turn;
+          + (e.turn_step !== null
+             ? ' <span style="color:#a5aec2">· world @ step ' + e.turn_step + '</span>'
+             : '') + '</div>';
     }
-    if (e.reasoning_html) out += '<div class="reason">' + e.reasoning_html + '</div>';
+    if (e.kind === "text") {
+      out += '<div class="reason">' + e.html + '</div>';
+      return;
+    }
     out += '<div class="call" id="pcall-' + e.seq + '" data-step="' + e.step + '">'
         + '<div class="t"><span class="seq">#' + e.seq + '</span> ' + esc(e.title)
         + (e.advanced ? '<span class="adv">env step</span>' : '')

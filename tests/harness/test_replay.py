@@ -105,7 +105,10 @@ with open(RUN / "tool_calls.jsonl", "w") as f:
         {"role": "assistant", "content": [
             {"type": "text", "text": "localize the cube, then approach it"},
             {"type": "tool_use", "id": "c2", "name": "segment", "input": {}},
+            {"type": "text", "text": "now approach **carefully**"},
             {"type": "tool_use", "id": "c3", "name": "move_to", "input": {}}]},
+        {"role": "assistant", "content": [
+            {"type": "text", "text": "episode over, giving up"}]},
     ],
 }))
 
@@ -114,11 +117,20 @@ print("=== loader ===")
 run = loader.load_run(RUN)
 check("3 calls joined", len(run.calls) == 3)
 check("no record gaps", run.warnings == [], str(run.warnings))
-check("reasoning attached to the turn's first call",
+check("each call carries the text written immediately before it",
       run.calls[1].reasoning == "localize the cube, then approach it"
-      and run.calls[2].reasoning == "",
+      and run.calls[2].reasoning == "now approach **carefully**",
       f"{run.calls[1].reasoning!r} / {run.calls[2].reasoning!r}")
 check("turns assigned", [c.turn for c in run.calls] == [1, 2, 2])
+check("segment order preserved (text between calls survives)",
+      run.turns[1].segments == [("text", "localize the cube, then approach it"),
+                                ("call", 2),
+                                ("text", "now approach **carefully**"),
+                                ("call", 3)],
+      str(run.turns[1].segments))
+check("text-only closing turn survives",
+      run.turns[2].segments == [("text", "episode over, giving up")],
+      str([t.segments for t in run.turns]))
 check("advancing computed from step_idx",
       [c.advanced for c in run.calls] == [False, False, True])
 check("task + termination read from states",
@@ -153,8 +165,10 @@ from rpent.replay import three_d  # noqa: E402
 html3d = three_d.build_3d_html(run)
 check("3d builds from stored world maps", html3d is not None)
 if html3d:
-    check("3d: full call timeline embedded (markdown-rendered reasoning)",
-          "localize the cube, then approach it" in html3d)
+    check("3d: full message flow embedded (markdown-rendered prose)",
+          "localize the cube, then approach it" in html3d
+          and "<b>carefully</b>" in html3d
+          and "episode over, giving up" in html3d)
     check("3d: segment reading carries seq + entity",
           "#2 cube" in html3d, html3d[html3d.find("segment readings"):][:120])
     check("3d: deep-links to the 2D card", "replay.html#seq-" in html3d)
@@ -166,6 +180,10 @@ out = replay_html.write_replay(run)
 text = out.read_text()
 check("anchors for every call", all(f'id="seq-{n}"' in text for n in (1, 2, 3)))
 check("reasoning rendered", "localize the cube" in text)
+check("2d: prose renders where it was written (between the two calls)",
+      text.find("localize the cube") < text.find('id="seq-2"')
+      < text.find("<b>carefully</b>") < text.find('id="seq-3"')
+      < text.find("episode over, giving up"))
 check("relative img srcs only", 'src="/' not in text and "src=\"images_cam/" in text)
 check("env-step badge on the advancing call only", text.count('class="adv"') == 1)
 check("sandbox profile in header", "sandbox none" in text)

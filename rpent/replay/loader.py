@@ -44,9 +44,24 @@ class Call:
 
 
 @dataclass
+class Turn:
+    """One assistant message, as the ordered segments it was written in.
+
+    ``segments`` preserves the block order of the original message:
+    ``("text", <str>)`` for prose, ``("call", <seq>)`` for a tool call — so
+    the replay shows exactly where in its reply the model reached for a
+    tool, including text between two calls and turns with no calls at all.
+    """
+
+    index: int
+    segments: list[tuple[str, object]] = field(default_factory=list)
+
+
+@dataclass
 class RunReplay:
     run_dir: Path
     calls: list[Call]
+    turns: list[Turn]
     states: list[dict]
     task_language: str
     terminated: bool
@@ -102,45 +117,65 @@ def _transcript(run_dir: Path, warnings: list[str]) -> dict:
     return docs[0] if docs else {}
 
 
-def _attach_reasoning(calls: list[Call], messages: list[dict], warnings: list[str]) -> None:
+def _build_turns(calls: list[Call], messages: list[dict],
+                 warnings: list[str]) -> list[Turn]:
+    """Walk the assistant messages block by block, preserving their order.
+
+    Each call gets the text written IMMEDIATELY before it (its reasoning);
+    text between calls, after the last call, and whole turns with no calls
+    all survive as ``("text", ...)`` segments.
+    """
+    turns: list[Turn] = []
     i = 0
-    turn = 0
+    exhausted = False
     for message in messages:
         if message.get("role") != "assistant":
             continue
-        turn += 1
+        turn = Turn(index=len(turns) + 1)
         content = message.get("content")
-        texts: list[str] = []
-        tool_uses: list[dict] = []
-        if isinstance(content, str):
-            texts.append(content)
-        elif isinstance(content, list):
-            for block in content:
-                if not isinstance(block, dict):
-                    continue
-                if block.get("type") == "text":
-                    texts.append(str(block.get("text") or ""))
-                elif block.get("type") == "tool_use":
-                    tool_uses.append(block)
-        reasoning = "\n".join(t for t in texts if t.strip()).strip()
-        for block in tool_uses:
+        blocks = ([{"type": "text", "text": content}] if isinstance(content, str)
+                  else content if isinstance(content, list) else [])
+        pending: list[str] = []
+        for block in blocks:
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") == "text":
+                if str(block.get("text") or "").strip():
+                    pending.append(str(block["text"]))
+                continue
+            if block.get("type") != "tool_use":
+                continue
+            text = "\n".join(pending).strip()
+            if text:
+                turn.segments.append(("text", text))
+            pending = []
             if i >= len(calls):
-                warnings.append(
-                    "transcript has more tool_use blocks than logged calls"
-                )
-                return
+                if not exhausted:
+                    warnings.append("transcript has more tool_use blocks than logged calls")
+                    exhausted = True
+                continue
             call = calls[i]
             if block.get("name") and block["name"] != call.tool:
                 warnings.append(
                     f"seq {call.seq}: transcript says {block['name']!r}, "
                     f"log says {call.tool!r} — positional join may be off here"
                 )
-            call.reasoning = reasoning
-            call.turn = turn
-            reasoning = ""  # a turn's text belongs to its first call only
+            call.reasoning = text
+            call.turn = turn.index
+            turn.segments.append(("call", call.seq))
             i += 1
+        trailing = "\n".join(pending).strip()
+        if trailing:
+            turn.segments.append(("text", trailing))
+        if turn.segments:
+            turns.append(turn)
     if i < len(calls):
         warnings.append(f"{len(calls) - i} logged calls have no transcript turn")
+        for call in calls[i:]:
+            turn = Turn(index=len(turns) + 1, segments=[("call", call.seq)])
+            call.turn = turn.index
+            turns.append(turn)
+    return turns
 
 
 def load_run(run_dir: str | Path) -> RunReplay:
@@ -175,7 +210,7 @@ def load_run(run_dir: str | Path) -> RunReplay:
         warnings.append("states.json missing")
 
     transcript = _transcript(run_dir, warnings)
-    _attach_reasoning(calls, transcript.get("messages", []), warnings)
+    turns = _build_turns(calls, transcript.get("messages", []), warnings)
 
     sandbox: dict = {}
     sandbox_path = run_dir / "sandbox.json"
@@ -203,6 +238,7 @@ def load_run(run_dir: str | Path) -> RunReplay:
     return RunReplay(
         run_dir=run_dir,
         calls=calls,
+        turns=turns,
         states=states,
         task_language=task_language,
         terminated=terminated,

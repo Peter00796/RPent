@@ -133,16 +133,21 @@ def render_html(run: RunReplay) -> str:
         items = "".join(f"<li>{_esc(w)}</li>" for w in run.warnings)
         warnings = f'<div class="warn"><b>record gaps</b><ul>{items}</ul></div>'
 
+    by_seq = {c.seq: c for c in run.calls}
     body: list[str] = []
-    last_turn = None
-    for call in run.calls:
-        if call.turn != last_turn:
-            body.append(f'<div class="turn"><b>turn {call.turn or "?"}</b></div>')
-            last_turn = call.turn
-        if call.reasoning:
-            body.append(f'<div class="reason">{render_markdown(call.reasoning)}</div>')
-        card = render_call(call, run)
-        body.append(_card_html(call.seq, call.advanced, call.elapsed_s, card))
+    for turn in run.turns:
+        body.append(f'<div class="turn"><b>turn {turn.index}</b></div>')
+        # Segments preserve the message's own order: prose renders where it
+        # was written, including between two calls and after the last one.
+        for kind, value in turn.segments:
+            if kind == "text":
+                body.append(f'<div class="reason">{render_markdown(str(value))}</div>')
+                continue
+            call = by_seq.get(value)
+            if call is None:
+                continue
+            card = render_call(call, run)
+            body.append(_card_html(call.seq, call.advanced, call.elapsed_s, card))
 
     return (
         "<!doctype html><meta charset='utf-8'>"
