@@ -125,6 +125,25 @@ records `step_idx_before` / `step_idx_after`, so "did this call advance the
 environment" is computed from the log rather than declared in it. High-resolution world
 maps keep only the last 5 steps.
 
+## Evidence replay (`rpent/replay/`)
+
+```bash
+PYTHONPATH=. python -m rpent.replay <run_dir>     # -> <run_dir>/replay.html
+python scripts/replay_run_3d.py <run_dir>          # -> 3D point-cloud slider
+```
+
+Rebuilds a finished run as a turn-by-turn timeline — reasoning text, then
+each tool call's card — from the DISK ARTIFACTS ALONE, which makes it double
+as the completeness test of the evidence record (a `record gaps` warning
+means the logs are missing something, and the fix is to record more).
+`loader.py` joins `tool_calls.jsonl` (ground truth) with the transcript
+(reasoning); `render.py` holds ONE RENDERER PER TOOL (`REGISTRY` — adding a
+tool means adding a function); `project.py` turns any recorded world-xyz
+into a dot on the recorded camera image by nearest-neighbour lookup in the
+stored world maps (no camera math; occluded points are reported, not drawn).
+Every call anchors as `#seq-N`, which is the evidence deep-link format that
+memory proposals and the promotion gate cite. Stdlib + numpy only.
+
 ## Prompt layer
 
 `robots/libero/prompts/system.py` sections, assembled by
