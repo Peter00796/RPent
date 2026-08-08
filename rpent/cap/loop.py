@@ -189,11 +189,14 @@ def cap_loop(*, suite: str, task: int, debug_seed: int, model: str,
 
     for round_no in range(1, max_attempts + 1):
         siblings: list[str] = []
+        # Parents snapshot BEFORE the round: a candidate's within-round
+        # predecessors are siblings ("explore differently"), never parents
+        # ("repair me") — one program must not carry both instructions.
+        parents = sorted(population, key=lambda p: -p[0])[:2]
         for cand in range(1, k + 1):
             label = f"r{round_no:02d}c{cand}"
             parts = [f"TASK\n{task_line}", f"API\n{api_doc}",
                      f"TECHNIQUE LIBRARY\n{memory}"]
-            parents = sorted(population, key=lambda p: -p[0])[:2]
             if parents:
                 parts.append("TOP PRIOR CANDIDATES (best first, with their "
                              "remaining failure evidence)\n" + "\n\n".join(
