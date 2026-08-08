@@ -154,10 +154,15 @@ def _score(run_dir: Path) -> float:
     return steps * 10.0 + (0.0 if crashed else 1.0)
 
 
-def cap_loop(*, suite: str, task: int, debug_seed: int, model: str,
+def cap_loop(*, suite: str, task: int, debug_seeds: list[int], model: str,
              base_url: str | None, max_attempts: int, logs_root: Path,
              extra_cli: list[str], k: int = 1) -> dict:
-    """Rounds of K candidate programs until the debug seed passes.
+    """Rounds of K candidate programs until EVERY debug seed passes.
+
+    ``debug_seeds`` are perturbed configurations of the same task — the same
+    cell with objects placed differently. A candidate must solve ALL of them
+    to freeze; that is what forces programs to re-measure per episode instead
+    of memorising one layout (one seed would only ever test variance).
 
     ``k=1`` is plain iterative refinement; ``k>1`` is ASPIRE's evolutionary
     search (Algorithm 1): each round proposes K candidates conditioned on the
@@ -165,10 +170,11 @@ def cap_loop(*, suite: str, task: int, debug_seed: int, model: str,
     this round's earlier siblings with an explicit instruction to explore a
     DISTINCT strategy — single-trajectory refinement gets stuck in one
     solution family; the population is what escapes it. Selection is
-    :func:`_score`: mechanical, from the record, auditable.
+    :func:`_score` summed over seeds: mechanical, from the record, auditable.
 
-    ``max_attempts`` counts ROUNDS. Total episodes <= max_attempts * k, each
-    a full env boot — on one GPU this is the cost knob that matters.
+    ``max_attempts`` counts ROUNDS. Total episodes <= max_attempts * k *
+    len(debug_seeds), each a full env boot — on one GPU this is the cost
+    knob that matters.
     """
     from langchain.chat_models import init_chat_model
 
@@ -178,10 +184,16 @@ def cap_loop(*, suite: str, task: int, debug_seed: int, model: str,
     api_doc = render_api_doc()
     memory = _memory_digest()
 
-    task_line = (f"suite={suite} task={task} seed={debug_seed} — write a program "
-                 "that solves this cell's manipulation task.")
-    cli_args = ["--env", "libero", "--suite", suite, "--task", str(task),
-                "--seed", str(debug_seed), "--sandbox", "none", *extra_cli]
+    task_line = (
+        f"suite={suite} task={task} — write a program that solves this cell's "
+        f"manipulation task. It will be run on {len(debug_seeds)} perturbed "
+        f"configurations (seeds {debug_seeds}) and must solve ALL of them: "
+        "object placements differ per seed, so measure everything per episode."
+    )
+
+    def _cli_args(seed: int) -> list[str]:
+        return ["--env", "libero", "--suite", suite, "--task", str(task),
+                "--seed", str(seed), "--sandbox", "none", *extra_cli]
 
     #: every evaluated candidate: (score, label, program_source, evidence)
     population: list[tuple[float, str, str, str]] = []
@@ -222,22 +234,40 @@ def cap_loop(*, suite: str, task: int, debug_seed: int, model: str,
             program = programs_dir / f"attempt_{label}.py"
             program.write_text(program_source)
 
-            run_dir = _run_episode(cli_args, program, logs_root)
-            if run_dir is None:
-                logger.error("%s: no run dir produced", label)
+            # One candidate = one episode PER DEBUG SEED. Frozen only if all
+            # pass; otherwise the failures (each with its seed) become the
+            # candidate's evidence, and the seed-summed score its fitness.
+            seed_results: list[tuple[int, Path, bool]] = []
+            for seed in debug_seeds:
+                run_dir = _run_episode(_cli_args(seed), program, logs_root)
+                if run_dir is None:
+                    logger.error("%s seed %d: no run dir produced", label, seed)
+                    continue
+                episodes += 1
+                solved = _terminated(run_dir)
+                logger.info("%s seed %d: %s (%s)", label, seed,
+                            "solved" if solved else "failed", run_dir.name)
+                seed_results.append((seed, run_dir, solved))
+            if not seed_results:
                 continue
-            episodes += 1
-            if _terminated(run_dir):
-                logger.info("%s: SOLVED (%s)", label, run_dir.name)
+            if all(solved for _, _, solved in seed_results):
+                logger.info("%s: SOLVED all %d debug seeds", label, len(seed_results))
                 (programs_dir / "solve.py").write_text(program_source)
-                meta = {"suite": suite, "task": task, "debug_seed": debug_seed,
+                meta = {"suite": suite, "task": task, "debug_seeds": debug_seeds,
                         "rounds": round_no, "episodes": episodes, "k": k,
-                        "run": run_dir.name, "source_attempt": program.name}
+                        "runs": [d.name for _, d, _ in seed_results],
+                        "source_attempt": program.name}
                 (programs_dir / "solve.json").write_text(json.dumps(meta, indent=2))
                 return {"solved": True, **meta}
-            score = _score(run_dir)
-            evidence = _attempt_digest(run_dir)
-            logger.info("%s: failed, score=%.0f (%s)", label, score, run_dir.name)
+            score = sum(_score(d) for _, d, _ in seed_results)
+            evidence = "\n\n".join(
+                f"[seed {seed}: {'SOLVED' if solved else 'FAILED'}]\n"
+                + ("" if solved else _attempt_digest(
+                    d, max_chars=max(6000, 25000 // len(debug_seeds))))
+                for seed, d, solved in seed_results
+            )
+            logger.info("%s: %d/%d seeds, score=%.0f", label,
+                        sum(s for _, _, s in seed_results), len(seed_results), score)
             population.append((score, label, program_source, evidence))
             siblings.append(f"--- {label} score={score:.0f} ---\n{program_source}")
 

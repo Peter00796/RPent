@@ -20,8 +20,12 @@ def main() -> int:
     ap.add_argument("--suite", required=True)
     ap.add_argument("--task", type=int, required=True)
     ap.add_argument("--debug-seed", type=int, default=51,
-                    help="the seed the loop learns on; held-out evaluation "
-                         "uses OTHER seeds with the frozen program")
+                    help="single debug seed (kept for compatibility; "
+                         "--debug-seeds wins when given)")
+    ap.add_argument("--debug-seeds", default=None,
+                    help="comma list of perturbed configurations the program "
+                         "must solve ALL of before freezing, e.g. '51,52,53'. "
+                         "Held-out evaluation uses OTHER seeds.")
     ap.add_argument("--model", default="deepseek-v4-flash")
     ap.add_argument("--base-url", default=None)
     ap.add_argument("--max-attempts", type=int, default=6,
@@ -36,8 +40,10 @@ def main() -> int:
 
     from rpent.cap.loop import cap_loop
 
+    seeds = ([int(s) for s in args.debug_seeds.split(",")]
+             if args.debug_seeds else [args.debug_seed])
     result = cap_loop(
-        suite=args.suite, task=args.task, debug_seed=args.debug_seed,
+        suite=args.suite, task=args.task, debug_seeds=seeds,
         model=args.model, base_url=args.base_url,
         max_attempts=args.max_attempts, logs_root=Path(args.logs_root),
         extra_cli=list(args.extra_cli), k=args.k,
