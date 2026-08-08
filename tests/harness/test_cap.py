@@ -46,7 +46,8 @@ def _finish(status, summary):
 stub_api["finish"] = _finish
 ns = cap_api.exec_namespace(stub_api)
 
-check("no __import__", "__import__" not in ns["__builtins__"])
+check("__import__ is the whitelist shim, not the real one",
+      ns["__builtins__"]["__import__"] is cap_api._safe_import)
 check("no open/eval/exec", all(k not in ns["__builtins__"]
                                for k in ("open", "eval", "exec", "compile")))
 check("math/json provided", ns["math"].pi > 3 and ns["json"] is json)
