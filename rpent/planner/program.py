@@ -72,7 +72,7 @@ class ProgramPlanner:
                     self._program_file, program_sha[:12])
 
         ctx = toolkit.tool_context
-        namespace = exec_namespace(make_api(ctx))
+        namespace = exec_namespace(make_api(ctx, output_dir=self._output_dir))
 
         finish_result = None
         error = None

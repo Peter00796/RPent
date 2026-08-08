@@ -19,7 +19,10 @@ from __future__ import annotations
 import builtins
 import json
 import math
+import time
 from typing import Any
+
+from rpent.tools import tool_log
 
 #: Builtins a program may use. No __import__, no open, no exec/eval/compile.
 _SAFE_BUILTIN_NAMES = (
@@ -38,12 +41,53 @@ class ProgramHalt(Exception):
         self.result = {"_finish": True, "status": status, "summary": summary}
 
 
-def make_api(ctx: Any) -> dict[str, Any]:
+def instrument(name: str, fn, ctx: Any, output_dir) -> Any:
+    """Wrap one API function so its calls land in ``tool_calls.jsonl``.
+
+    Found the hard way on the first smoke run: the tool-call log is written
+    by a LANGCHAIN middleware, so program runs — which never build a graph —
+    advanced 23 env steps while recording ZERO calls, and the coding agent
+    debugged nearly blind. For program runs, THIS wrapper is the uniform
+    seam the middleware provides for tool runs; without it the evidence
+    inheritance the CaP arm is built on is a false promise.
+    """
+    def wrapped(**kwargs):
+        before = getattr(ctx, "step_idx", None)
+        start = time.monotonic()
+        try:
+            result = fn(**kwargs)
+        except ProgramHalt:
+            raise  # finish() is control flow, not a tool call outcome
+        except Exception as exc:
+            tool_log.append(
+                output_dir, tool=name, args=kwargs,
+                result={"error": f"{type(exc).__name__}: {exc}"},
+                elapsed_s=time.monotonic() - start,
+                step_idx_before=before,
+                step_idx_after=getattr(ctx, "step_idx", None),
+                status="raised",
+            )
+            raise
+        tool_log.append(
+            output_dir, tool=name, args=kwargs, result=result,
+            elapsed_s=time.monotonic() - start,
+            step_idx_before=before,
+            step_idx_after=getattr(ctx, "step_idx", None),
+        )
+        return result
+    wrapped.__name__ = name
+    return wrapped
+
+
+def make_api(ctx: Any, output_dir=None) -> dict[str, Any]:
     """Build the callable namespace for one run's program.
 
     ``ctx`` is the run's :class:`LiberoContext`. Env-advancing calls go
-    through ``ctx.advance`` (bookkeeping + logging identical to the tool
-    path); read-only calls hit the same handler modules the tools wrap.
+    through ``ctx.advance`` (bookkeeping identical to the tool path);
+    read-only calls hit the same handler modules the tools wrap. When
+    ``output_dir`` is given, every call is instrumented into
+    ``tool_calls.jsonl`` — program runs must leave the same evidence trail
+    tool runs do.
     """
     from robots.libero.tools import geometry, perception, state
 
@@ -74,6 +118,10 @@ def make_api(ctx: Any) -> dict[str, Any]:
         "compare_extent": lambda **kw: geometry.compare_extent(**kw),
     }
 
+    if output_dir is not None:
+        api = {name: instrument(name, fn, ctx, output_dir)
+               for name, fn in api.items()}
+
     def finish(status: str, summary: str):
         raise ProgramHalt(status, summary)
 
@@ -81,11 +129,28 @@ def make_api(ctx: Any) -> dict[str, Any]:
     return api
 
 
+def _safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+    """Allow ``import math`` / ``import json`` — and nothing else.
+
+    The first smoke run died on ``import math`` even though ``math`` was
+    already a global: models write the import line reflexively, and failing
+    a whole episode over a no-op statement is discipline where a mechanism
+    is cheap. Anything beyond the two whitelisted modules still raises.
+    """
+    if name in ("math", "json"):
+        return {"math": math, "json": json}[name]
+    raise ImportError(
+        f"import of {name!r} is not available to programs; the API functions, "
+        "math and json are the whole toolbox"
+    )
+
+
 def exec_namespace(api: dict[str, Any]) -> dict[str, Any]:
     """The globals a program executes under: API + a small safe prelude."""
     safe_builtins = {name: getattr(builtins, name) for name in _SAFE_BUILTIN_NAMES
                      if hasattr(builtins, name)}
     safe_builtins["True"], safe_builtins["False"], safe_builtins["None"] = True, False, None
+    safe_builtins["__import__"] = _safe_import
     return {
         "__builtins__": safe_builtins,
         "math": math,

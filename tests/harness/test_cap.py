@@ -53,9 +53,54 @@ check("math/json provided", ns["math"].pi > 3 and ns["json"] is json)
 
 try:
     exec("import os", dict(ns))
-    check("import blocked", False)
+    check("import os blocked", False)
 except ImportError:
-    check("import blocked", True)
+    check("import os blocked", True)
+ns2 = dict(ns)
+exec("import math\nx = math.sqrt(9)", ns2)
+check("import math tolerated (smoke-run lesson: a no-op import must not "
+      "kill an episode)", ns2["x"] == 3.0)
+
+# --- instrumentation: program calls must land in tool_calls.jsonl -----------
+print("\n=== instrumentation ===")
+import tempfile as _tf  # noqa: E402
+
+from rpent.tools import tool_log  # noqa: E402
+
+LOGDIR = Path(_tf.mkdtemp(prefix="cap_log_"))
+
+
+class Ctx:
+    step_idx = 0
+
+
+ctx = Ctx()
+
+
+def fake_move(**kw):
+    ctx.step_idx += 1
+    return {"final_dist_m": 0.004}
+
+
+def fake_bad(**kw):
+    raise RuntimeError("boom")
+
+
+tool_log.reset_sequence()
+inst_move = cap_api.instrument("move_to", fake_move, ctx, LOGDIR)
+inst_bad = cap_api.instrument("segment", fake_bad, ctx, LOGDIR)
+inst_move(xyz=[1, 2, 3])
+try:
+    inst_bad(prompt="x")
+except RuntimeError:
+    pass
+records = tool_log.load(LOGDIR)
+check("both calls recorded (smoke-run lesson: program runs logged ZERO calls)",
+      [r["tool"] for r in records] == ["move_to", "segment"], str(records))
+check("step advance visible in the record",
+      records[0]["step_idx_before"] == 0 and records[0]["step_idx_after"] == 1)
+check("raised call recorded with status=raised",
+      records[1]["status"] == "raised" and "boom" in json.dumps(records[1]))
 
 # --- ProgramPlanner ----------------------------------------------------------
 print("\n=== ProgramPlanner ===")
@@ -77,7 +122,7 @@ class StubToolkit:
 
 
 # The planner asks cap.api for the binding; stub it so no tool imports run here.
-cap_api.make_api = lambda ctx: dict(stub_api)
+cap_api.make_api = lambda ctx, output_dir=None: dict(stub_api)
 
 out_dir = TMP / "run"
 out_dir.mkdir()

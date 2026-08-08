@@ -38,7 +38,9 @@ evidence record of every prior attempt.
 Rules:
 - Output exactly ONE fenced python block containing the COMPLETE program.
   It runs top-level (the API functions are globals) and must end by calling
-  finish(status, summary). No imports beyond the provided math/json.
+  finish(status, summary). math and json are already available (an
+  `import math` / `import json` line is tolerated); NOTHING else can be
+  imported — the API functions are the whole toolbox.
 - The API is everything you have. Measure, do not assume: every coordinate
   you command must come from a segment/back_project/world_extent result
   computed in the SAME episode the program is running in. Scenes vary
