@@ -204,7 +204,8 @@ def cap_loop(*, suite: str, task: int, debug_seeds: list[int], model: str,
         # Parents snapshot BEFORE the round: a candidate's within-round
         # predecessors are siblings ("explore differently"), never parents
         # ("repair me") — one program must not carry both instructions.
-        parents = sorted(population, key=lambda p: -p[0])[:2]
+        # Top3, matching ASPIRE's Algorithm 1 ProposeRepairs(·, Top3(H), ·).
+        parents = sorted(population, key=lambda p: -p[0])[:3]
         for cand in range(1, k + 1):
             label = f"r{round_no:02d}c{cand}"
             parts = [f"TASK\n{task_line}", f"API\n{api_doc}",
@@ -271,6 +272,17 @@ def cap_loop(*, suite: str, task: int, debug_seeds: list[int], model: str,
             population.append((score, label, program_source, evidence))
             siblings.append(f"--- {label} score={score:.0f} ---\n{program_source}")
 
+    # Budget exhausted: Algorithm 1 still returns P* — freeze the best
+    # candidate so held-out validation can measure what the search found,
+    # even when the debug set was not fully solved.
+    if population:
+        best = max(population, key=lambda p: p[0])
+        (programs_dir / "best.py").write_text(best[2])
+        (programs_dir / "best.json").write_text(json.dumps({
+            "suite": suite, "task": task, "debug_seeds": debug_seeds,
+            "rounds": max_attempts, "episodes": episodes, "k": k,
+            "label": best[1], "score": best[0], "solved_all_debug": False,
+        }, indent=2))
     return {"solved": False, "suite": suite, "task": task, "k": k,
             "rounds": max_attempts, "episodes": episodes,
             "best": max(population, key=lambda p: p[0])[1] if population else None}
