@@ -1,0 +1,177 @@
+{
+  "entries": {
+    "memory/common/after_pi0_exhaustion_use_a_scripted_grasp_with_geometric_ver.md": {
+      "consulted_runs": 4,
+      "failures": 3,
+      "reads": 4,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false
+      },
+      "successes": 1
+    },
+    "memory/common/do_not_spend_the_whole_episode_on_perception_only_investigat.md": {
+      "consulted_runs": 2,
+      "failures": 1,
+      "reads": 2,
+      "runs": {
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false
+      },
+      "successes": 1
+    },
+    "memory/common/pre_position_pi0_from_the_agentview_anchor_when_wrist_and_ag.md": {
+      "consulted_runs": 10,
+      "failures": 5,
+      "reads": 10,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:32:33_libero_object_swap_t4_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true,
+        "20260807-20:35:04_libero_object_swap_t9_s0": false
+      },
+      "successes": 5
+    },
+    "memory/common/resolve_semantic_collisions_with_color_and_geometric_probes_.md": {
+      "consulted_runs": 5,
+      "failures": 2,
+      "reads": 5,
+      "runs": {
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true
+      },
+      "successes": 3
+    },
+    "memory/common/retry_failed_pi0_picks_from_a_clear_home_viewpoint_before_gi.md": {
+      "consulted_runs": 4,
+      "failures": 2,
+      "reads": 4,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false
+      },
+      "successes": 2
+    },
+    "memory/common/verify_every_pi0_pick_geometrically_before_transport.md": {
+      "consulted_runs": 10,
+      "failures": 5,
+      "reads": 10,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:32:33_libero_object_swap_t4_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true,
+        "20260807-20:35:04_libero_object_swap_t9_s0": false
+      },
+      "successes": 5
+    },
+    "memory/common/when_target_name_segmentation_fails_retry_with_color_shape_p.md": {
+      "consulted_runs": 6,
+      "failures": 3,
+      "reads": 6,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true
+      },
+      "successes": 3
+    },
+    "memory/libero/after_release_verify_placement_geometry_a_release_call_is_no.md": {
+      "consulted_runs": 10,
+      "failures": 5,
+      "reads": 10,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:32:33_libero_object_swap_t4_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true,
+        "20260807-20:35:04_libero_object_swap_t9_s0": false
+      },
+      "successes": 5
+    },
+    "memory/libero/discard_held_object_point_clouds_contaminated_by_the_contain.md": {
+      "consulted_runs": 9,
+      "failures": 5,
+      "reads": 9,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true,
+        "20260807-20:35:04_libero_object_swap_t9_s0": false
+      },
+      "successes": 4
+    },
+    "memory/libero/re_localize_the_basket_after_every_carry_identity_warning_me.md": {
+      "consulted_runs": 10,
+      "failures": 5,
+      "reads": 10,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:32:33_libero_object_swap_t4_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-19:58:43_libero_object_swap_t6_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true,
+        "20260807-20:35:04_libero_object_swap_t9_s0": false
+      },
+      "successes": 5
+    },
+    "memory/libero/treat_large_remaining_distance_on_move_to_as_a_stall_retreat.md": {
+      "consulted_runs": 8,
+      "failures": 4,
+      "reads": 8,
+      "runs": {
+        "20260807-18:33:42_libero_object_swap_t0_s0": false,
+        "20260807-18:51:17_libero_object_swap_t1_s0": true,
+        "20260807-19:07:14_libero_object_swap_t2_s0": false,
+        "20260807-19:22:13_libero_object_swap_t3_s0": true,
+        "20260807-19:38:26_libero_object_swap_t5_s0": false,
+        "20260807-20:15:39_libero_object_swap_t7_s0": true,
+        "20260807-20:22:07_libero_object_swap_t8_s0": true,
+        "20260807-20:35:04_libero_object_swap_t9_s0": false
+      },
+      "successes": 4
+    }
+  },
+  "recommendations": [
+    "zombie memory/common/do_not_conclude_emptiness_from_a_single_tight_occupancy_box.md: never consulted in the scanned runs"
+  ],
+  "runs_scanned": 10,
+  "zombies": [
+    "memory/common/do_not_conclude_emptiness_from_a_single_tight_occupancy_box.md"
+  ]
+}
