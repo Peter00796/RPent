@@ -112,6 +112,7 @@ def build_planner(
     claude_code_max_budget_usd: float | None = None,
     dashboard_events: DashboardEventSink,
     no_images: bool = False,
+    program_file: str | None = None,
 ):
     """Build a planner for the given backend, resolving credentials from env vars."""
     # Imports are deferred to avoid a circular import: api_loop / claude_code /
@@ -156,6 +157,22 @@ def build_planner(
             dashboard_events=dashboard_events,
             no_images=no_images,
         )
+    if planner_type == "program":
+        # Code-as-policy, in-loop half: execute a FIXED program, zero LLM
+        # calls in the episode (see rpent/cap). The coding agent lives
+        # between episodes, not inside them.
+        if not program_file:
+            raise ValueError(
+                "the 'program' planner requires --program-file <solve.py>"
+            )
+        from rpent.planner.program import ProgramPlanner
+
+        return ProgramPlanner(
+            program_file=program_file,
+            output_dir=output_dir,
+            dashboard_events=dashboard_events,
+        )
+
     if planner_type == "deepagents":
         if not model:
             raise ValueError(
