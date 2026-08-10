@@ -215,22 +215,34 @@ def check_write(p: Path) -> None:
 # Profile loading
 # ---------------------------------------------------------------------------
 
-def default_bindings(env_name: str, output_dir) -> dict[str, str]:
+def default_bindings(env_name: str, output_dir,
+                     extra: dict | None = None) -> dict[str, str]:
     """The placeholder → real-path map for this run.
 
     Profiles stay environment-agnostic; everything env- or run-specific
-    enters here.
+    enters here. When ``extra`` carries ``suite`` and ``task`` (the runner
+    knows them, the sandbox does not), the ``{memory_task}`` binding — this
+    task's playbook directory — becomes available; a profile referencing it
+    without them fails loudly at load.
     """
-    return {
+    bindings = {
         "output_dir": str(Path(output_dir).resolve()),
         "repo_root": str(get_repo_root()),
         "memory_common": str(get_memory_common_dir()),
         "memory_env": str(get_memory_env_dir(env_name)),
         "staging_root": str(get_staging_dir(env_name)),
     }
+    extra = extra or {}
+    if extra.get("suite") is not None and extra.get("task") is not None:
+        bindings["memory_task"] = str(
+            get_repo_root() / "memory" / "tasks"
+            / str(extra["suite"]) / f"t{extra['task']}"
+        )
+    return bindings
 
 
-def init_run_sandbox(profile: str, env_name: str, output_dir) -> SandboxPolicy:
+def init_run_sandbox(profile: str, env_name: str, output_dir,
+                     extra_bindings: dict | None = None) -> SandboxPolicy:
     """Load the profile, activate it, and dump the fingerprint into the run.
 
     ``{output_dir}/sandbox.json`` records the exact boundary that was live —
@@ -238,7 +250,8 @@ def init_run_sandbox(profile: str, env_name: str, output_dir) -> SandboxPolicy:
     run is attributable to its input surface.
     """
     global _FINGERPRINT_PATH
-    policy = load_profile(profile, default_bindings(env_name, output_dir))
+    policy = load_profile(
+        profile, default_bindings(env_name, output_dir, extra_bindings))
     set_sandbox(policy)
     fp = Path(output_dir) / "sandbox.json"
     fp.write_text(json.dumps(policy.fingerprint(), indent=2))

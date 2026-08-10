@@ -46,6 +46,28 @@ from rpent.utils.resources import ensure_staged_priors
 
 logger = get_logger("agent")
 
+#: The experiment-episode task brief. It replaces the normal user message:
+#: the goal is a CONTROLLED ANSWER ("which variant works"), not a solve —
+#: the missing 0-to-1 discovery step for cells that have never succeeded.
+#: A summariser can only learn "don't" from failures; contrast pairs from
+#: deliberate trials are where "do" comes from.
+_EXPERIMENT_BRIEF = """EXPERIMENT MODE — this episode is NOT scored and is NOT about completing the task.
+
+Cell: suite={suite} task={task} seed={seed} (practice seed)
+QUESTION TO SETTLE: {question}
+
+Rules:
+1. Controlled trials: change ONE variable per trial, hold everything else fixed.
+2. Up to {trials} trials. Before each, state what you are changing and why;
+   after each, record the outcome from tool evidence.
+3. Record findings in RELATIVE terms that survive a re-randomised scene
+   (offsets from measured features: rim centre, retreat direction, object
+   top, graspable width) — never absolute coordinates.
+4. End by writing {output_dir}/experiment_notes.md: one line per trial
+   (what changed -> outcome), then THE WINNING RECIPE if any trial worked,
+   in relative terms. Then call finish(status="experiment", summary=...).
+"""
+
 
 # ---------------------------------------------------------------------------
 # API agent transcript serialization
@@ -134,6 +156,15 @@ def _build_argparser() -> argparse.ArgumentParser:
                          "resolved boundary is dumped to "
                          "{output_dir}/sandbox.json. Default: none (the "
                          "run's workspace only).")
+    ap.add_argument("--experiment", default=None, metavar="QUESTION",
+                    help="Run an EXPERIMENT episode instead of a task attempt: "
+                         "the agent runs controlled trials to settle QUESTION "
+                         "(one variable changed per trial, findings recorded in "
+                         "relative terms) and writes experiment_notes.md. "
+                         "Practice seeds (>=51) only — experiment episodes are "
+                         "never scored. Pair with --sandbox practice.")
+    ap.add_argument("--experiment-trials", type=int, default=5,
+                    help="Max trials inside an experiment episode (default 5).")
     ap.add_argument("--output-dir", default=None)
     ap.add_argument("--dashboard", action="store_true",
                     help="Start a local dashboard server for this single run.")
@@ -181,7 +212,10 @@ def main() -> int:
     output_dir = init_output_dir(output_dir, verbose=args.verbose)
     logger.info("physical agent cmd: %s", shlex.join([sys.executable, *sys.argv]))
 
-    sandbox_policy = init_run_sandbox(args.sandbox, env_name, output_dir)
+    sandbox_policy = init_run_sandbox(
+        args.sandbox, env_name, output_dir,
+        extra_bindings={k: prompt_vars.get(k) for k in ("suite", "task")},
+    )
     logger.info(
         "sandbox profile '%s': read %s",
         sandbox_policy.name,
@@ -225,6 +259,25 @@ def main() -> int:
         variables=prompt_vars,
         memory=memory_on,
     )
+    if args.experiment:
+        try:
+            seed_num = int(prompt_vars.get("seed"))
+        except (TypeError, ValueError):
+            seed_num = None
+        if seed_num is not None and seed_num < 51:
+            parser.error(
+                f"--experiment runs on practice seeds (>=51); seed {seed_num} "
+                "is a scoring seed and an experiment there would poison it"
+            )
+        user_msg = _EXPERIMENT_BRIEF.format(
+            suite=prompt_vars.get("suite", "?"),
+            task=prompt_vars.get("task", "?"),
+            seed=prompt_vars.get("seed", "?"),
+            question=args.experiment,
+            trials=args.experiment_trials,
+            output_dir=output_dir,
+        )
+        logger.info("EXPERIMENT episode: %s", args.experiment)
 
     input_queue: "queue.Queue[str | None] | None" = None
     await_first_prompt: "Callable[[], str | None] | None" = None

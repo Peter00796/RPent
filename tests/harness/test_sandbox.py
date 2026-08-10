@@ -172,6 +172,25 @@ check("default_bindings resolves under the repo root",
       str(get_repo_root()) in json.dumps(
           sandbox.default_bindings("libero", OUT)))
 
+# Practice profile: the task-playbook root binds only when the runner
+# supplies suite/task; without them the profile fails loudly, not silently.
+task_bindings = dict(BINDINGS)
+task_bindings["memory_task"] = str(TMP / "memory" / "tasks" / "suite_x" / "t5")
+practice = sandbox.load_profile("practice", task_bindings)
+check("practice profile exposes the task playbook root",
+      len(practice.read_roots) == 4
+      and any(str(p).endswith("t5") for p in practice.read_roots))
+try:
+    sandbox.load_profile("practice", BINDINGS)
+    check("practice without suite/task binding fails loudly", False)
+except ValueError as e:
+    check("practice without suite/task binding fails loudly",
+          "memory_task" in str(e), str(e))
+check("default_bindings adds memory_task only with suite+task",
+      "memory_task" not in sandbox.default_bindings("libero", OUT)
+      and sandbox.default_bindings("libero", OUT,
+          {"suite": "s", "task": 5})["memory_task"].endswith("tasks/s/t5"))
+
 # The recorded fingerprint must track write protection registered later
 # (the toolkit registers it AFTER init_run_sandbox's first dump).
 sandbox.add_write_protection([OUT / "states.json"])

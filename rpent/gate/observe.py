@@ -32,6 +32,13 @@ Rules, all hard:
 - Prefer observations that explain the run's outcome: what worked, what
   failed, what was tried repeatedly, what was consulted and whether it
   helped.
+- CONTRAST PAIRS ARE THE MOST VALUABLE OBSERVATION TYPE. If the run tried
+  the same subgoal more than one way (a different prompt, pre-position,
+  approach, or height), you MUST write a contrast observation: which
+  variant worked, which failed, citing every attempt. State the difference
+  in RELATIVE terms that survive a re-randomised scene (offsets from
+  measured features like a rim centre or an object top), never as absolute
+  coordinates.
 
 Output format — repeat this block per observation, nothing else:
 

@@ -20,6 +20,7 @@ its content being read — provenance is a mechanism here, not a request.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -27,7 +28,11 @@ from rpent.gate.tokens import Cite, parse_cite
 
 ACTIONS = ("add", "revise", "evict", "endorse")
 TYPES = ("technique", "invariant", "failure_mode")
-SCOPES = ("common", "env")
+#: ``task`` is the playbook tier: knowledge valid for ONE task cell (object
+#: identities, working phrasings, winning recipes from practice episodes).
+#: Naming a scene instance is legal there — that is the tier's whole point —
+#: but absolute coordinates still are not: they die with the seed.
+SCOPES = ("common", "env", "task")
 #: Actions that touch an existing entry — higher evidence bar, target required.
 TARGETED_ACTIONS = ("revise", "evict", "endorse")
 
@@ -48,6 +53,7 @@ class Proposal:
     scope: str = ""
     conditions: str = ""
     target: str = ""
+    task: str = ""       # scope=task only: "<suite>/t<n>", e.g. libero_object_swap/t5
     evidence: list[Evidence] = field(default_factory=list)
     counter_evidence: list[Evidence] = field(default_factory=list)
     support: int | None = None
@@ -137,6 +143,7 @@ def load_proposal(path: str | Path) -> Proposal:
     proposal.scope = str(front.get("scope", "")).strip()
     proposal.conditions = str(front.get("conditions", "") or "").strip()
     proposal.target = str(front.get("target", "") or "").strip()
+    proposal.task = str(front.get("task", "") or "").strip()
     if front.get("support") is not None:
         try:
             proposal.support = int(front["support"])
@@ -155,6 +162,14 @@ def load_proposal(path: str | Path) -> Proposal:
         errors.append(f"action {proposal.action!r} requires a target entry path")
     if proposal.action == "add" and proposal.target:
         errors.append("action 'add' must not carry a target")
+    if proposal.scope == "task":
+        if not re.fullmatch(r"[\w-]+/t\d+", proposal.task):
+            errors.append(
+                "scope=task requires task: '<suite>/t<n>' "
+                f"(got {proposal.task!r})"
+            )
+    elif proposal.task:
+        errors.append("task: is only valid with scope=task")
 
     proposal.evidence = _evidence_list(front.get("evidence"), errors, "evidence")
     proposal.counter_evidence = _evidence_list(
@@ -163,7 +178,8 @@ def load_proposal(path: str | Path) -> Proposal:
         errors.append("no evidence — a proposal without citations is not read")
 
     unknown = set(front) - {"title", "action", "type", "scope", "conditions",
-                            "target", "evidence", "counter_evidence", "support"}
+                            "target", "task", "evidence", "counter_evidence",
+                            "support"}
     if unknown:
         errors.append(f"unknown frontmatter keys: {sorted(unknown)}")
     return proposal

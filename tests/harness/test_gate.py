@@ -222,6 +222,32 @@ check("unconsulted entries reported as zombies",
       any("retreat_off" in z for z in result["zombies"]),
       str(result["zombies"]))
 
+# --- task-playbook tier ---------------------------------------------------------
+print("\n=== task tier ===")
+p_task = proposal(RUN_B, "p7_task.md", {
+    "title": "the ketchup in this cell is the tall red bottle",
+    "action": "add", "type": "invariant", "scope": "task",
+    "task": "libero_object_swap/t1",
+    "evidence": [{"cite": f"run:{RUN_B.name}#seq=1", "role": "measurement"}],
+}, "ketchup_1 is the tall red bottle; grasp it at [0.123, 0.456, 0.789] "
+   "worked once.")
+r_task = run_checks(load_proposal(p_task), RUNS, MEMORY, "libero",
+                    proposals)
+check("task tier: instance names are legal (no cell_answers flag for names)",
+      not any("names a scene instance" in f.message for f in r_task.findings))
+check("task tier: absolute coordinates still flagged",
+      any("coordinate" in f.message for f in r_task.findings),
+      str([f.message for f in r_task.findings]))
+check("task tier: destination under memory/tasks/<suite>/t<n>/",
+      r_task.destination.startswith("memory/tasks/libero_object_swap/t1/"),
+      r_task.destination)
+p_bad_task = proposal(RUN_B, "p8_badtask.md", {
+    "title": "x", "action": "add", "type": "invariant", "scope": "task",
+    "evidence": [{"cite": f"run:{RUN_B.name}#seq=1", "role": "m"}],
+}, "task scope without task ref")
+check("scope=task without task: ref is a contract error",
+      any("scope=task requires" in e for e in load_proposal(p_bad_task).contract_errors))
+
 # --- distiller plumbing (LLM-free parts) ---------------------------------------
 print("\n=== distiller plumbing ===")
 from rpent.gate.observe import run_digest, split_blocks  # noqa: E402

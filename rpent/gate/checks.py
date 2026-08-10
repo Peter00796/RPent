@@ -162,11 +162,24 @@ def run_checks(
                        "measurement or delete the number")
 
     # -- 3. per-cell answers --------------------------------------------------
+    # The task tier is EXEMPT by design: naming this cell's objects is its
+    # whole purpose. What still does not fly there is an absolute coordinate:
+    # it dies with the seed, so it gets flagged with the relational reminder.
     object_names = _object_names(review.resolutions, runs)
-    for hit in sorted(set(_INSTANCE_RE.findall(prose)) & object_names):
-        review.add("cell_answers", "flag",
-                   f"names a scene instance ({hit!r}) — a library entry that "
-                   "identifies one cell's object is an answer, not knowledge")
+    if p.scope == "task":
+        for m in re.finditer(
+                r"[\[\(]\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*[\]\)]",
+                prose):
+            review.add("cell_answers", "flag",
+                       f"absolute coordinate {m.group(0)} — coordinates do not "
+                       "survive a re-randomised scene; record it relative to a "
+                       "measured feature (rim centre, retreat direction, object top)")
+    else:
+        for hit in sorted(set(_INSTANCE_RE.findall(prose)) & object_names):
+            review.add("cell_answers", "flag",
+                       f"names a scene instance ({hit!r}) — a library entry that "
+                       "identifies one cell's object is an answer, not knowledge; "
+                       "if this is task-specific knowledge, scope it 'task'")
 
     # -- 4. scope -------------------------------------------------------------
     if p.scope == "common":
@@ -202,7 +215,11 @@ def run_checks(
                    f"claims support={p.support} but cites {len(p.cited_runs)} "
                    "distinct runs — support is counted, not declared")
 
-    review.destination = (p.target if p.action in TARGETED_ACTIONS else
-                          f"memory/{'common' if p.scope == 'common' else env_name}"
-                          f"/{_slug(p.title)}.md")
+    if p.action in TARGETED_ACTIONS:
+        review.destination = p.target
+    elif p.scope == "task":
+        review.destination = f"memory/tasks/{p.task}/{_slug(p.title)}.md"
+    else:
+        review.destination = (f"memory/{'common' if p.scope == 'common' else env_name}"
+                              f"/{_slug(p.title)}.md")
     return review

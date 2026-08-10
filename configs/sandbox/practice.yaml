@@ -1,0 +1,14 @@
+# Practice arm: the memory library PLUS this task's own playbook —
+# the tier where cell-specific knowledge (object identities, working
+# phrasings, winning recipes from experiment episodes) legally lives.
+# For practice seeds (51+) and playbook-armed exam runs; a run under this
+# profile carries the playbook in its fingerprint like any other root.
+name: practice
+description: memory library + this task's playbook (cell-specific tier)
+read_roots:
+  - "{output_dir}"
+  - "{memory_common}"
+  - "{memory_env}"
+  - "{memory_task}"
+write_roots:
+  - "{output_dir}"
