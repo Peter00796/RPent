@@ -118,6 +118,20 @@ class LiberoContext:
             ``agent_elapsed_s`` added. If the call was interrupted, the
             cancellation fields are merged in.
         """
+        # A finished episode cannot step again — the env client asserts on it
+        # (a protocol invariant we keep). Surface it as information instead
+        # of a crash: experiment episodes in particular keep probing after an
+        # accidental solve or a truncation, and one late motion call must not
+        # cost the run its notes.
+        env = getattr(self.primitives, "env", None)
+        if env is not None and (getattr(env, "episode_terminated", False)
+                                or getattr(env, "episode_truncated", False)):
+            return {
+                "error": "the episode already signaled termination/truncation "
+                         "— no further env steps are possible. Save your "
+                         "notes/audit with write_text_file and call finish().",
+                "libero_terminated": bool(getattr(env, "episode_terminated", False)),
+            }
         command = {"action": name, **args}
         t0 = time.time()
         start_frame = self.primitives.recorded_frame_count()

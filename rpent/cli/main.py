@@ -259,7 +259,9 @@ def main() -> int:
 
         task_dir = (get_repo_root() / "memory" / "tasks"
                     / str(prompt_vars["suite"]) / f"t{prompt_vars['task']}")
-        playbook_on = sandbox_policy.can_read(task_dir)
+        # Readable AND existing: advertising an empty root cost the agent a
+        # confused list_dir on the first playbook-less practice run.
+        playbook_on = sandbox_policy.can_read(task_dir) and task_dir.is_dir()
         if playbook_on:
             prompt_vars["memory_task"] = task_dir
     system_prompt = prompt_bundle.render(
