@@ -144,7 +144,29 @@ class DeepAgentPlanner:
             invoke_kwargs["context"] = context
 
         try:
-            agent.invoke({"messages": [("user", user_message)]}, **invoke_kwargs)
+            state = agent.invoke({"messages": [("user", user_message)]},
+                                 **invoke_kwargs)
+            if recorder.finish_result is None and recorder.turns < max_turns:
+                # The model wrote prose and called nothing, so the graph
+                # ended. Seen killing experiment episodes silently (and any
+                # run that drifts into an essay): the record then has no
+                # finish and no artifacts. One nudge, not a loop — either it
+                # wraps up properly or it stops for good.
+                logger.info(
+                    "model ended turn without a tool call at turn %d — "
+                    "nudging once to finish or continue", recorder.turns,
+                )
+                nudge = (
+                    "You ended your turn without a tool call, which halts "
+                    "the episode. If you are done, save any deliverables "
+                    "(notes, audit) with write_text_file and call finish(). "
+                    "Otherwise continue working with a tool call now."
+                )
+                agent.invoke(
+                    {"messages": [*(state.get("messages") or []),
+                                  ("user", nudge)]},
+                    **invoke_kwargs,
+                )
             if recorder.finish_result is not None:
                 logger.info("FINISH called: %s", recorder.finish_result)
             elif recorder.turns >= max_turns:

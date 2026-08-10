@@ -66,6 +66,8 @@ Rules:
 4. End by writing {output_dir}/experiment_notes.md: one line per trial
    (what changed -> outcome), then THE WINNING RECIPE if any trial worked,
    in relative terms. Then call finish(status="experiment", summary=...).
+5. NEVER end a message without a tool call — reasoning goes in text BEFORE
+   a call. A message with no call halts the episode and loses your notes.
 """
 
 

@@ -240,6 +240,25 @@ check("every other tool's description is unchanged", all(
     with_img[n]["function"]["description"] == no_img[n]["function"]["description"]
     for n in with_img if n != "read_image"))
 
+print("\n=== D2. essay-drift: one nudge recovers the finish ===")
+drift_script = [
+    AIMessage(content="long essay, no tool call", usage_metadata=usage(900, 200)),
+    AIMessage(content="right — wrapping up", tool_calls=[
+        {"name": "finish", "args": {"status": "stuck", "summary": "nudged"},
+         "id": "n1"}], usage_metadata=usage(1000, 30)),
+    AIMessage(content="done", usage_metadata=usage(1100, 10)),
+]
+tk_d2 = FakeToolkit()
+model_d2 = ScriptedModel(turns=drift_script)
+planner_d2 = DeepAgentPlanner(model="scripted", chat_model=model_d2,
+                              dashboard_events=NullDashboardEventSink())
+res_d2 = planner_d2.solve(system_prompt="agent", user_message="task",
+                          toolkit=tk_d2, max_turns=20)
+check("essay-only turn no longer ends the run silently",
+      res_d2.finish_result is not None
+      and res_d2.finish_result.get("summary") == "nudged",
+      str(res_d2.finish_result))
+
 print("\n=== E. ToolCallIntegrityMiddleware repairs orphan tool_calls ===")
 from types import SimpleNamespace  # noqa: E402
 
