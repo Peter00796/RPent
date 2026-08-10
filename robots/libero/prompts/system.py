@@ -298,7 +298,7 @@ rim bias rather than mistaken identity.
 #: at all. Note what is deliberately absent: the verbal prohibitions that used
 #: to follow this step. A file the sandbox blocks does not exist as far as
 #: this prompt is concerned; naming it just to forbid it advertises it.
-WORKFLOW_STEP_MEMORY = """READ THE MEMORY LIBRARY. Two roots are readable this run:
+WORKFLOW_STEP_MEMORY = """READ THE MEMORY LIBRARY. These roots are readable this run:
 - `{{memory_common}}` — cross-environment operating wisdom
 - `{{memory_env}}` — this environment's library
 
@@ -345,14 +345,29 @@ b. Call `finish`.""",
 )
 
 
-def workflow_steps(*, memory: bool) -> tuple[str, ...]:
+#: Appended to the library step when the run's sandbox exposes this task's
+#: playbook. It outranks the general library on purpose: a verified recipe
+#: for THIS cell beats general wisdom about all cells.
+WORKFLOW_STEP_PLAYBOOK_LINE = """- `{{memory_task}}` — THIS task's playbook: verified recipes for this exact
+  cell, from controlled experiments. Read it FIRST; when a recipe matches the
+  situation, follow it before improvising."""
+
+
+def workflow_steps(*, memory: bool, playbook: bool = False) -> tuple[str, ...]:
     """The WORKFLOW step list for this run's sandbox capabilities.
 
-    ``memory=True`` prepends the library step; ``memory=False`` yields a
+    ``memory=True`` prepends the library step; ``playbook=True`` (requires
+    memory) adds the task-playbook root to it. ``memory=False`` yields a
     prompt in which the library is never mentioned — not instructed, not
     forbidden, not named.
     """
-    return (WORKFLOW_STEP_MEMORY, *WORKFLOW_STEPS_CORE) if memory else WORKFLOW_STEPS_CORE
+    if not memory:
+        return WORKFLOW_STEPS_CORE
+    step = WORKFLOW_STEP_MEMORY
+    if playbook:
+        head, rest = step.split("\n\n", 1)
+        step = head + "\n" + WORKFLOW_STEP_PLAYBOOK_LINE + "\n\n" + rest
+    return (step, *WORKFLOW_STEPS_CORE)
 
 OUTPUT_DISCIPLINE = """- One or two sentences of reasoning before each tool call: observation -> decision.
 - Cite your evidence when you commit a coordinate: which tool result, which step.

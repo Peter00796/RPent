@@ -247,17 +247,30 @@ def main() -> int:
         "memory_env": get_memory_env_dir(env_name),
     }
     # The prompt varies with the sandbox's CAPABILITIES, not its name: the
-    # library step exists iff the library is actually readable this run.
+    # library step exists iff the library is actually readable this run, and
+    # the playbook line iff this task's playbook root is readable.
     memory_on = memory_exposed(env_name)
+    playbook_on = False
+    if sandbox_policy is not None and prompt_vars.get("suite") is not None \
+            and prompt_vars.get("task") is not None:
+        from rpent.utils.config import get_repo_root
+
+        task_dir = (get_repo_root() / "memory" / "tasks"
+                    / str(prompt_vars["suite"]) / f"t{prompt_vars['task']}")
+        playbook_on = sandbox_policy.can_read(task_dir)
+        if playbook_on:
+            prompt_vars["memory_task"] = task_dir
     system_prompt = prompt_bundle.render(
         "system",
         variables=prompt_vars,
         memory=memory_on,
+        playbook=playbook_on,
     )
     user_msg = prompt_bundle.render(
         "user",
         variables=prompt_vars,
         memory=memory_on,
+        playbook=playbook_on,
     )
     if args.experiment:
         try:

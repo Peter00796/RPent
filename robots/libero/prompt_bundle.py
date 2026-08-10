@@ -7,13 +7,14 @@ from robots.libero.prompts import user as user_parts
 from rpent.context.prompt_utils import Numbered, PromptNode
 
 
-def system_prompt(*, memory: bool = False) -> PromptNode:
+def system_prompt(*, memory: bool = False, playbook: bool = False) -> PromptNode:
     """Assemble the LIBERO system prompt tree.
 
-    ``memory`` is a CAPABILITY, not a profile name: main.py sets it iff the
-    active sandbox actually exposes the memory-library roots, so the prompt
-    and the enforcement can never disagree (a custom profile that exposes the
-    library gets the library instructions, whatever it is called).
+    ``memory`` and ``playbook`` are CAPABILITIES, not profile names: main.py
+    sets them iff the active sandbox actually exposes the corresponding
+    roots, so the prompt and the enforcement can never disagree (a custom
+    profile that exposes the library gets the library instructions, whatever
+    it is called).
     """
     return {
         "ROLE AND EVALUATION": system_parts.ROLE_AND_EVALUATION,
@@ -28,13 +29,15 @@ def system_prompt(*, memory: bool = False) -> PromptNode:
         "PERCEPTION PASS — agentview = IDENTITY, wrist = GEOMETRY": (
             system_parts.PERCEPTION_ALGORITHM
         ),
-        "WORKFLOW": Numbered(system_parts.workflow_steps(memory=memory)),
+        "WORKFLOW": Numbered(
+            system_parts.workflow_steps(memory=memory, playbook=playbook)),
         "OUTPUT DISCIPLINE": system_parts.OUTPUT_DISCIPLINE,
     }
 
 
-def user_prompt(*, memory: bool = False) -> PromptNode:
-    """Assemble the LIBERO user prompt tree (same capability flag as system)."""
+def user_prompt(*, memory: bool = False, playbook: bool = False) -> PromptNode:
+    """Assemble the LIBERO user prompt tree (same capability flags as system;
+    ``playbook`` is accepted for signature parity and currently unused)."""
     return {
         "CELL": user_parts.CELL,
         "MODE": user_parts.MODE,

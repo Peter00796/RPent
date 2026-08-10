@@ -35,6 +35,7 @@ VARS = {
     "seed": "0",
     "memory_common": "/repo/memory/common",
     "memory_env": "/repo/memory/libero",
+    "memory_task": "/repo/memory/tasks/libero_object_swap/t0",
 }
 
 
@@ -75,6 +76,19 @@ check("library framed as technique, not values",
       "take the technique" in mem_text.lower())
 check("still no verbal file prohibitions",
       re.search(r"do not read", mem_text, re.IGNORECASE) is None)
+
+print("\n=== playbook variant (memory=True, playbook=True) ===")
+pb_text = (format_prompt(system_prompt(memory=True, playbook=True), variables=VARS)
+           + "\n" + format_prompt(user_prompt(memory=True, playbook=True),
+                                  variables=VARS))
+check("playbook root appears with read-first instruction",
+      "/repo/memory/tasks/libero_object_swap/t0" in pb_text
+      and "Read it FIRST" in pb_text)
+check("memory variant does NOT mention the playbook",
+      "playbook" not in mem_text.lower())
+for pat in LEAKS_ALWAYS:
+    check(f"playbook variant: no /{pat}/",
+          re.search(pat, pb_text, re.IGNORECASE) is None)
 
 print("\n=== both variants ===")
 check("variants differ only by the library material",
