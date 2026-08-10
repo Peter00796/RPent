@@ -2,9 +2,9 @@
 title: Do not conclude emptiness from a single tight occupancy box
 type: failure_mode
 scope: common
-conditions: When a box or held-object query returns 0 points while the arm is inside
-  or above the queried volume, after a pick, or when a basket-interior zero is being
-  used to infer a missing object.
+conditions: When a tight occupancy box at the expected landing spot returns only floor
+  points after a release; when a basket-interior zero is about to be used to start
+  a re-pick.
 support: 3
 provenance:
 - action: add
@@ -37,6 +37,17 @@ provenance:
   - run:20260810-18:58:23_libero_object_swap_t8_s0#seq=50
   - run:20260810-18:58:23_libero_object_swap_t8_s0#seq=52
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen5/proposals/proposal_05.md
+  batch: gate_gen5
+  date: '2026-08-11'
+  evidence:
+  - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=44
+  - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=48
+  - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=61
+  - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=62
+  counter_evidence: []
 ---
 
-A 0-point result means the sensor did not see points in that volume at that instant, not that the volume is empty in the world. Before using such a reading to declare an object absent or lost, clear the view, move the arm out of the queried volume, widen the query, or re-check with the wrist camera. If after a pick the held-object query returns 0 but the origin box emptied and the object appears elevated in agentview, the pick is verified. Use a zero reading as one vote, never as proof of absence.
+A tight box at the exact expected landing point can miss an object that is standing slightly offset, tilted, or occluded by the basket wall. The floor-only reading is one vote against placement; before re-picking, clear the arm, lower the wrist into view of the basket interior, and segment/back-project the object. Only if the object is still not inside the basket should the run treat the placement as failed and re-pick.
+---

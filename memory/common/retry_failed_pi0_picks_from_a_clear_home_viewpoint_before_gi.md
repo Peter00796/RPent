@@ -2,9 +2,9 @@
 title: Retry failed Pi0 picks from a clear/home viewpoint before giving up
 type: technique
 scope: common
-conditions: When a pi0_pick empties the origin box but no object is in the hand; when
-  an air-grasp or push is diagnosed after lifting; when the object is later found
-  in a new footprint; when a re-pick from the original stance has failed.
+conditions: When an air-grasp has been diagnosed (pi0 status success but nothing held,
+  or origin box empty and no held object); when the run has just read retry or flat-target
+  guidance and then returns to occupancy probing.
 support: 1
 provenance:
 - action: add
@@ -40,6 +40,18 @@ provenance:
   - run:20260810-17:57:07_libero_object_swap_t3_s0#seq=92
   - run:20260810-17:57:07_libero_object_swap_t3_s0#step=12
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen5/proposals/proposal_03.md
+  batch: gate_gen5
+  date: '2026-08-11'
+  evidence:
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=87
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=93
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=94
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=102
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=112
+  counter_evidence: []
 ---
 
-An air-grasp does not leave the object where it was. If the origin box empties but verification shows nothing held, scan the surrounding table for the object's new footprint before re-picking; the object may have been knocked over or displaced. Re-issue the pick from the fresh footprint, not from the original coordinates, and verify the retry geometrically before transport.
+Once a pick is geometrically confirmed as an air-grasp, re-picking is the next action, not optional. Locate the object's new footprint from a low z-band or the wrist camera and issue a pick from the fresh coordinates. Re-enumerating the table after a failed pick consumes the episode; do not return to perception once the failure class is diagnosed.
+---

@@ -2,8 +2,9 @@
 title: Termination can fire during a closed-gripper descent; do not require a release
 type: invariant
 scope: env
-conditions: When carrying the target over the basket and descending with the gripper
-  closed; check the termination flag after every environment step.
+conditions: When an environment termination fires while the gripper is closed or during
+  a pick/descent; when a run is waiting for termination to decide whether placement
+  succeeded.
 support: 6
 provenance:
 - action: add
@@ -29,7 +30,21 @@ provenance:
   - run:20260810-18:58:23_libero_object_swap_t8_s0#seq=62
   - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=54
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen5/proposals/proposal_02.md
+  batch: gate_gen5
+  date: '2026-08-11'
+  evidence:
+  - run:20260810-21:45:48_libero_object_swap_t0_s0#seq=7
+  - run:20260810-21:45:48_libero_object_swap_t0_s0#seq=8
+  - run:20260810-21:45:48_libero_object_swap_t0_s0#seq=12
+  - run:20260810-21:45:48_libero_object_swap_t0_s0#seq=13
+  - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=61
+  - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=62
+  - run:20260810-20:46:39_libero_object_swap_t5_s0#seq=34
+  - run:20260810-20:46:39_libero_object_swap_t5_s0#seq=36
+  counter_evidence: []
 ---
 
-In this environment, the success predicate may evaluate true while the gripper is still closed during the final descent into the basket; it does not wait for a release. After any descent that enters the basket, read the termination flag. If it is true, run the interior geometry check, write the audit, and call finish. Do not keep stepping until a release appears, and do not call release merely to advance the state.
-
+Keep the existing fact that termination can fire during a closed-gripper descent and that a release call is not required. Extend it: termination is a signal to verify, not an oracle. It can fire while nothing is grasped and the target is still on the table; it can also fail to fire when the object is already inside the basket. Before declaring success, require at least two independent physical checks (origin box emptied, held/table absence, basket-interior occupancy, or a lowered wrist view). If the object is confirmed inside the basket and the origin is empty but termination has not fired, treat the task as complete; do not keep re-seating the object with closed-gripper descents.
+---

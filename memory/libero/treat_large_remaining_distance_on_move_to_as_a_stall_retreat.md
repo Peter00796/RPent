@@ -4,7 +4,7 @@ type: failure_mode
 scope: env
 conditions: Applies when a move_to finishes with a large remaining distance, or when
   low correction moves become pinned near a rim, wall, or obstacle.
-support: 4
+support: 5
 provenance:
 - action: add
   proposal: logs/gate_gen1/proposals/proposal_11.md
@@ -18,7 +18,18 @@ provenance:
   - run:20260807-15:52:13_libero_object_swap_t8_s0#seq=65
   - run:20260807-15:39:36_libero_object_swap_t7_s0#seq=36
   counter_evidence: []
+- action: endorse
+  proposal: logs/gate_gen5/proposals/proposal_06.md
+  batch: gate_gen5
+  date: '2026-08-11'
+  evidence:
+  - run:20260810-19:56:09_libero_object_swap_t1_s0#seq=8
+  - run:20260810-19:56:09_libero_object_swap_t1_s0#seq=75
+  - run:20260810-19:56:09_libero_object_swap_t1_s0#seq=82
+  - run:20260810-19:56:09_libero_object_swap_t1_s0#seq=91
+  counter_evidence: []
 ---
 
 A move_to can report completion while lagging the requested target; a large remaining distance means the position controller did not arrive. Continuing to send small corrections from a pinned or wall-adjacent pose wastes steps. Retreat to clear space, re-localize the object and container, and plan a segmented approach; use a direct pose move for the final descent into the basket.
 ---
+

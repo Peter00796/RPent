@@ -2,8 +2,9 @@
 title: Verify every pi0 pick geometrically before transport
 type: failure_mode
 scope: common
-conditions: Applies after any pi0_pick call, regardless of the tool-reported success
-  status.
+conditions: After any pi0_pick call, regardless of whether the tool reports success
+  or failure; before any transport; before trusting a termination signal that fires
+  during a pick.
 support: 13
 provenance:
 - action: add
@@ -56,10 +57,19 @@ provenance:
   - run:20260810-17:57:07_libero_object_swap_t3_s0#seq=8
   - run:20260810-17:57:07_libero_object_swap_t3_s0#seq=87
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen5/proposals/proposal_01.md
+  batch: gate_gen5
+  date: '2026-08-11'
+  evidence:
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=93
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=94
+  - run:20260810-20:52:58_libero_object_swap_t6_s0#seq=101
+  - run:20260810-21:58:40_libero_object_swap_t2_s0#seq=6
+  - run:20260810-21:58:40_libero_object_swap_t2_s0#seq=8
+  - run:20260810-21:58:40_libero_object_swap_t2_s0#seq=26
+  counter_evidence: []
 ---
 
-The pi0_pick success flag means the policy call completed, not that the object is in the gripper. Treat every pick as unverified until held-object geometry, origin-box occupancy, and camera re-segmentation agree. If holding is false or the target is still visible on the table, do not begin transport; classify the incident as air-grasp, wander, or push and retry.
+The pi0_pick success/failure string is not a contact report. A success can be an air-grasp that displaces the object, and a failure can occur after the object was actually moved. Never transport, release, or accept a termination signal until held-object geometry and origin-box removal agree that the target left its start. If the pick reports failure, do not treat that as proof that no transport happened; verify geometrically either way.
 ---
-
-
-

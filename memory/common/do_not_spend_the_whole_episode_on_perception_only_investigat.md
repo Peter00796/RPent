@@ -2,9 +2,9 @@
 title: Do not spend the whole episode on perception-only investigation
 type: failure_mode
 scope: common
-conditions: When all tool calls so far are reads, segments, back-projections, or occupancy
-  queries at environment step 0; when a lowered z-band sweep has completed without
-  adding a new cluster; when the run is about to re-scan a region it already enumerated.
+conditions: When the run has spent many tool calls on segments/back-projections/occupancy
+  at an early env step; when the target name repeatedly fails to segment; when a camera-FOV
+  exploration move is being considered without an immediate manipulation plan.
 support: 3
 provenance:
 - action: add
@@ -47,6 +47,18 @@ provenance:
   - run:20260810-17:21:40_libero_object_swap_t0_s0#seq=72
   - run:20260810-17:36:14_libero_object_swap_t1_s0#seq=81
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen5/proposals/proposal_04.md
+  batch: gate_gen5
+  date: '2026-08-11'
+  evidence:
+  - run:20260810-20:16:31_libero_object_swap_t3_s0#seq=104
+  - run:20260810-20:16:31_libero_object_swap_t3_s0#seq=110
+  - run:20260810-21:14:37_libero_object_swap_t8_s0#seq=28
+  - run:20260810-21:14:37_libero_object_swap_t8_s0#seq=104
+  - run:20260810-21:14:37_libero_object_swap_t8_s0#seq=108
+  counter_evidence: []
 ---
 
-Perception ends when one full occupancy/back-projection enumeration, including the lowered z-band when warranted, stops producing new candidate clusters. After that, no further probing or re-wording is admission-worthy; commit to the best-supported candidate and execute an environment step. If the semantic list implies more objects than clusters, treat it as a label collision, not a license to keep scanning. A run that never leaves step 0 cannot succeed.
+Perception ends after a bounded number of name variants per camera and one complete low-z occupancy enumeration. If the target still has no name, the best-supported unclaimed cluster is the target; execute a pick and verify it geometrically. Moving the wrist to inspect beyond the current view is also perception: if it is not followed by an attempt to manipulate, the episode is lost. A run that never leaves early environment steps, or leaves them only to hover, cannot succeed.
+---
