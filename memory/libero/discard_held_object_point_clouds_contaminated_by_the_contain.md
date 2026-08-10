@@ -4,7 +4,7 @@ type: failure_mode
 scope: env
 conditions: Applies when the wrist is over or near the basket and held_object returns
   a shape_warning, an implausibly wide span, or a failed wrist segmentation.
-support: 5
+support: 7
 provenance:
 - action: add
   proposal: logs/gate_gen1/proposals/proposal_08.md
@@ -28,8 +28,19 @@ provenance:
   - run:20260808-11:37:47_libero_object_swap_t3_s0#seq=89
   - run:20260808-11:37:47_libero_object_swap_t3_s0#seq=93
   counter_evidence: []
+- action: endorse
+  proposal: logs/gate_gen4/proposals/proposal_09.md
+  batch: gate_gen4
+  date: '2026-08-10'
+  evidence:
+  - run:20260810-18:51:12_libero_object_swap_t7_s0#seq=45
+  - run:20260810-18:51:12_libero_object_swap_t7_s0#seq=46
+  - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=53
+  - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=54
+  counter_evidence: []
 ---
 
 When the EEF is over the basket, the held-object mask can include the container, producing an implausibly wide span. Do not use such a reading to compute release coordinates. Record a clean held-object offset in open air before the final approach; when the contaminated warning appears, use that clean offset or agentview re-segmentation so that the object, not the EEF, is centered over the opening.
 ---
+
 

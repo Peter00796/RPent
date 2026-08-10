@@ -2,8 +2,9 @@
 title: Do not conclude emptiness from a single tight occupancy box
 type: failure_mode
 scope: common
-conditions: When an occupancy or compare query over a box returns zero points, especially
-  after a pick or over the basket while the arm is in or above the box.
+conditions: When a box or held-object query returns 0 points while the arm is inside
+  or above the queried volume, after a pick, or when a basket-interior zero is being
+  used to infer a missing object.
 support: 3
 provenance:
 - action: add
@@ -27,6 +28,15 @@ provenance:
   - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=75
   - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=76
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen4/proposals/proposal_02.md
+  batch: gate_gen4
+  date: '2026-08-10'
+  evidence:
+  - run:20260810-17:36:14_libero_object_swap_t1_s0#seq=73
+  - run:20260810-18:58:23_libero_object_swap_t8_s0#seq=50
+  - run:20260810-18:58:23_libero_object_swap_t8_s0#seq=52
+  counter_evidence: []
 ---
 
-A zero-point box is a camera/occlusion statement, not a world statement. If the arm is inside or above the queried volume, move it out of the viewing volume before trusting the empty reading, or corroborate with a second camera, a wrist mask, or a point-segment. Treat an empty box as one vote, never as proof of absence or loss.
+A 0-point result means the sensor did not see points in that volume at that instant, not that the volume is empty in the world. Before using such a reading to declare an object absent or lost, clear the view, move the arm out of the queried volume, widen the query, or re-check with the wrist camera. If after a pick the held-object query returns 0 but the origin box emptied and the object appears elevated in agentview, the pick is verified. Use a zero reading as one vote, never as proof of absence.

@@ -2,9 +2,9 @@
 title: Do not spend the whole episode on perception-only investigation
 type: failure_mode
 scope: common
-conditions: When the target remains ungrounded after a bounded round of name/color/shape
-  probes, or after a complete occupancy/back-projection enumeration stops adding candidate
-  blobs.
+conditions: When all tool calls so far are reads, segments, back-projections, or occupancy
+  queries at environment step 0; when a lowered z-band sweep has completed without
+  adding a new cluster; when the run is about to re-scan a region it already enumerated.
 support: 3
 provenance:
 - action: add
@@ -38,6 +38,15 @@ provenance:
   - run:20260808-12:13:27_libero_object_swap_t6_s0#seq=108
   - run:20260808-12:13:27_libero_object_swap_t6_s0#seq=110
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen4/proposals/proposal_01.md
+  batch: gate_gen4
+  date: '2026-08-10'
+  evidence:
+  - run:20260810-18:25:20_libero_object_swap_t5_s0#seq=74
+  - run:20260810-17:21:40_libero_object_swap_t0_s0#seq=72
+  - run:20260810-17:36:14_libero_object_swap_t1_s0#seq=81
+  counter_evidence: []
 ---
 
-Replace the generic warning with an actionable cap: the perception phase ends when it stops adding candidates. After one full occupancy/back-projection enumeration, commit to the best-supported candidate and issue the next environment step; if the enumeration isolated one unclaimed cluster, that cluster is the target. Do not re-run failed prompts, re-scan the same windows, or treat the basket as the missing target. A run that never executes a manipulation cannot succeed.
+Perception ends when one full occupancy/back-projection enumeration, including the lowered z-band when warranted, stops producing new candidate clusters. After that, no further probing or re-wording is admission-worthy; commit to the best-supported candidate and execute an environment step. If the semantic list implies more objects than clusters, treat it as a label collision, not a license to keep scanning. A run that never leaves step 0 cannot succeed.

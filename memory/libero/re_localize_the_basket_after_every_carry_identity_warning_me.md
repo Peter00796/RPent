@@ -5,7 +5,7 @@ type: technique
 scope: env
 conditions: Applies while carrying the target toward the basket, after any stalled
   move, or when a re-segmentation returns an identity_warning.
-support: 9
+support: 11
 provenance:
 - action: add
   proposal: logs/gate_gen1/proposals/proposal_07.md
@@ -45,9 +45,20 @@ provenance:
   - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=34
   - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=40
   counter_evidence: []
+- action: endorse
+  proposal: logs/gate_gen4/proposals/proposal_08.md
+  batch: gate_gen4
+  date: '2026-08-10'
+  evidence:
+  - run:20260810-17:51:34_libero_object_swap_t2_s0#seq=7
+  - run:20260810-17:51:34_libero_object_swap_t2_s0#seq=26
+  - run:20260810-17:51:34_libero_object_swap_t2_s0#seq=31
+  - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=50
+  counter_evidence: []
 ---
 
 The basket is an unanchored object and can be bumped by the arm or by a stalled move. A segmentation identity_warning or a changed rim reading is a displacement signal, not sensor noise. Re-localize the container and re-check occupancy before computing the release target; never reuse the step-0 basket mask for a later placement.
 ---
+
 
 
