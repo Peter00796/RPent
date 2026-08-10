@@ -4,7 +4,7 @@ type: failure_mode
 scope: common
 conditions: Applies after any pi0_pick call, regardless of the tool-reported success
   status.
-support: 9
+support: 11
 provenance:
 - action: add
   proposal: logs/gate_gen1/proposals/proposal_03.md
@@ -34,8 +34,20 @@ provenance:
   - run:20260807-20:15:39_libero_object_swap_t7_s0#seq=11
   - run:20260807-20:15:39_libero_object_swap_t7_s0#seq=32
   counter_evidence: []
+- action: endorse
+  proposal: logs/gate_gen3/proposals/proposal_07.md
+  batch: gate_gen3
+  date: '2026-08-10'
+  evidence:
+  - run:20260808-11:00:42_libero_object_swap_t0_s0#seq=10
+  - run:20260808-11:00:42_libero_object_swap_t0_s0#seq=68
+  - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=8
+  - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=25
+  - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=31
+  counter_evidence: []
 ---
 
 The pi0_pick success flag means the policy call completed, not that the object is in the gripper. Treat every pick as unverified until held-object geometry, origin-box occupancy, and camera re-segmentation agree. If holding is false or the target is still visible on the table, do not begin transport; classify the incident as air-grasp, wander, or push and retry.
 ---
+
 

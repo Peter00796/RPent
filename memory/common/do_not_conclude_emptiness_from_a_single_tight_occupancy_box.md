@@ -2,8 +2,8 @@
 title: Do not conclude emptiness from a single tight occupancy box
 type: failure_mode
 scope: common
-conditions: Applies when an occupancy query returns zero points for a boxed region
-  while other evidence suggests the region may be occupied.
+conditions: When an occupancy or compare query over a box returns zero points, especially
+  after a pick or over the basket while the arm is in or above the box.
 support: 3
 provenance:
 - action: add
@@ -17,7 +17,16 @@ provenance:
   - run:20260807-15:39:36_libero_object_swap_t7_s0#seq=10
   - run:20260807-15:15:22_libero_object_swap_t5_s0#seq=30
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen3/proposals/proposal_06.md
+  batch: gate_gen3
+  date: '2026-08-10'
+  evidence:
+  - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=30
+  - run:20260808-12:27:43_libero_object_swap_t7_s0#seq=31
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=75
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=76
+  counter_evidence: []
 ---
 
-A zero-point occupancy result is a function of box bounds, viewpoint, and occlusion, not a ground-truth statement about the scene. The arm itself can zero a box. Corroborate emptiness with a second view, larger/quadrant boxes, or segmentation; an empty origin box alone neither proves a grasp nor disproves occupancy.
----
+A zero-point box is a camera/occlusion statement, not a world statement. If the arm is inside or above the queried volume, move it out of the viewing volume before trusting the empty reading, or corroborate with a second camera, a wrist mask, or a point-segment. Treat an empty box as one vote, never as proof of absence or loss.

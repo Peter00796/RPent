@@ -4,7 +4,7 @@ type: failure_mode
 scope: common
 conditions: After a pick, during transport, or when held-object reports contradictory
   states.
-support: 4
+support: 5
 provenance:
 - action: add
   proposal: logs/gate_gen2/proposals/proposal_04.md
@@ -20,6 +20,18 @@ provenance:
   - run:20260807-20:22:07_libero_object_swap_t8_s0#seq=58
   - run:20260807-20:22:07_libero_object_swap_t8_s0#seq=61
   counter_evidence: []
+- action: endorse
+  proposal: logs/gate_gen3/proposals/proposal_09.md
+  batch: gate_gen3
+  date: '2026-08-10'
+  evidence:
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=55
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=60
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=72
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=75
+  - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=87
+  counter_evidence: []
 ---
 
 `held_object=true` can follow a push that displaced the object without grasping it, and `held_object=false`/0 points can follow a successful grasp when the object is occluded or outside the queried volume. Do not trust one reading. Confirm with at least one independent signal: origin-box voxel removal, wrist close-up occupancy, or camera re-segmentation of an elevated object. If readings conflict, retreat to a clear viewpoint, re-localize, and re-check before any release.
+

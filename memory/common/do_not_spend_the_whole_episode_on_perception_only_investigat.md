@@ -2,8 +2,9 @@
 title: Do not spend the whole episode on perception-only investigation
 type: failure_mode
 scope: common
-conditions: When the target is not grounded after a small number of probes, or after
-  several segmentation/back-project calls return no new candidates.
+conditions: When the target remains ungrounded after a bounded round of name/color/shape
+  probes, or after a complete occupancy/back-projection enumeration stops adding candidate
+  blobs.
 support: 3
 provenance:
 - action: add
@@ -28,6 +29,15 @@ provenance:
   - run:20260807-14:28:32_libero_object_swap_t1_s0#seq=4
   - run:20260807-15:15:22_libero_object_swap_t5_s0#seq=50
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen3/proposals/proposal_02.md
+  batch: gate_gen3
+  date: '2026-08-10'
+  evidence:
+  - run:20260808-11:58:02_libero_object_swap_t5_s0#seq=111
+  - run:20260808-12:13:27_libero_object_swap_t6_s0#seq=108
+  - run:20260808-12:13:27_libero_object_swap_t6_s0#seq=110
+  counter_evidence: []
 ---
 
-Replace the vague warning with an actionable cap: after a bounded number of segmentation/back-project probes that do not add new candidate or identity information, stop re-probing and either (a) switch to color/shape and wrist close-up probes, (b) run a full occupancy enumeration of the table, or (c) commit to the best candidate and take the first env step. Do not re-run the same failed prompt on the same frame.
+Replace the generic warning with an actionable cap: the perception phase ends when it stops adding candidates. After one full occupancy/back-projection enumeration, commit to the best-supported candidate and issue the next environment step; if the enumeration isolated one unclaimed cluster, that cluster is the target. Do not re-run failed prompts, re-scan the same windows, or treat the basket as the missing target. A run that never executes a manipulation cannot succeed.
