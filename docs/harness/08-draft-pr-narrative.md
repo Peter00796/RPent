@@ -1,13 +1,19 @@
 # From upstream RPent to a self-growing harness — the change narrative
 
-The account this branch's PR needs: what changed, in the order it was built, and
+The account the draft PR needs: what changed, in the order it was built, and
 the argument that made each change necessary. Written to be checkable — every
 structural claim carries a `file:line` and every empirical claim carries a run
 citation in the project's `run:<dir>#seq=N` form.
 
+**Subject of this document**: the branch `pre-PR/self-growing-harness` — the
+reviewed surface. It is the development branch
+`refactor/langchain-native-tools` minus the parked code-as-policy arm (§11);
+this file lives on both, and where it says "the PR branch" it means the former.
+
 **Branch point**: `3c2516e3` on `RLinf/RPent` main
 (*"feat(dashboard): add sequential task session control (#69)"*).
-**Head**: `14b62ae2`. 59 commits, 120 files, +17,174 / −2,518.
+Roughly 60 commits, 120 files, +17k / −2.5k against that point (a snapshot —
+the branch is still moving as results land).
 **Everything runs on `deepseek-v4-flash`**, text-only, `--no-images`. The planner
 is blind by construction; SAM 3.0, the world maps and the geometry tools are its
 only channel to the scene.
@@ -48,7 +54,7 @@ only one that survives a mentor:
    generational protocol is offered as **a measurement instrument that worked**
    — it is what caught both dead claims — not as a positive result.
 3. **Not a complete system.** The code-as-policy arm was built, produced no
-   measured result, and is excluded from this branch (§11). One sweep pass was
+   measured result, and is excluded from the PR branch (§11). One sweep pass was
    cut mid-run. One of three cross-seed exams failed. The environment's own
    checker is flaky on one cell. All below.
 
@@ -1572,7 +1578,8 @@ silently costing evidence.
 
 ## 11. What is deliberately not in this PR, and other negative results
 
-- **The code-as-policy arm is removed** (`14b62ae2`). `rpent/cap/` implemented
+- **The code-as-policy arm is excluded from the PR branch** (it remains on
+  `refactor/langchain-native-tools`). `rpent/cap/` implemented
   ASPIRE's Algorithm 1 faithfully — K candidates per round, Top-3 parents, debug
   on a *set* of perturbed configurations, freeze-best on budget exhaustion — and
   `--planner program` executed a frozen program with zero LLM calls in the
