@@ -174,6 +174,35 @@ The citation grammar wants an optional attempt segment
 per-attempt pages). Accepted as v1 debt when the rotation shortcut was
 approved; this run converted it from hypothetical to measured.
 
+## 5d. The vision triangle: `inspect_image` tool + three-arm modality ablation
+
+Agreed with the owner 2026-08-11 evening, motivated by the t5 wall (the
+discriminating attribute — which sauce bottle is which — has no measuring
+channel, and the planner reasoning-spiraled trying to settle it by thought).
+
+Design: vision enters as a TOOL, not a planner swap and not a middleware
+injection — the pull-shaped form that matches "planner reasons, tools
+measure". `inspect_image(path, question, region?)` sends one image (optionally
+cropped to a segment bbox) to a cheap VLM (glm-4.6v via InfiniAI) and returns
+its textual answer; sandboxed like read_image; every call lands in
+tool_calls.jsonl with the image path as evidence. The tool's answer is an
+OPINION, not a measurement — its docs entry must say to cross-check
+geometrically, same rule as wrist readings vs agentview anchors.
+
+The ablation triangle this creates (each arm a fingerprinted configuration):
+1. flash blind (baseline — all existing data);
+2. flash + inspect_image (`--vision-tool`): what a QUERYABLE vision channel
+   is worth;
+3. glm-4.6v full swap (probe queued 2026-08-11 overnight): what a natively
+   seeing planner is worth beyond querying.
+Arm 3 minus arm 2 separates "eyes as instrument" from "eyes in the brain",
+and arm 2 dodges the model confound arm 3 carries alone.
+
+Relation to the perception overhaul (5b/认东西链大修): complementary, not
+competing — inspect_image gives fast semantic discrimination (opinion-grade),
+LocateAnything + colour/size stats give auditable numbers (measurement-grade).
+Build order: inspect_image first (hours), overhaul after Friday.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —
