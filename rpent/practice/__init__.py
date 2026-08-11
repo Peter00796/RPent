@@ -14,8 +14,7 @@ One cell, iterated until it cracks:
     stop: exam solved, or max rounds spent. Every episode, proposal and
     verdict lands in the same evidence trail as everything else.
 
-The turn-loop analogue of ``rpent.cap``: there the artifact debugged
-between episodes is a program; here it is the task playbook. Same seed
+The artifact debugged between episodes is the task playbook. Same seed
 discipline (practice seeds learn, the scoring seed only examines), same
 iron rule (evidence cites run records).
 """

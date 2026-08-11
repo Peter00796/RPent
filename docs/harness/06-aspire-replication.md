@@ -1,5 +1,14 @@
 # ASPIRE replication checklist (arXiv 2607.00272, read 2026-08-08)
 
+> **Status on this branch**: the CaP arm this checklist describes
+> (`rpent/cap/`, `--planner program`) is **PARKED and not present here** —
+> the plumbing was proven, but flash-as-coder was insufficient on t3, so
+> the arm has no measured result. The code lives on
+> `refactor/langchain-native-tools`. What survived into this branch is the
+> half that did earn its keep: the evidence layer and the resident debug
+> session (see [07](07-handoff-20260811.md)). File paths below refer to the
+> parked implementation.
+
 What the paper actually specifies, what we implement, and where we deviate —
 so the replication claim is auditable. We replicate the METHOD on our stack
 (LIBERO + our tool API), not their benchmark numbers (their env is CaP-X on

@@ -157,15 +157,8 @@ def _build_argparser() -> argparse.ArgumentParser:
 
     # models
     ap.add_argument("--planner", default="api",
-                    choices=["api", "deepagents", "claude_code", "codex", "program"],
-                    help="LLM backend: api | deepagents | claude_code | codex, "
-                         "or 'program' to execute a fixed code-as-policy "
-                         "program (zero LLM calls in the episode; see "
-                         "--program-file).")
-    ap.add_argument("--program-file", default=None,
-                    help="Python program for --planner program: defines "
-                         "solve(api) or top-level calls against the tool API. "
-                         "Recorded to {output_dir}/program.py + hash.")
+                    choices=["api", "deepagents", "claude_code", "codex"],
+                    help="LLM backend: api | deepagents | claude_code | codex.")
     ap.add_argument("--model", default=None,
                     help="Model id. For the 'api' planner, prefix the provider "
                          "(e.g. anthropic:claude-opus-4-8, openai:gpt-5.5, "
@@ -332,7 +325,6 @@ def main() -> int:
         claude_code_max_budget_usd=args.claude_code_max_budget_usd,
         dashboard_events=dashboard_events,
         no_images=args.no_images,
-        program_file=args.program_file,
         resident=args.resident,
         vision=bool(args.vision_tool),
     )

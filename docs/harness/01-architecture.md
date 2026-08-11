@@ -170,27 +170,15 @@ mechanically from ``read_text_file`` records, never from strategy notes.
 Everything except the two LLM stages is stdlib+yaml
 (`tests/harness/test_gate.py` runs the whole chain locally).
 
-## Code-as-policy arm (`rpent/cap/`, ASPIRE replication)
+## Code-as-policy arm — NOT IN THIS BRANCH
 
-```bash
-python -m rpent.cap --suite libero_object_swap --task 3 --debug-seed 51   # write/run/debug/freeze
-python -m rpent.cli.main ... --planner program --program-file programs/<suite>/t3/solve.py
-```
-
-The ASPIRE cycle (arXiv 2607.00272) on this harness: the coding agent lives
-BETWEEN episodes. In-loop, ``--planner program`` executes a fixed program
-with zero LLM calls; the program's API functions are the tool handlers bound
-to the run's context, so the evidence layer (tool_calls.jsonl, replay,
-sandbox, databus) is identical across policy forms — the CaP arm and the
-tool-loop arm differ only in who decides the next call, which is what makes
-the A/B interpretable. Out-of-loop, ``rpent.cap.loop`` feeds the coding
-agent the API doc (rendered from tool_docs + schemas), the memory library
-(the skill-library role), and each attempt's recorded digest + traceback,
-then freezes the program on debug-seed success (hash into ``program.json``).
-Frozen programs live under ``programs/`` — per-cell POLICY artifacts,
-legitimate via the seed-split protocol, never admitted to the memory
-library. `tests/harness/test_cap.py` covers namespace safety and the
-executor locally.
+An ASPIRE-faithful code-as-policy arm (`rpent/cap/` + a `--planner program`
+executor) was built and PARKED: the plumbing was proven but flash-as-coder
+was insufficient on t3, so the arm produced no result worth shipping. It is
+excluded from this branch to keep the reviewed surface to what has measured
+backing. It lives on `refactor/langchain-native-tools`; the replication
+checklist in [06-aspire-replication.md](06-aspire-replication.md) documents
+what it did.
 
 ## Prompt layer
 
