@@ -283,6 +283,30 @@ complete. A one-condition "no footer ⇒ exclude" rule would have deleted a real
 failure and inflated the practice arm — which is why the convention requires
 both a missing marker **and** abort provenance.
 
+**Footnote: what killed it was our own bug, and it is now fixed.** Chasing the
+cleanup crash produced a traceback in the chain log:
+
+```
+File "rpent/cli/main.py", line 139, in <listcomp>
+  {**{k: v for k, v in m.items() if k != "content"},
+AttributeError: 'HumanMessage' object has no attribute 'items'
+```
+
+`_serialize_messages` assumed every transcript message is a dict. The nudge
+path injects `("user", nudge)`, which LangChain materialises as a
+`HumanMessage` object, and the transcript is written in the run's final block —
+so the run died **after** its recipe was saved and **lost its transcript
+entirely**. Blast radius, counted rather than assumed: **1 confirmed
+occurrence** out of 26 nudged runs (25 nudged runs wrote transcripts fine, so
+the trigger is narrower than "a nudge happened" and is not fully
+characterised). The other transcript-less run in the register, `18:02:28`, has
+no traceback and never reached the recipe write — it was killed, not crashed.
+
+Fixed on this branch: `_serialize_messages` now coerces non-dict messages
+(`model_dump()` when available, otherwise a typed repr) instead of raising,
+because the transcript is evidence — replay reads its reasoning text — and an
+unknown message shape recorded is worth more than an exception.
+
 Two of the other three exclusions were already outside every table in this
 file, but only by where the globs happened to start. They are registered here
 so that is a decision rather than an accident.
