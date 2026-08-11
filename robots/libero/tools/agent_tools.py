@@ -38,6 +38,7 @@ from robots.libero.tools.schemas import (
     Pi0DoubledInput,
     Pi0PickInput,
     ReleaseInput,
+    ResetEpisodeInput,
     RotatePitchInput,
     RotateWristInput,
     SegmentInput,
@@ -389,6 +390,27 @@ def compare_extent(
         voxel=voxel,
         exclude_arm_radius=exclude_arm_radius,
     )
+
+
+# ---------------------------------------------------------------------------
+# resident debug session — NOT part of LIBERO_TOOLS; the toolkit appends it
+# only when the run is a resident practice session, so exam runs never see it
+# (mechanism, not prohibition — the read_image-variant pattern).
+# ---------------------------------------------------------------------------
+
+
+@tool(
+    args_schema=ResetEpisodeInput,
+    description=tool_docs.render_description("reset_episode"),
+)
+def reset_episode(reason: str, runtime: ToolRuntime) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    ctx = _context(runtime)
+    return ctx.reset_episode(reason)
+
+
+#: Appended to the surface by ``LiberoToolkit.langchain_tools(resident=True)``.
+RESIDENT_TOOLS = [reset_episode]
 
 
 # ---------------------------------------------------------------------------

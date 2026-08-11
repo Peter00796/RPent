@@ -26,6 +26,7 @@ Hooks available on ``AgentMiddleware`` (langchain 1.3):
   ``tool``, ``state`` and ``runtime``. This is the anchor for gates.
 """
 
+import json
 import time
 from typing import Any
 
@@ -53,6 +54,10 @@ MIDDLEWARE_ORDER: tuple[tuple[str, str], ...] = (
     ("ModelCallLimitMiddleware", "turn budget (prebuilt: langchain)"),
     ("TranscriptMiddleware", "transcript + usage + dashboard projection"),
     ("ToolCallLogMiddleware", "run-evidence record of every tool call"),
+    ("AttemptFoldingMiddleware",
+     "resident sessions only: archived attempts' tool results fold into "
+     "seq-cited one-line digests (the first legitimate compaction — the "
+     "folded prefix is byte-stable, so it stays cache-friendly)"),
     ("ToolCallIntegrityMiddleware",
      "innermost: repair orphan tool_calls pre-flight; dump the outbound "
      "request on provider rejection (gen-0 t5 400 incident)"),
@@ -61,10 +66,10 @@ MIDDLEWARE_ORDER: tuple[tuple[str, str], ...] = (
     ("ProvenanceMiddleware", "not implemented — argument-level evidence provenance"),
     (
         "CompactionMiddleware",
-        "not implemented — env-unsafe, and cache-hostile: rewriting the middle of "
-        "the message list invalidates every automatic prefix cache from that "
-        "point on, so its token saving is partly offset. Prebuilt: Summarization, "
-        "ContextEditing",
+        "not implemented for exam runs — env-unsafe, and cache-hostile: "
+        "rewriting the middle of the message list invalidates every automatic "
+        "prefix cache from that point on, so its token saving is partly "
+        "offset. Prebuilt: Summarization, ContextEditing",
     ),
 )
 
@@ -245,6 +250,7 @@ class ToolCallLogMiddleware(AgentMiddleware):
         call = request.tool_call
         name = call.get("name", "")
         args = call.get("args") or {}
+        call_id = call.get("id")
         before = self._step_index(request)
         started = time.monotonic()
         try:
@@ -259,6 +265,7 @@ class ToolCallLogMiddleware(AgentMiddleware):
                 step_idx_before=before,
                 step_idx_after=self._step_index(request),
                 status="raised",
+                call_id=call_id,
             )
             raise
         content = getattr(result, "content", result)
@@ -271,6 +278,7 @@ class ToolCallLogMiddleware(AgentMiddleware):
             step_idx_before=before,
             step_idx_after=self._step_index(request),
             status=getattr(result, "status", "success") or "success",
+            call_id=call_id,
         )
         return result
 
@@ -513,3 +521,109 @@ class ToolCallIntegrityMiddleware(AgentMiddleware):
             if "tool" in str(exc).lower() or "400" in str(exc):
                 self._dump_failure(repaired, exc)
             raise
+
+
+class AttemptFoldingMiddleware(AgentMiddleware):
+    """Fold archived attempts' tool results into one-line digests.
+
+    Resident debug sessions only. The wall this removes: a session that
+    remembers three failed attempts verbatim exhausts a flash-sized context;
+    a session that forgets them entirely is the amnesiac loop again. The
+    ASPIRE-shaped middle: the model keeps its own REASONING from every
+    attempt, each archived tool result shrinks to one line carrying its
+    citation key ``[attempt N seq M]``, and the full record stays on disk,
+    retrievable one call at a time via ``view_attempt_call``.
+
+    Folding is a per-REQUEST view built in ``wrap_model_call`` — the graph
+    state and the transcript keep the original messages, so the disk record
+    stays complete. Attempt boundaries are the ``reset_episode`` ToolMessages
+    in the message list; everything before the last one belongs to an
+    archived attempt. The join from a ToolMessage to its logged record is by
+    ``call_id`` (exact), written by :class:`ToolCallLogMiddleware`.
+
+    Cache note: a folded prefix is byte-stable across turns (archives are
+    immutable), so unlike mid-list summarisation this compaction keeps the
+    provider's automatic prefix cache warm after the first post-reset turn.
+    """
+
+    #: Head of the archived result kept in the digest, chars.
+    _BRIEF_CHARS = 110
+
+    def __init__(self, *, output_dir: Any) -> None:
+        super().__init__()
+        from pathlib import Path
+
+        self._output_dir = Path(output_dir)
+        #: attempt number -> {call_id: record}. Archives are immutable, so
+        #: a loaded map never invalidates.
+        self._seq_maps: dict[int, dict[str, dict]] = {}
+
+    def _seq_map(self, attempt: int) -> dict[str, dict]:
+        if attempt not in self._seq_maps:
+            records = tool_log.load(
+                self._output_dir / f"attempt_{attempt:02d}")
+            self._seq_maps[attempt] = {
+                r["call_id"]: r for r in records if r.get("call_id")
+            }
+        return self._seq_maps[attempt]
+
+    def _digest(self, message: ToolMessage, attempt: int) -> ToolMessage:
+        record = self._seq_map(attempt).get(message.tool_call_id or "")
+        name = message.name or (record or {}).get("tool") or "tool"
+        if record is None:
+            text = (f"[attempt {attempt}] {name}: result archived; no "
+                    f"per-call record found — raw log: "
+                    f"attempt_{attempt:02d}/tool_calls.jsonl")
+        else:
+            result = record.get("result")
+            if isinstance(result, dict) and result.get("error"):
+                brief = f"error: {str(result['error'])}"
+            else:
+                brief = json.dumps(result, default=str) if not isinstance(
+                    result, str) else result
+            brief = " ".join(brief.split())
+            if len(brief) > self._BRIEF_CHARS:
+                brief = brief[:self._BRIEF_CHARS] + "…"
+            text = (f"[attempt {attempt} seq {record['seq']}] {name} -> "
+                    f"{record.get('status', '?')}; {brief} | full record: "
+                    f"view_attempt_call(attempt={attempt}, "
+                    f"seq={record['seq']})")
+        return ToolMessage(
+            content=text,
+            tool_call_id=message.tool_call_id,
+            name=message.name,
+            status=getattr(message, "status", None) or "success",
+        )
+
+    def _fold(self, messages: list) -> tuple[list, int]:
+        n_resets = sum(
+            1 for m in messages
+            if isinstance(m, ToolMessage) and m.name == "reset_episode"
+        )
+        if n_resets == 0:
+            return messages, 0
+        folded: list = []
+        seen_resets = 0
+        n_folded = 0
+        for message in messages:
+            if isinstance(message, ToolMessage):
+                if message.name == "reset_episode":
+                    # The boundary marker itself stays readable: it carries
+                    # the fresh step-0 view the next attempt started from.
+                    seen_resets += 1
+                elif seen_resets < n_resets:
+                    folded.append(self._digest(message, seen_resets + 1))
+                    n_folded += 1
+                    continue
+            folded.append(message)
+        return folded, n_folded
+
+    def wrap_model_call(self, request: Any, handler: Any) -> Any:
+        messages = list(getattr(request, "messages", None) or ())
+        folded, n_folded = self._fold(messages)
+        if n_folded:
+            if hasattr(request, "override"):
+                request = request.override(messages=folded)
+            else:
+                request.messages = folded
+        return handler(request)

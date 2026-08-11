@@ -73,6 +73,17 @@ class ReadImageInput(BaseModel):
     path: str = Field(description="Path to a local image file")
 
 
+class ViewAttemptCallInput(BaseModel):
+    """Which archived tool call to retrieve."""
+
+    attempt: int = Field(
+        ge=1, description="Archived attempt number (the N in attempt_NN/)"
+    )
+    seq: int = Field(
+        ge=1, description="Call sequence number within that attempt's log"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
@@ -151,18 +162,35 @@ def read_image_text_only(path: str) -> str:
     )
 
 
-def common_tools(*, no_images: bool = False) -> list[BaseTool]:
+@tool(
+    args_schema=ViewAttemptCallInput,
+    description=render_description("view_attempt_call"),
+)
+def view_attempt_call(attempt: int, seq: int) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    return common.view_attempt_call(attempt, seq)
+
+
+def common_tools(*, no_images: bool = False,
+                 resident: bool = False) -> list[BaseTool]:
     """Return the environment-independent tools every planner gets.
 
     Args:
         no_images: Swap ``read_image`` for the byte-free variant. Both expose
             the same name and schema; the text-only variant advertises the
             truth (no visual content available) and sends no bytes.
+        resident: Add ``view_attempt_call``, the drill-down into archived
+            attempts. Exists only in resident debug sessions — exam runs have
+            no attempts to drill into, and not shipping the tool is the
+            mechanism form of that statement.
     """
-    return [
+    tools = [
         read_text_file,
         write_text_file,
         list_dir,
         finish,
         read_image_text_only if no_images else read_image,
     ]
+    if resident:
+        tools.append(view_attempt_call)
+    return tools

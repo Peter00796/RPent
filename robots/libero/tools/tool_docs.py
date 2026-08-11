@@ -262,6 +262,37 @@ four, because an object perched on the rim registers like a seated one. Only
 the environment's own checker establishes success; use this to confirm that
 something moved where you intended, then check libero_terminated separately.""",
     },
+    # -- resident session (conditional: practice debug sessions only) --------
+    "reset_episode": {
+        "what": (
+            "Archive the current episode into `attempt_NN/` and reset the "
+            "environment to the SAME cell and seed for a fresh attempt. "
+            "Practice sessions only."
+        ),
+        "need": (
+            "a diagnosis first: read the evidence for why this attempt "
+            "failed and decide what the next one changes — `reason` records "
+            "exactly that, and resetting without a stated change wastes an "
+            "attempt on a rerun."
+        ),
+        "returns": (
+            "the new attempt number, the archive directory name, and the "
+            "fresh step-0 state view. Every entity registration died with "
+            "the old episode — re-localize before any motion."
+        ),
+        "how": (
+            "call it ALONE in its turn, never in parallel with other calls — "
+            "the rotation moves the files those calls would read. After the "
+            "reset, earlier attempts' tool results appear as one-line "
+            "digests tagged [attempt N seq M]; retrieve any full record "
+            "with `view_attempt_call`. The archive is read-only."
+        ),
+        "failure_modes": (
+            "the same seed re-creates the SAME initial layout, so archived "
+            "readings are good hypotheses — but commit motions only to "
+            "values re-measured in the CURRENT episode, same as always"
+        ),
+    },
 }
 
 

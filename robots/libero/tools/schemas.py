@@ -385,3 +385,21 @@ class WorldExtentInput(BaseModel):
             "and the offset is not a fixed constant."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# resident debug session (practice cells only — not on the exam surface)
+# ---------------------------------------------------------------------------
+
+
+class ResetEpisodeInput(BaseModel):
+    """Diagnosis-first reset: the reason is recorded with the archive."""
+
+    reason: str = Field(
+        min_length=20,
+        description=(
+            "One or two sentences: why this attempt is being abandoned "
+            "(cite the evidence) and what the next attempt will do "
+            "differently. Recorded verbatim in the archive's attempt.json."
+        ),
+    )

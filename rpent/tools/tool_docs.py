@@ -126,6 +126,33 @@ COMMON_TOOL_DOCS: dict[str, dict[str, object]] = {
             "a path outside this run's sandbox is refused with a structured error",
         ],
     },
+    "view_attempt_call": {
+        "what": (
+            "Retrieve ONE archived tool-call record — args, status, result, "
+            "step indices — from a previous attempt's log, addressed by "
+            "attempt number and seq."
+        ),
+        "need": (
+            "at least one archived attempt (a prior `reset_episode`); the "
+            "[attempt N seq M] tags on folded digests are the addresses."
+        ),
+        "returns": (
+            "the record exactly as logged at call time: args, status, "
+            "result (truncated at record time if it was very large), "
+            "step_idx before/after, elapsed_s."
+        ),
+        "when": (
+            "a folded one-line digest from an earlier attempt is not enough "
+            "— e.g. re-reading the exact geometry or error that killed a "
+            "grasp before designing the next attempt."
+        ),
+        "failure_modes": [
+            "an unknown attempt or seq returns a structured error listing "
+            "the attempts / seq range that exist",
+            "one record per call — this is a drill-down, not a way to "
+            "re-read a whole attempt",
+        ],
+    },
     "read_image_text_only": {
         "what": (
             "DISABLED in this run: image input is off (text-only model), so "

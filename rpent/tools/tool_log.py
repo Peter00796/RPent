@@ -65,8 +65,15 @@ def append(
     step_idx_before: int | None = None,
     step_idx_after: int | None = None,
     status: str = "success",
+    call_id: str | None = None,
 ) -> None:
-    """Append one tool call. Never raises — recording must not break a run."""
+    """Append one tool call. Never raises — recording must not break a run.
+
+    ``call_id`` is the provider's tool-call id when the caller has one. It is
+    what lets a message-list ToolMessage be joined back to its record exactly
+    (the resident session's folding digests depend on that join); older logs
+    without the field still load fine.
+    """
     global _SEQ
     try:
         rendered = _render_result(result)
@@ -83,6 +90,8 @@ def append(
                 "step_idx_after": step_idx_after,
                 "result": rendered,
             }
+            if call_id:
+                record["call_id"] = call_id
             target = path_for(output_dir)
             target.parent.mkdir(parents=True, exist_ok=True)
             with open(target, "a") as handle:

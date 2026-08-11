@@ -70,6 +70,46 @@ Rules:
    a call. A message with no call halts the episode and loses your notes.
 """
 
+#: The resident-debug-session task brief. Replaces the normal user message:
+#: one continuous session debugs the SAME cell across multiple attempts
+#: (reset_episode), keeping its own reasoning while archived tool results
+#: fold to digests — the ASPIRE-shaped middle between an amnesiac
+#: between-episode loop and an unbounded context.
+_RESIDENT_BRIEF = """RESIDENT DEBUG SESSION — practice cell, multiple attempts allowed.
+
+Cell: suite={suite} task={task} seed={seed} (practice seed)
+GOAL: make this cell solve RELIABLY, then write the recipe down. This session
+is done when the same recipe has solved the task TWICE (once, then reproduced
+from a clean reset), or the turn budget is nearly spent.
+
+Rules:
+1. Work each attempt as one continuous episode: recover in place first.
+   Reset only when the attempt is truly unrecoverable or the episode
+   terminated — and diagnose BEFORE resetting: read the evidence, name the
+   failure cause, and put both the cause and the planned change into
+   reset_episode(reason=...). Never rerun a failed attempt unchanged.
+2. After a reset, earlier attempts' tool results appear as one-line digests
+   tagged [attempt N seq M]; your own reasoning stays. Drill into any digest
+   with view_attempt_call(attempt=N, seq=M). Raw artifacts live in
+   attempt_NN/ (read-only).
+3. The seed re-creates the SAME initial layout, so treat archived readings
+   as hypotheses — verify each with a fresh measurement in the current
+   episode before committing a motion to it.
+4. When the env terminates (libero_terminated=true), that attempt SOLVED:
+   reset once more and reproduce the solve with the recipe as written. If
+   the reproduction fails, the recipe is not done — keep debugging.
+5. Before finishing, write {output_dir}/resident_notes.md:
+   - per attempt, one line: what was tried -> outcome -> [attempt N seq M]
+     citations for the decisive evidence;
+   - then THE RECIPE in RELATIVE terms (offsets from measured features:
+     rim centre, object top, graspable width — never absolute coordinates),
+     step by step, with the evidence citation for each step.
+   Then call finish(status="success" if the recipe reproduced else the
+   honest status, summary=...).
+6. NEVER end a message without a tool call — reasoning goes in text BEFORE
+   a call. A message with no call halts the session and loses your notes.
+"""
+
 
 # ---------------------------------------------------------------------------
 # API agent transcript serialization
@@ -167,6 +207,15 @@ def _build_argparser() -> argparse.ArgumentParser:
                          "never scored. Pair with --sandbox practice.")
     ap.add_argument("--experiment-trials", type=int, default=5,
                     help="Max trials inside an experiment episode (default 5).")
+    ap.add_argument("--resident", action="store_true",
+                    help="Resident debug session: one continuous session "
+                         "debugs the SAME cell across multiple attempts. "
+                         "Exposes reset_episode (archive to attempt_NN/ + env "
+                         "reset) and view_attempt_call, and folds archived "
+                         "attempts' tool results into seq-cited digests. "
+                         "Practice seeds (>=51) and the deepagents planner "
+                         "only. Pair with --sandbox practice and a raised "
+                         "--max-turns.")
     ap.add_argument("--output-dir", default=None)
     ap.add_argument("--dashboard", action="store_true",
                     help="Start a local dashboard server for this single run.")
@@ -210,6 +259,26 @@ def main() -> int:
 
     env_name = args.env_name
 
+    if args.resident:
+        # The resident surface (reset_episode, folding) exists only on the
+        # deepagents planner, and a reset on a scoring seed would turn an
+        # exam into practice — both are refused here, not discouraged.
+        if args.planner != "deepagents":
+            parser.error("--resident requires --planner deepagents")
+        if args.experiment:
+            parser.error("--resident and --experiment are different session "
+                         "kinds; pick one")
+        try:
+            seed_num = int(prompt_vars.get("seed"))
+        except (TypeError, ValueError):
+            seed_num = None
+        if seed_num is not None and seed_num < 51:
+            parser.error(
+                f"--resident runs on practice seeds (>=51); seed {seed_num} "
+                "is a scoring seed and a multi-attempt session there would "
+                "poison it"
+            )
+
     # mkdir + logging wiring (env-side already picked the path).
     output_dir = init_output_dir(output_dir, verbose=args.verbose)
     logger.info("physical agent cmd: %s", shlex.join([sys.executable, *sys.argv]))
@@ -240,6 +309,7 @@ def main() -> int:
         dashboard_events=dashboard_events,
         no_images=args.no_images,
         program_file=args.program_file,
+        resident=args.resident,
     )
     prompt_bundle = env_spec.prompts
     prompt_vars = {
@@ -269,13 +339,24 @@ def main() -> int:
         variables=prompt_vars,
         memory=memory_on,
         playbook=playbook_on,
+        resident=args.resident,
     )
     user_msg = prompt_bundle.render(
         "user",
         variables=prompt_vars,
         memory=memory_on,
         playbook=playbook_on,
+        resident=args.resident,
     )
+    if args.resident:
+        user_msg = _RESIDENT_BRIEF.format(
+            suite=prompt_vars.get("suite", "?"),
+            task=prompt_vars.get("task", "?"),
+            seed=prompt_vars.get("seed", "?"),
+            output_dir=output_dir,
+        )
+        logger.info("RESIDENT debug session on practice seed %s",
+                    prompt_vars.get("seed"))
     if args.experiment:
         try:
             seed_num = int(prompt_vars.get("seed"))

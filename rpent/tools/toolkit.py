@@ -158,7 +158,8 @@ class Toolkit:
             [spec for spec, _ in self._tools.values()]
         )
 
-    def langchain_tools(self, *, no_images: bool = False) -> list[Any]:
+    def langchain_tools(self, *, no_images: bool = False,
+                        resident: bool = False) -> list[Any]:
         """Return this toolkit's tools as native LangChain tools.
 
         The LangChain planner consumes these instead of the
@@ -169,10 +170,12 @@ class Toolkit:
         Args:
             no_images: Select the byte-free ``read_image`` variant for
                 text-only models.
+            resident: Expose the resident-debug-session tools
+                (``view_attempt_call`` here; env toolkits add their reset).
         """
         from rpent.tools.langchain_common import common_tools
 
-        return common_tools(no_images=no_images)
+        return common_tools(no_images=no_images, resident=resident)
 
     def execute_tool(self, name: str, input_dict: dict[str, Any]) -> ToolResult:
         """Dispatch a tool call to its registered handler."""

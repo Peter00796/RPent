@@ -81,8 +81,12 @@ class FakeToolkit(Toolkit):
         return {"step": len(self.advanced), "libero_terminated": False,
                 "result": primitive(**args)}
 
-    def langchain_tools(self, *, no_images: bool = False):
-        return [*super().langchain_tools(no_images=no_images), *T.LIBERO_TOOLS]
+    def langchain_tools(self, *, no_images: bool = False,
+                        resident: bool = False):
+        return [*super().langchain_tools(no_images=no_images,
+                                         resident=resident),
+                *T.LIBERO_TOOLS,
+                *(T.RESIDENT_TOOLS if resident else [])]
 
 
 failures = []

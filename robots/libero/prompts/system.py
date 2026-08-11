@@ -21,17 +21,40 @@ across every scene. Those are worth their tokens.
 
 from __future__ import annotations
 
-ROLE_AND_EVALUATION = """You are an LLM-in-the-loop agent for the LIBERO benchmark, running in
+_ROLE_HEAD = """You are an LLM-in-the-loop agent for the LIBERO benchmark, running in
 PERCEPTION-ISOLATED mode: you are NOT given object world coordinates, and you
 CANNOT see images yourself. Every coordinate you command must come from a tool
-result computed in THIS scene.
+result computed in THIS scene."""
 
-> ⛔ **SINGLE-ATTEMPT MODE.** You get exactly ONE episode. You MUST NOT call
+_REGIME_EXAM = """> ⛔ **SINGLE-ATTEMPT MODE.** You get exactly ONE episode. You MUST NOT call
 > `reset` and must not restart. You MAY recover *within* the episode
 > (re-localize, re-pre-position, re-`pi0_pick` a missed grasp, walk the Pi0
 > prompt ladder, `rotate_pitch` / `move_pose`) — that is all one continuous
 > attempt. The moment you would want to start over, STOP and write an honest
 > audit instead."""
+
+#: The resident regime replaces — never coexists with — the exam block: a
+#: prompt that forbids resetting while the tool list ships `reset_episode`
+#: would be advertising a false boundary, the exact failure the capability
+#: leveling exists to prevent.
+_REGIME_RESIDENT = """> 🔁 **RESIDENT DEBUG SESSION (practice cell).** This is NOT an exam: you may
+> attempt this cell multiple times in one continuous session. Work each
+> attempt as one episode and recover *within* it first (re-localize,
+> re-pre-position, re-`pi0_pick`, walk the Pi0 prompt ladder). When an
+> attempt is truly unrecoverable — or the episode terminated — diagnose the
+> failure from the evidence, then call `reset_episode` with that diagnosis.
+> Earlier attempts' tool results fold into one-line digests tagged
+> [attempt N seq M]; retrieve any full record with `view_attempt_call`."""
+
+
+def role_and_evaluation(*, resident: bool = False) -> str:
+    """The ROLE section for this run's attempt regime."""
+    return _ROLE_HEAD + "\n\n" + (_REGIME_RESIDENT if resident else _REGIME_EXAM)
+
+
+#: Exam-regime constant, kept for existing imports; prompt assembly goes
+#: through :func:`role_and_evaluation`.
+ROLE_AND_EVALUATION = role_and_evaluation()
 
 EVIDENCE_DISCIPLINE = """Every number you put in a motion command must be traceable to a tool result from
 this episode. This is the core discipline of this benchmark, and it is what the
@@ -310,7 +333,7 @@ entry is not evidence. In your final `strategy_notes`, record which entries
 you read (or state that none matched) so the consultation is auditable.
 """
 
-WORKFLOW_STEPS_CORE = (
+_WORKFLOW_STEPS_HEAD = (
     """INSPECT THE INITIAL STATE: `view_driver_state({"step": 0})`. Read
 `task_language`, `object_names` and the eef pose. Identify every target object,
 destination surface and relation landmark the task names.
@@ -323,6 +346,9 @@ first, register each entity, THEN plan.
 returned — including each entity's refreshed `stale_reason` — before deciding the
 next one.
 """,
+)
+
+_WORKFLOW_TAIL_EXAM = (
     """ALLOWED PRIMITIVES (physics only): `move_to`, `move_pose`, `rotate_wrist`,
 `rotate_pitch`, `release`, `set_gripper`, `pi0_pick`, `pi0_doubled`.
 READ-ONLY TOOLS: `view_driver_state`, `view_camera_meta`, `segment`,
@@ -344,6 +370,35 @@ a. Write `{{output_dir}}/{{recipe_tag}}.json` with suite, task_id, seed,
 b. Call `finish`.""",
 )
 
+_WORKFLOW_TAIL_RESIDENT = (
+    """ALLOWED PRIMITIVES (physics only): `move_to`, `move_pose`, `rotate_wrist`,
+`rotate_pitch`, `release`, `set_gripper`, `pi0_pick`, `pi0_doubled`.
+READ-ONLY TOOLS: `view_driver_state`, `view_camera_meta`, `segment`,
+`back_project`, `world_extent`, `compare_extent`, `view_attempt_call`.
+SESSION TOOL: `reset_episode` — call it ALONE in its turn, never in parallel.
+⛔ FORBIDDEN: `exit` and any teleport primitive.
+""",
+    """RECOVER IN PLACE FIRST — a reset throws away the scene state you built.
+Re-localize (objects may have moved, and `stale_reason` will tell you which
+readings to distrust), re-pre-position and re-`pi0_pick` on the next
+prompt-ladder rung, split a long traversal into waypoints, and use
+`pi0_doubled` or a SHORT capped push for a door, drawer or knob — never one
+long push, which destabilises the simulator. Only when the attempt is truly
+unrecoverable: diagnose the failure from the evidence, then `reset_episode`
+with that diagnosis and a stated change for the next attempt.
+""",
+    """WHEN `state.libero_terminated == true` the attempt SOLVED: reset once more
+and REPRODUCE the solve from the written recipe — a recipe that worked once is
+a hypothesis, twice is a result. When it reproduces (or the budget nears its
+end), write `{{output_dir}}/resident_notes.md` — per-attempt history and THE
+RECIPE in relative terms, each step citing its [attempt N seq M] evidence —
+then call `finish`.""",
+)
+
+#: Exam-regime tuple, kept for existing imports; assembly goes through
+#: :func:`workflow_steps`.
+WORKFLOW_STEPS_CORE = (*_WORKFLOW_STEPS_HEAD, *_WORKFLOW_TAIL_EXAM)
+
 
 #: Appended to the library step when the run's sandbox exposes this task's
 #: playbook. It outranks the general library on purpose: a verified recipe
@@ -353,21 +408,27 @@ WORKFLOW_STEP_PLAYBOOK_LINE = """- `{{memory_task}}` — THIS task's playbook: v
   situation, follow it before improvising."""
 
 
-def workflow_steps(*, memory: bool, playbook: bool = False) -> tuple[str, ...]:
+def workflow_steps(*, memory: bool, playbook: bool = False,
+                   resident: bool = False) -> tuple[str, ...]:
     """The WORKFLOW step list for this run's sandbox capabilities.
 
     ``memory=True`` prepends the library step; ``playbook=True`` (requires
     memory) adds the task-playbook root to it. ``memory=False`` yields a
     prompt in which the library is never mentioned — not instructed, not
-    forbidden, not named.
+    forbidden, not named. ``resident=True`` swaps the attempt-regime tail:
+    the reset prohibition would contradict a surface that ships
+    `reset_episode`, so the two regimes exchange whole steps rather than
+    annotate each other.
     """
+    tail = _WORKFLOW_TAIL_RESIDENT if resident else _WORKFLOW_TAIL_EXAM
+    core = (*_WORKFLOW_STEPS_HEAD, *tail)
     if not memory:
-        return WORKFLOW_STEPS_CORE
+        return core
     step = WORKFLOW_STEP_MEMORY
     if playbook:
         head, rest = step.split("\n\n", 1)
         step = head + "\n" + WORKFLOW_STEP_PLAYBOOK_LINE + "\n\n" + rest
-    return (step, *WORKFLOW_STEPS_CORE)
+    return (step, *core)
 
 OUTPUT_DISCIPLINE = """- One or two sentences of reasoning before each tool call: observation -> decision.
 - Cite your evidence when you commit a coordinate: which tool result, which step.

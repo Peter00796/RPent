@@ -333,6 +333,64 @@ also still receive the legacy `resources/<env>/memory` path via
 `get_memory_dir` — untouched, per the standing decision not to modify those
 planners.
 
+## Resident debug sessions (2026-08-11)
+
+### Folding is admissible only with a retrieval channel
+
+The owner's concern, verbatim in spirit: folding tool messages into digests
+loses information. The resolution: it does not, IF every digest is an index
+entry rather than a summary. Each folded tool result becomes one line
+carrying its citation key `[attempt N seq M]`, and `view_attempt_call`
+resolves that key into the full archived record — one call, one record. This
+mirrors ASPIRE's evidence engine (the resident agent pulls per-call evidence
+by index) and reuses the `#seq=N` citation format the gate and replay
+already speak. `read_text_file` was considered and rejected for the
+drill-down: it reads head-first with a char cap, so reaching call 37 of an
+archived log would re-inflate the context with calls 1-36 — defeating the
+fold. A line-range parameter was rejected too: paging invites re-reading
+whole attempts; a seq-addressed read returns one record by construction.
+
+### Folding is a per-request view, not a state rewrite
+
+`AttemptFoldingMiddleware` folds in `wrap_model_call` via
+`request.override`; the graph state and the transcript keep the original
+messages, so the disk record stays complete and replay sees everything.
+Corollary that makes this the first legitimate compaction: archives are
+immutable, so the folded prefix is byte-stable across turns and the
+provider's automatic prefix cache stays warm after the first post-reset
+turn — unlike mid-list summarisation (see the DeepSeek cache section).
+
+### The join is by call_id, not by position
+
+`tool_calls.jsonl` records gain a `call_id` field (the provider's tool-call
+id, written by `ToolCallLogMiddleware`). Position-based alignment between
+the message list and the log was rejected: parallel calls in one turn can
+land in the log in a different order than in the message list, and a
+misattributed seq in a digest is worse than none.
+
+### Tool existence is the regime boundary
+
+`reset_episode` and `view_attempt_call` ship only under `--resident`
+(read_image-variant pattern), which main.py refuses on scoring seeds
+(< 51) and on non-deepagents planners. An exam run cannot be talked into a
+reset because the tool is not in its surface — mechanism, not prohibition.
+The prompt levels the same way: the resident regime REPLACES the
+single-attempt blocks (⛔ FORBIDDEN: `reset` etc.), because a prompt that
+forbids resetting while the tool list ships `reset_episode` advertises a
+false boundary. `test_prompt_leveling.py` asserts both directions.
+
+### Rotation details that carry evidence weight
+
+Per-attempt seq numbering restarts at 1 (the reset call itself lands as
+seq 1 of the new attempt's log), so `[attempt N seq M]` is unambiguous.
+The archive (`attempt_NN/`) is registered write-protected the moment it is
+created — evidence of a failed attempt must survive the session that
+produced it. The attempt manifest records the model's own diagnosis
+(`reason`, schema-enforced >= 20 chars): resetting without a stated change
+is a rerun, not debugging. v1 rotation is a plain rename; replay and gate
+read the live layout and see only the newest attempt (accepted shortcut,
+refine when the resident sessions earn it).
+
 ## Comparison with OpenETA
 
 OpenMOSS/OpenETA (arXiv 2608.03924) covers much of the same governance ground. Read it

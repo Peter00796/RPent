@@ -113,8 +113,13 @@ def build_planner(
     dashboard_events: DashboardEventSink,
     no_images: bool = False,
     program_file: str | None = None,
+    resident: bool = False,
 ):
-    """Build a planner for the given backend, resolving credentials from env vars."""
+    """Build a planner for the given backend, resolving credentials from env vars.
+
+    ``resident=True`` (deepagents only — main.py enforces it) selects the
+    resident-debug-session surface; see :class:`DeepAgentPlanner`.
+    """
     # Imports are deferred to avoid a circular import: api_loop / claude_code /
     # codex all import from this module (PlannerResult).
 
@@ -190,6 +195,7 @@ def build_planner(
                 model, base_url=base_url, max_tokens=max_tokens
             ),
             no_images=no_images,
+            resident=resident,
             dashboard_events=dashboard_events,
         )
     if planner_type == "claude_code":

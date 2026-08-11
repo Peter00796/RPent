@@ -90,6 +90,27 @@ for pat in LEAKS_ALWAYS:
     check(f"playbook variant: no /{pat}/",
           re.search(pat, pb_text, re.IGNORECASE) is None)
 
+print("\n=== resident variant (memory=True, playbook=True, resident=True) ===")
+res_text = (format_prompt(system_prompt(memory=True, playbook=True,
+                                        resident=True), variables=VARS)
+            + "\n" + format_prompt(user_prompt(memory=True, playbook=True,
+                                               resident=True), variables=VARS))
+check("resident: single-attempt regime gone", "SINGLE-ATTEMPT" not in res_text)
+check("resident: resident regime present", "RESIDENT DEBUG SESSION" in res_text)
+check("resident: reset_episode and view_attempt_call are advertised",
+      "reset_episode" in res_text and "view_attempt_call" in res_text)
+check("resident: no leftover reset prohibition",
+      "FORBIDDEN: `reset`," not in res_text and "never reset" not in res_text)
+for pat in LEAKS_ALWAYS:
+    check(f"resident variant: no /{pat}/",
+          re.search(pat, res_text, re.IGNORECASE) is None)
+# The exam surface must not know the resident machinery exists — the tool is
+# absent there, so naming it would advertise a capability the run lacks.
+for text, tag in ((none_text, "none"), (mem_text, "memory"), (pb_text, "playbook")):
+    check(f"{tag}: resident machinery unmentioned",
+          "reset_episode" not in text and "view_attempt_call" not in text
+          and "attempt_" not in text)
+
 print("\n=== both variants ===")
 check("variants differ only by the library material",
       len(mem_text) > len(none_text))

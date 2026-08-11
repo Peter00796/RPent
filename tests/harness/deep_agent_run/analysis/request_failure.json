@@ -1,0 +1,33 @@
+{
+  "error": "RuntimeError: Error code: 400 - insufficient tool messages",
+  "time": 1786421803.150558,
+  "messages": [
+    {
+      "type": "AIMessage",
+      "tool_call_id": null,
+      "tool_calls": [
+        {
+          "id": "kept",
+          "name": "back_project"
+        },
+        {
+          "id": "lost",
+          "name": "back_project"
+        }
+      ],
+      "content": "parallel burst"
+    },
+    {
+      "type": "ToolMessage",
+      "tool_call_id": "lost",
+      "tool_calls": [],
+      "content": "{\"error\": \"this tool result was lost by the framework; treat the call as failed and re-issue it if still needed\"}"
+    },
+    {
+      "type": "ToolMessage",
+      "tool_call_id": "kept",
+      "tool_calls": [],
+      "content": "{}"
+    }
+  ]
+}

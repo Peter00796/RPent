@@ -124,6 +124,37 @@ def list_dir(path: str = "") -> dict:
     return {"path": str(p), "count": len(files), "files": files}
 
 
+def view_attempt_call(attempt: int, seq: int) -> dict:
+    """Return ONE archived tool-call record from a previous attempt's log.
+
+    The drill-down half of the resident session's context folding: a folded
+    digest carries ``[attempt N seq M]``, and this resolves that citation into
+    the full record without re-reading the whole archived log into context.
+    """
+    from rpent.tools import tool_log
+
+    out = get_output_dir()
+    attempt_dir = out / f"attempt_{attempt:02d}"
+    try:
+        sandbox.check_read(attempt_dir / tool_log.FILENAME)
+    except sandbox.SandboxDenied as denied:
+        return denied.as_error()
+    if not attempt_dir.is_dir():
+        available = sorted(p.name for p in out.glob("attempt_*") if p.is_dir())
+        return {
+            "error": f"no archived attempt {attempt}",
+            "available_attempts": available,
+        }
+    records = tool_log.load(attempt_dir)
+    for record in records:
+        if record.get("seq") == seq:
+            return {"attempt": attempt, **record}
+    return {
+        "error": f"seq {seq} not found in attempt {attempt}",
+        "seq_range": [records[0]["seq"], records[-1]["seq"]] if records else [],
+    }
+
+
 def finish(status: str, summary: str) -> dict:
     """Signal that the run is complete. Halts the agent loop.
 

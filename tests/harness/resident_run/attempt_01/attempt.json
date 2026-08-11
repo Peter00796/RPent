@@ -1,0 +1,5 @@
+{
+  "attempt": 1,
+  "reason": "pi0 grasp closed on nothing because the prompt was name-only; next attempt uses a shape-descriptive prompt",
+  "env_steps": 2
+}

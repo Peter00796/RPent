@@ -12,6 +12,7 @@ cross-cutting concern, not tool logic.
 """
 from __future__ import annotations
 
+import json
 import shutil
 import time
 from collections.abc import Callable
@@ -19,12 +20,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from rpent.tools import tool_log
+from rpent.tools import sandbox, tool_log
 from rpent.tools.toolkit import ToolCancelled
 from rpent.utils.logging import get_logger
 
 from robots.libero.tools import databus
-from robots.libero.tools.artifacts import ARTIFACT_DIRECTORIES, artifact_path
+from robots.libero.tools.artifacts import (
+    ARTIFACT_DIRECTORIES,
+    artifact_path,
+    protected_paths,
+)
 from robots.libero.tools.primitives import LiberoPrimitives
 from robots.libero.tools.state import dump_state, view_driver_state
 
@@ -59,6 +64,9 @@ class LiberoContext:
     video_fps: int = 20
     on_step: Callable[[dict[str, Any]], None] | None = None
     step_idx: int = field(default=0, init=False)
+    #: 1-based attempt counter for resident debug sessions. Stays at 1 for
+    #: exam runs, where ``reset_episode`` does not exist.
+    attempt_no: int = field(default=1, init=False)
 
     # ------------------------------------------------------------------
     # Episode lifecycle
@@ -94,6 +102,69 @@ class LiberoContext:
         if self.on_step is not None:
             self.on_step(view)
         return view
+
+    def reset_episode(self, reason: str) -> dict[str, Any]:
+        """Archive the running episode into ``attempt_NN/`` and start fresh.
+
+        Resident debug sessions only — the tool that calls this is not on the
+        exam surface. v1 rotation is a plain rename: the archived attempt is
+        complete on disk (states, tool-call log, images, world maps, its own
+        episode video) but replay/gate tooling reads the live layout, so they
+        see only the newest attempt until taught otherwise (accepted 08-11).
+
+        The archive is registered write-protected: evidence of a failed
+        attempt must survive the session that produced it.
+        """
+        attempt_dir = self.output_dir / f"attempt_{self.attempt_no:02d}"
+        if attempt_dir.exists():
+            return {
+                "error": f"{attempt_dir.name} already exists — the rotation "
+                         "state is inconsistent; do not reset again",
+            }
+        attempt_dir.mkdir(parents=True)
+
+        # Flush the in-memory frame buffer as the attempt's own episode video
+        # before begin_episode() restarts the recording (which clears it).
+        try:
+            self.primitives.stop_recording_and_save(
+                str(attempt_dir / "episode.mp4"), fps=self.video_fps
+            )
+        except Exception as e:
+            logger.warning("attempt %d: episode video not saved: %s",
+                           self.attempt_no, e)
+
+        # Everything the artifact layout owns, plus the tool-call log.
+        for path in (*protected_paths(self.output_dir),
+                     tool_log.path_for(self.output_dir)):
+            if path.exists():
+                path.rename(attempt_dir / path.name)
+
+        (attempt_dir / "attempt.json").write_text(json.dumps({
+            "attempt": self.attempt_no,
+            "reason": reason,
+            "env_steps": self.step_idx,
+        }, indent=2))
+        sandbox.add_write_protection([attempt_dir])
+
+        archived = self.attempt_no
+        self.attempt_no += 1
+        # Per-attempt seq numbering: each attempt's log restarts at 1, so a
+        # ``[attempt N seq M]`` citation is unambiguous. The reset call itself
+        # is recorded by the log middleware AFTER this returns, landing as
+        # seq 1 of the new attempt's log.
+        tool_log.reset_sequence()
+        view = self.begin_episode()
+        return {
+            "attempt": self.attempt_no,
+            "archived_to": attempt_dir.name,
+            "note": (
+                "fresh episode on the same cell and seed. Every entity "
+                "registration died with the old episode — re-localize before "
+                "any motion. Archived tool results appear as one-line "
+                "digests; retrieve one in full with view_attempt_call."
+            ),
+            **view,
+        }
 
     # ------------------------------------------------------------------
     # One env-advancing action

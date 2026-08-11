@@ -65,11 +65,18 @@ class LiberoToolkit(Toolkit):
             ToolResultEvent(name="view_driver_state", result=view)
         )
 
-    def langchain_tools(self, *, no_images: bool = False) -> list[Any]:
-        """Common tools plus the twelve LIBERO tools, as native LangChain tools."""
+    def langchain_tools(self, *, no_images: bool = False,
+                        resident: bool = False) -> list[Any]:
+        """Common tools plus the LIBERO tools, as native LangChain tools.
+
+        ``resident=True`` appends ``reset_episode`` — the tool exists only in
+        resident practice sessions, so an exam run cannot be talked into a
+        reset (the read_image-variant pattern: mechanism, not prohibition).
+        """
         return [
-            *super().langchain_tools(no_images=no_images),
+            *super().langchain_tools(no_images=no_images, resident=resident),
             *libero_tools.LIBERO_TOOLS,
+            *(libero_tools.RESIDENT_TOOLS if resident else []),
         ]
 
     # ------------------------------------------------------------------

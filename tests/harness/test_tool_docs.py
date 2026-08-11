@@ -50,9 +50,10 @@ def check(cond: bool, msg: str) -> None:
         FAILURES.append(msg)
 
 
-# The full model-facing tool surface: 14 LIBERO + 5 common. Kept by hand so a
-# rename or removal breaks this test visibly instead of leaving dangling
-# references in descriptions.
+# The full model-facing tool surface: 14 LIBERO + 5 common, plus the two
+# resident-session tools (reset_episode, view_attempt_call) that ship only
+# under --resident. Kept by hand so a rename or removal breaks this test
+# visibly instead of leaving dangling references in descriptions.
 KNOWN_TOOL_NAMES = {
     # state
     "view_driver_state",
@@ -62,13 +63,17 @@ KNOWN_TOOL_NAMES = {
     "pi0_pick", "pi0_doubled",
     # perception
     "view_camera_meta", "segment", "back_project", "world_extent", "compare_extent",
+    # resident session (conditional surface)
+    "reset_episode",
     # common
     "read_text_file", "write_text_file", "list_dir", "finish", "read_image",
+    "view_attempt_call",
 }
 
 # Backticked terms in descriptions that are legitimately not tool names
 # (argument names and returned-field names quoted in the prose).
-NON_TOOL_TERMS = {"path", "max_chars", "world_xyz", "steps", "entity", "shape"}
+NON_TOOL_TERMS = {"path", "max_chars", "world_xyz", "steps", "entity", "shape",
+                  "reason", "attempt_NN/"}
 
 # A hit on any of these in a rendered description is a prior leak: it either
 # advertises that priors exist or hands the model the path to them.
@@ -86,6 +91,7 @@ FORBIDDEN_PATTERNS = [
 # --- 1+2+3: the structured docs and their rendered surface -------------------
 LIBERO_EXPECTED = KNOWN_TOOL_NAMES - {
     "read_text_file", "write_text_file", "list_dir", "finish", "read_image",
+    "view_attempt_call",
 }
 check(
     set(libero_docs.LIBERO_TOOL_DOCS) == LIBERO_EXPECTED,
@@ -135,6 +141,7 @@ else:
         (langchain_common.finish, "finish"),
         (langchain_common.read_image, "read_image"),
         (langchain_common.read_image_text_only, "read_image_text_only"),
+        (langchain_common.view_attempt_call, "view_attempt_call"),
     ]
     for t, key in pairs:
         check(
@@ -147,6 +154,13 @@ else:
         print(f"SKIP LIBERO native-surface check ({type(exc).__name__}: {exc})")
     else:
         for t in agent_tools.LIBERO_TOOLS:
+            check(
+                t.description == libero_docs.render_description(t.name),
+                f"native {t.name}: description drifted from LIBERO_TOOL_DOCS",
+            )
+        # The resident tool is not on LIBERO_TOOLS (conditional surface) but
+        # its description renders from the same source.
+        for t in agent_tools.RESIDENT_TOOLS:
             check(
                 t.description == libero_docs.render_description(t.name),
                 f"native {t.name}: description drifted from LIBERO_TOOL_DOCS",

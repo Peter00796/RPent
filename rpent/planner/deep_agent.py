@@ -25,6 +25,7 @@ from rpent.dashboard.events import DashboardEventSink
 from rpent.dashboard.interaction import DashboardInteractionPort
 from rpent.planner.base import PlannerResult
 from rpent.planner.middleware import (
+    AttemptFoldingMiddleware,
     ToolCallIntegrityMiddleware,
     ToolCallLogMiddleware,
     TranscriptMiddleware,
@@ -63,6 +64,7 @@ class DeepAgentPlanner:
         model: str,
         chat_model: Any,
         no_images: bool = False,
+        resident: bool = False,
         dashboard_events: DashboardEventSink,
     ) -> None:
         """Store the already-constructed chat model.
@@ -71,10 +73,16 @@ class DeepAgentPlanner:
         here, so an unusable ``--model`` fails before the env / VLA / SAM3
         servers spend minutes loading onto the GPU. ``model`` is kept only as the
         human-readable spec for logs.
+
+        ``resident=True`` selects the resident-debug-session surface: the
+        toolkit exposes ``reset_episode`` / ``view_attempt_call``, and
+        :class:`AttemptFoldingMiddleware` joins the chain so archived
+        attempts fold to digests instead of exhausting the context.
         """
         self._model = model
         self._chat_model = chat_model
         self._no_images = no_images
+        self._resident = resident
         self._dashboard_events = dashboard_events
 
     def solve(
@@ -107,23 +115,28 @@ class DeepAgentPlanner:
             max_turns=max_turns,
         )
         context = toolkit.tool_context
-        tools = toolkit.langchain_tools(no_images=self._no_images)
+        tools = toolkit.langchain_tools(
+            no_images=self._no_images, resident=self._resident)
         # Log the image mode explicitly. It decides which perception channels the
         # agent actually has, so it must be visible in the run log rather than
         # inferred from a flag nobody recorded.
         logger.info(
-            "deepagents planner: model=%s tools=%d max_turns=%d images=%s",
+            "deepagents planner: model=%s tools=%d max_turns=%d images=%s%s",
             self._model,
             len(tools),
             max_turns,
             "disabled (text-only: segment + back_project are the only "
             "perception channels)" if self._no_images else "enabled",
+            " resident=on (reset_episode + attempt folding)"
+            if self._resident else "",
         )
 
         middleware = [
             ModelCallLimitMiddleware(run_limit=max_turns, exit_behavior="end"),
             recorder,
             ToolCallLogMiddleware(output_dir=get_output_dir()),
+            *([AttemptFoldingMiddleware(output_dir=get_output_dir())]
+              if self._resident else []),
             # Innermost: sees the final outbound request (gen-0 t5 incident).
             ToolCallIntegrityMiddleware(output_dir=get_output_dir()),
         ]
