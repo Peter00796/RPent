@@ -132,15 +132,16 @@ def read_image(path: str) -> list[dict[str, Any]] | str:
     if not file_path.exists():
         return f"image not found: {path}"
     media_type = mimetypes.guess_type(file_path.name)[0] or "image/png"
+    # Provider-neutral block: the data-URI image_url form is consumed
+    # directly by OpenAI-compatible chat models and converted by
+    # langchain-anthropic, so one encoding serves every vision arm
+    # (the Anthropic-native source dict only ChatAnthropic understood).
+    data = base64.b64encode(file_path.read_bytes()).decode("utf-8")
     return [
         {"type": "text", "text": path},
         {
-            "type": "image",
-            "source": {
-                "type": "base64",
-                "media_type": media_type,
-                "data": base64.b64encode(file_path.read_bytes()).decode("utf-8"),
-            },
+            "type": "image_url",
+            "image_url": {"url": f"data:{media_type};base64,{data}"},
         },
     ]
 
