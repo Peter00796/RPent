@@ -48,6 +48,52 @@ _NODES_PER_TURN_BASE = 3
 _RECURSION_SAFETY_FACTOR = 2
 _RECURSION_HEADROOM = 20
 
+#: How many times a RESIDENT session is re-nudged after a no-tool-call turn
+#: before stopping for good. Exam runs keep exactly one (the essay-drift
+#: decision); the bound exists so a model that never recovers still halts.
+_RESIDENT_NUDGE_BUDGET = 5
+
+_ESSAY_NUDGE = (
+    "You ended your turn without a tool call, which halts "
+    "the episode. If you are done, save any deliverables "
+    "(notes, audit) with write_text_file and call finish(). "
+    "Otherwise continue working with a tool call now."
+)
+
+#: The t5 failure shape: the entire output budget went into hidden reasoning
+#: and the visible turn arrived empty — re-deriving everything again will
+#: only truncate again, so the message demands a short conclusion + one call.
+_TRUNCATION_NUDGE = (
+    "Your last reply was cut off by the output-token limit before it "
+    "produced any visible text or tool call — the reasoning consumed the "
+    "entire budget and NOTHING was executed. Do not re-derive your "
+    "analysis. State your current best conclusion in one or two short "
+    "sentences, then IMMEDIATELY make one tool call. If you are stuck "
+    "choosing between candidates, pick the cheapest measurement that "
+    "discriminates between them and call that tool now."
+)
+
+
+def _is_empty_turn(message: Any) -> bool:
+    """True when the assistant turn carries no visible content at all —
+    the signature of a reply truncated inside the reasoning channel."""
+    content = getattr(message, "content", None)
+    if getattr(message, "tool_calls", None):
+        return False
+    if content is None or content == "" or content == []:
+        return True
+    if isinstance(content, str):
+        return not content.strip()
+    if isinstance(content, list):
+        for block in content:
+            if isinstance(block, str) and block.strip():
+                return False
+            if isinstance(block, dict) and str(
+                    block.get("text", block.get("thinking", ""))).strip():
+                return False
+        return True
+    return False
+
 
 def _recursion_limit(max_turns: int, n_middleware: int) -> int:
     """Return the graph-node backstop for ``max_turns`` model turns."""
@@ -159,27 +205,34 @@ class DeepAgentPlanner:
         try:
             state = agent.invoke({"messages": [("user", user_message)]},
                                  **invoke_kwargs)
-            if recorder.finish_result is None and recorder.turns < max_turns:
-                # The model wrote prose and called nothing, so the graph
-                # ended. Seen killing experiment episodes silently (and any
-                # run that drifts into an essay): the record then has no
-                # finish and no artifacts. One nudge, not a loop — either it
-                # wraps up properly or it stops for good.
+            # The model ended its turn and the graph stopped without finish.
+            # Exam runs get ONE nudge, not a loop — either it wraps up
+            # properly or it stops for good (essay-drift incident). Resident
+            # sessions get a BOUNDED series: a 150-turn practice session
+            # stopping for good at turn 18 wastes the whole GPU buy, and the
+            # t5 incident (2026-08-11) showed a second failure shape the one
+            # nudge cannot reach — the model burning its entire max_tokens in
+            # the hidden reasoning channel, so the turn arrives EMPTY (no
+            # text, no call) and truncated. That shape gets its own message.
+            nudge_budget = _RESIDENT_NUDGE_BUDGET if self._resident else 1
+            nudges = 0
+            while (recorder.finish_result is None
+                   and recorder.turns < max_turns
+                   and nudges < nudge_budget):
+                messages = list(state.get("messages") or [])
+                truncated = _is_empty_turn(messages[-1] if messages else None)
                 logger.info(
-                    "model ended turn without a tool call at turn %d — "
-                    "nudging once to finish or continue", recorder.turns,
+                    "model ended turn without a tool call at turn %d (%s) — "
+                    "nudge %d/%d", recorder.turns,
+                    "empty/truncated reply" if truncated else "prose only",
+                    nudges + 1, nudge_budget,
                 )
-                nudge = (
-                    "You ended your turn without a tool call, which halts "
-                    "the episode. If you are done, save any deliverables "
-                    "(notes, audit) with write_text_file and call finish(). "
-                    "Otherwise continue working with a tool call now."
-                )
-                agent.invoke(
-                    {"messages": [*(state.get("messages") or []),
-                                  ("user", nudge)]},
+                nudge = _TRUNCATION_NUDGE if truncated else _ESSAY_NUDGE
+                state = agent.invoke(
+                    {"messages": [*messages, ("user", nudge)]},
                     **invoke_kwargs,
                 )
+                nudges += 1
             if recorder.finish_result is not None:
                 logger.info("FINISH called: %s", recorder.finish_result)
             elif recorder.turns >= max_turns:

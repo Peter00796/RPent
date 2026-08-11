@@ -249,6 +249,43 @@ check("transcript tool message is the original, not the digest",
       c2_transcript and "[attempt" not in c2_transcript[0]["content"],
       c2_transcript[0]["content"][:120] if c2_transcript else "missing")
 
+print("\n=== truncation guard: resident survives empty turns, exam stops ===")
+# Two consecutive EMPTY replies (the t5 shape: reasoning burned the whole
+# output budget, nothing visible) followed by a proper finish.
+trunc_script = [
+    AIMessage(content=""),
+    AIMessage(content=""),
+    AIMessage(content="recovered", tool_calls=[
+        {"name": "finish",
+         "args": {"status": "stuck", "summary": "recovered after nudges"},
+         "id": "t1"}]),
+    AIMessage(content="done"),
+]
+tk_t = FakeToolkit()
+model_t = ScriptedModel(turns=trunc_script, seen=[])
+planner_t = DeepAgentPlanner(model="scripted", chat_model=model_t,
+                             resident=True,
+                             dashboard_events=NullDashboardEventSink())
+res_t = planner_t.solve(system_prompt="s", user_message="go",
+                        toolkit=tk_t, max_turns=20)
+check("resident: recovered after two empty turns",
+      (res_t.finish_result or {}).get("summary") == "recovered after nudges",
+      str(res_t.finish_result))
+check("resident: truncation nudge text was injected",
+      any(isinstance(m, tuple) is False and "cut off by the output-token"
+          in str(getattr(m, "content", "")) for m in model_t.seen[-1]),
+      str([str(getattr(m, 'content', ''))[:40] for m in model_t.seen[-1]]))
+
+tk_e = FakeToolkit()
+model_e = ScriptedModel(turns=trunc_script, seen=[])
+planner_e = DeepAgentPlanner(model="scripted", chat_model=model_e,
+                             resident=False,
+                             dashboard_events=NullDashboardEventSink())
+res_e = planner_e.solve(system_prompt="s", user_message="go",
+                        toolkit=tk_e, max_turns=20)
+check("exam: still stops after ONE nudge (no recovery)",
+      res_e.finish_result is None, str(res_e.finish_result))
+
 sandbox.clear_sandbox()
 print()
 if failures:
