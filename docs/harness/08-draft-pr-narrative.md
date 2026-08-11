@@ -1558,7 +1558,15 @@ silent death (→ one nudge); post-termination crash (→ episode-over guard in
 `ctx.advance`); empty-playbook advertising; a `"(none)"` placeholder being read
 as a brief; program runs leaving zero evidence; `sandbox.json` recording an
 empty `write_denied` because the fingerprint was dumped before the toolkit
-registered protection (→ re-dump on registration).
+registered protection (→ re-dump on registration); and — found while auditing
+which runs were interrupted rather than failed — `_serialize_messages` raising
+`AttributeError: 'HumanMessage' object has no attribute 'items'` on a nudged
+run, which killed the process *after* its recipe was written and lost the
+transcript (→ coerce non-dict messages; `rpent/cli/main.py`,
+[09 §4.1c](09-baseline-table.md#41c-interrupted-runs--the-exclusion-register)).
+That last one is the pattern in miniature: an accounting question ("is this run
+a failure or a missing measurement?") turned up a live defect that was
+silently costing evidence.
 
 ---
 

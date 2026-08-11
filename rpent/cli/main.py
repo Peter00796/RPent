@@ -28,6 +28,7 @@ import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from rpent.cli.tui import (
     start_first_prompt_resolver,
@@ -133,13 +134,41 @@ def _strip_images(value):
     return value
 
 
-def _serialize_messages(messages: list[dict]) -> list[dict]:
+def _as_message_dict(m: Any) -> dict:
+    """Coerce one transcript message to a plain dict.
+
+    Most messages arrive as dicts, but the deepagents path can leave a
+    LangChain message OBJECT in the list — the nudge injects
+    ``("user", nudge)``, which LangChain materialises as a ``HumanMessage``.
+    Calling ``.items()`` on that raises, and because the transcript is written
+    in the run's final block the whole run then dies AFTER its recipe is
+    saved, losing the transcript entirely. Observed once on
+    ``20260812-01:11:00_libero_object_swap_t6_s0`` (25 other nudged runs were
+    unaffected, so the trigger is narrower than "a nudge happened").
+
+    The transcript is evidence — replay reads reasoning text from it — so this
+    coerces rather than raises: an unknown shape is recorded as its repr with
+    its type, which is worth more than an exception.
+    """
+    if isinstance(m, dict):
+        return m
+    dump = getattr(m, "model_dump", None)          # pydantic / LangChain
+    if callable(dump):
+        try:
+            return dump()
+        except Exception:
+            pass
+    return {"type": type(m).__name__, "content": getattr(m, "content", repr(m))}
+
+
+def _serialize_messages(messages: list) -> list[dict]:
     """Strip inline image payloads from messages before writing the transcript."""
-    return [
-        {**{k: v for k, v in m.items() if k != "content"},
-         "content": _strip_images(m.get("content"))}
-        for m in messages
-    ]
+    out = []
+    for raw in messages:
+        m = _as_message_dict(raw)
+        out.append({**{k: v for k, v in m.items() if k != "content"},
+                    "content": _strip_images(m.get("content"))})
+    return out
 
 
 # ---------------------------------------------------------------------------
