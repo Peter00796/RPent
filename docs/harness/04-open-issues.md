@@ -265,6 +265,33 @@ coordinate" is cheap to compute and hard to argue with.
 
 ## 8. Smaller items
 
+- **`tests/harness/test_deep_agent.py` section A2 is order-fragile** (found
+  2026-08-12 during the branch sync; observed failing once, then 3/3 clean, and
+  **not reproduced in 15 further local runs** — so the defect is certain from
+  the code but the rate is low and scheduling-dependent).
+
+  The scripted turn 2 issues **two tool calls in one `AIMessage`**
+  (`move_to` id `c2` and `pi0_pick` id `c3`, `test_deep_agent.py:111-113`).
+  `ToolCallLogMiddleware` appends each record as its call completes, so
+  `tool_calls.jsonl` order follows `ToolNode`'s execution order, which is not
+  guaranteed to match the order the calls appear in the message. Three
+  assertions assume it does:
+
+  - `names == ["back_project", "move_to", "pi0_pick", "finish"]` — reports a
+    check failure;
+  - `recorded[1]["args"]["xyz"]` — **raises `KeyError`** when `pi0_pick` lands
+    first, since its args carry `prompt`/`max_chunks` and no `xyz`. This is the
+    observed crash;
+  - the `step_idx` advancing check also indexes `recorded[1]` positionally,
+    so it silently checks the wrong record.
+
+  Fix shape: assert on `sorted(names)` (or a set) for the parallel pair, and
+  look records up **by tool name** rather than by position for the argument and
+  `step_idx` checks. Note the ordering itself is not a bug — the log is
+  seq-ordered by completion and `call_id` is the join key precisely because
+  position is unreliable (see 02-decisions, "The join is by call_id, not by
+  position"). The test is asserting a property the design deliberately does not
+  provide.
 - **`tests/harness/audit_descriptions.py` is broken**: it does
   `git show HEAD:robots/libero/tools.py`, which no longer exists at HEAD. Pin it to
   `3c2516e` (the pre-split commit) if the description-drift check is wanted, or retire
