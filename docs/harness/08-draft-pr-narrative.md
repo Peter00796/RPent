@@ -795,7 +795,7 @@ settle it. It scored **6**:
 |---|---|---|---|---|
 | `none` (no library at all) | S7, S9, S13 | 6, 6, 6 | **6.0** | **0** |
 | `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | **6.0** | ±1.73 |
-| `practice` (gen 5 + task playbooks) | S11, S12, S14 | 7, 4–5, 6 | **5.67–6.0** | ±1.5 |
+| `practice` (gen 5 + task playbooks) | S11, S12, S14 | 7, 5, 6 | **6.0** | ±1.0 |
 | *(retired)* `none` @ gen-0 head | S2 | 4 | — | fixed-crash casualty |
 
 ### **All three arms sit at 6.0 out of 10. The library buys no suite-wide lift.**
@@ -1582,10 +1582,16 @@ registered protection (→ re-dump on registration).
   The `+0.7` in earlier drafts was an artifact of a harness bug in one sweep.
   The defensible claim is targeted wall-breaking plus attribution, never a
   suite average.
-- **One sweep duplicates a cell.** S12 was cut and resumed, so t4 ran twice
-  under a byte-identical configuration — once failing, once solving. Reported as
-  a range (4–5/10) rather than resolved in the favourable direction, and the
-  conservative copy is used in every mean.
+- **Interrupted runs are excluded, and the register is published.** S12 was cut
+  and resumed, so t4 appeared twice; the first copy turned out to have been
+  externally killed (no natural-exit marker, ends mid-tool-result at 20:46:50,
+  coinciding with a documented `pkill`), which makes it a missing measurement
+  rather than a failure. Applying that test to the whole corpus found four
+  interrupted runs, three excluded and **one kept** — a run that logged
+  `reached max_turns` and then died during cleanup is a complete measurement.
+  All four are listed with their evidence in
+  [09 §4.1c](09-baseline-table.md#41c-interrupted-runs--the-exclusion-register),
+  so the exclusions are auditable rather than assumed.
 - **Cross-seed transfer is 2/3, not 3/3.** `t6_s1` failed.
 - **t5 seed 0 is n=1.** One solve, one failure, on a cell whose environment
   checker is demonstrably flaky. The t5/t6 pincer (§9) is a clean *design*

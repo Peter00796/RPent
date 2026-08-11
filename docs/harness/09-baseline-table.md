@@ -21,6 +21,19 @@
 >   [08 §8.4/§9.2](08-draft-pr-narrative.md).
 > - resident sessions: read each `attempt_NN/states.json` as well as the live
 >   one; report per-attempt, not just per-run.
+>
+> **Interrupted runs are EXCLUDED, not scored.** A run is an interrupted
+> measurement — invalid as a failure *and* as a solve — when **both** hold:
+>
+> 1. `run.log` contains **no natural-exit marker** (`FINISH called`,
+>    `reached max_turns`, `without a tool call. Stopping`), and
+> 2. its final timestamp coincides with a documented abort (a `pkill`, a
+>    sweep cut, a relaunch of the same cell moments later).
+>
+> Both conditions are required. The `[agent] elapsed:`/`usage:` footer alone is
+> too blunt a test: a run can exit naturally, log its marker and its recipe
+> path, and still be cut during the last second of cleanup before the footer
+> is written — that measurement is complete and counts. See §4.1c.
 
 Written 2026-08-11 for the Friday draft PR, so that no number in the doc has to
 be recalled. Every row here was recomputed from the run artifacts on the box on
@@ -153,20 +166,13 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 | S9 | `20260811-01:20:05` → `03:09:25` | `none` | — | 10 | **6** | `t0- t1+ t2+ t3+ t4+ t5- t6- t7+ t8+ t9-` |
 | S10 | `20260811-03:19:41` → `05:12:33` | `memory` | gen 4 | 10 | **5** | `t0- t1- t2+ t3+ t4+ t5- t6- t7+ t8+ t9-` |
 | S11 | `20260811-18:16:16` → `19:49:10` | `practice` | gen 5 + t5/t6 playbooks | 10 | **7** | `t0- t1+ t2+ t3+ t4+ t5- t6+ t7+ t8- t9+` |
-| S12 | `20260811-19:49:27` → `20260812-02:06:53` | `practice` | same | 10 | **5** (or 4 — see below) | `t0- t1+ t2+ t3- t4? t5- t6- t7+ t8- t9+` — cut mid-pass, resumed 6 h later |
+| S12 | `20260811-19:49:27` → `20260812-02:06:53` | `practice` | same | 10 | **5** | `t0- t1+ t2+ t3- t4+ t5- t6- t7+ t8- t9+` — cut mid-pass, resumed 6 h later; see §4.1c |
 | S13 | `20260811-22:41:11` → `20260812-00:40:16` | `none` | — | 10 | **6** | `t0+ t1+ t2+ t3- t4- t5- t6- t7+ t8+ t9+` (**P2**) |
 | S14 | `20260812-02:15:33` → `04:08:00` | `practice` | same | 10 | **6** | `t0- t1+ t2+ t3+ t4- t5- t6+ t7+ t8- t9+` (**P3** pass 3) |
 
-> **⚠ S12 contains a duplicated cell, and which copy you take changes the
-> number.** Pass 2 was cut after t0–t4 on 08-11 evening, the GPU went to the t5
-> vision work and then to S13, and the pass resumed at 00:46 on 08-12 starting
-> **again at t4**. So t4 was run twice under a byte-identical configuration
-> (`20260811-20:34:31` **failed**, `20260812-00:46:00` **solved**; both
-> `--sandbox practice`, same model, same `--max-turns 50`). Taking the
-> resumption copy gives S12 = 5/10; taking the first gives **4/10**. There is no
-> principled reason to prefer the later one, and preferring it is exactly the
-> silent selection this file exists to prevent. **Reported as 4–5/10**; the
-> conservative reading is used in every mean below.
+> **S12's apparent duplicate t4 is resolved by exclusion, not preference** —
+> the first copy was externally killed and is not a measurement. Evidence chain
+> in §4.1c.
 
 ### 4.1 The comparisons that are actually licensed
 
@@ -176,7 +182,7 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 |---|---|---|---|---|
 | `none` (no library at all) | S7, S9, **S13** | 6, 6, 6 | **6.0** | **0** |
 | `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | **6.0** | ±1.73 |
-| `practice` (gen 5 + t5/t6 playbooks) | S11, S12, **S14** | 7, 4–5, 6 | **5.67–6.0** | ±1.5 |
+| `practice` (gen 5 + t5/t6 playbooks) | S11, S12, **S14** | 7, 5, 6 | **6.0** | ±1.0 |
 | *(retired)* `none` @ gen-0 head | S2 | 4 | — | bug-affected, see below |
 
 ### **All three arms sit at a suite mean of 6.0 out of 10.**
@@ -238,10 +244,53 @@ established is that the *predicted exposure occurred*, not that it cost
 anything. The motivation for the `requires`-filtered per-run index moves from
 anticipated to empirical; its impact remains unquantified.
 
+### 4.1c Interrupted runs — the exclusion register
+
+A run that was killed mid-flight is not a failure; it is a missing
+measurement. Applying the two-condition test from the counting convention to
+**every** run directory in the corpus turns up exactly four, all recorded here
+so a future recount does not silently re-admit them.
+
+| run | steps | natural-exit marker | verdict |
+|---|---|---|---|
+| `20260811-20:34:31_..._t4_s0` | 17 | **none** | **EXCLUDED** — externally killed |
+| `20260811-18:02:28_..._t0_s0` | 17 | **none** | **EXCLUDED** — aborted, relaunched 45 s later |
+| `20260811-12:52:17_..._t6_s51` | 0 | **none** | **EXCLUDED** — aborted launch, 20 s long |
+| `20260812-01:11:00_..._t6_s0` | 16 | `reached max_turns=50` | **VALID — counts as a failure** |
+
+**The t4 exclusion, in full**, because it is the one that changes a published
+number. `20260811-20:34:31_libero_object_swap_t4_s0`:
+
+- `run.log` contains **zero** `[agent] elapsed:` / `usage:` footer lines and
+  **zero** natural-exit markers — no `finish`, no `reached max_turns`, no
+  essay-drift stop;
+- it ends mid-tool-result at **20:46:50** (`[tool<] segment: {"found": true,
+  "step": 16, …}`), with 17 step records and climbing;
+- that timestamp coincides with a documented abort: a `pkill -f rpent.cli.main`
+  issued at ~20:46–47 to end the sweep and start the vision arm, whose session
+  launched at **20:48:01**.
+
+So it belongs to the same category as the sweep-cut itself — an interrupted
+measurement, invalid as a failure *and* as a solve. **The `20260812-00:46:00`
+resumption run is the only valid t4 in pass 2**, and it solved. Pass 2 is
+therefore **5/10**, and the practice arm is `7, 5, 6` → mean **6.0**.
+
+**Why the footer alone is not the test.** `20260812-01:11:00_..._t6_s0` has no
+footer either, and it is a *valid* failure: it logged
+`reached max_turns=50. Stopping.` and its recipe path at 01:40:37, then died in
+the last second of cleanup before the footer was written. The measurement was
+complete. A one-condition "no footer ⇒ exclude" rule would have deleted a real
+failure and inflated the practice arm — which is why the convention requires
+both a missing marker **and** abort provenance.
+
+Two of the other three exclusions were already outside every table in this
+file, but only by where the globs happened to start. They are registered here
+so that is a decision rather than an accident.
+
 ### 4.2 Per-cell, pooled across full sweeps
 
-Retired `none` sweep S2 excluded (see §4.1); `practice` pools S11/S12/S14 and
-takes the conservative copy of S12's duplicated t4.
+Retired `none` sweep S2 excluded (see §4.1); interrupted runs excluded per
+§4.1c; `practice` pools S11/S12/S14.
 
 | cell | `none` (S7,S9,S13) | `memory` (S3–S6,S8,S10) | `practice` (S11,S12,S14) | pre-sandbox (S1) |
 |---|---|---|---|---|
@@ -249,7 +298,7 @@ takes the conservative copy of S12's duplicated t4.
 | t1 | 3/3 | 3/6 | 3/3 | 1/1 |
 | t2 | 3/3 | 5/6 | 3/3 | 0/1 |
 | t3 | 2/3 | 5/6 | 2/3 | 0/1 |
-| t4 | 1/3 | 5/6 | 1/3 | 1/1 |
+| t4 | 1/3 | 5/6 | 2/3 | 1/1 |
 | t5 | 0/3 | **1/6** | **0/3** | 1/1 |
 | t6 | **0/3** | **0/6** | **2/3** | 1/1 |
 | t7 | 3/3 | 6/6 | 3/3 | 1/1 |
