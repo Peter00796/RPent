@@ -154,6 +154,26 @@ crime scene. Also fixed: `sandbox.json` recorded an empty `write_denied`
 (fingerprint dumped before the toolkit registered protection) — the
 fingerprint now re-dumps when protection registers.
 
+## 5c. Gate citations and replay cannot see archived attempts
+
+Surfaced on the first real resident session (2026-08-11, the t6 crack):
+the v1 rotation renames an attempt's evidence into `attempt_NN/`, but
+
+- the gate's citation resolver only reads the live `tool_calls.jsonl`, so
+  a proposal cannot cite the failure it fixes when that failure lives in
+  an archived attempt (the 0.002 air-grasp — the decisive refuting
+  evidence for the approved grasp revision — was unciteable; the
+  proposal had to lean on attempt 2's summary records);
+- replay renders the live layout only, so the resident run's replay
+  shows 14 calls of attempt 2 and reports the transcript's attempt-1
+  turns as record gaps.
+
+The citation grammar wants an optional attempt segment
+(`run:<dir>@attempt_02#seq=N` or similar), resolved into
+`attempt_NN/tool_calls.jsonl`; replay wants an attempt picker (or
+per-attempt pages). Accepted as v1 debt when the rotation shortcut was
+approved; this run converted it from hypothetical to measured.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —
