@@ -137,7 +137,13 @@ def update_playbook(*, suite: str, task: int, failed_runs: list[Path],
     question = None
     if "===OPEN QUESTION===" in text:
         text, tail = text.split("===OPEN QUESTION===", 1)
-        question = tail.strip().split("===")[0].strip() or None
+        candidate = tail.strip().split("===")[0].strip()
+        # Models write "(none)" instead of omitting the block; a placeholder
+        # must not become next round's experiment brief (dry-run catch).
+        if candidate and len(candidate) >= 20 and not re.fullmatch(
+                r"[\s\(\)\[\]\.]*(none|n/?a|no (open )?question)[\s\(\)\[\]\.,!]*",
+                candidate, re.IGNORECASE):
+            question = candidate
 
     proposals_dir = round_dir / "proposals"
     proposals_dir.mkdir(parents=True, exist_ok=True)

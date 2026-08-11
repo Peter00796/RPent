@@ -152,6 +152,25 @@ check("open question queued",
       json.dumps(hist))
 check("round 2 ran the experiment", "experiment" in hist[1], json.dumps(hist[1]))
 
+# Arc 3: a "(none)" placeholder after ===OPEN QUESTION=== must NOT queue an
+# experiment (dry-run catch: junk placeholders became bogus briefs).
+class NoneChat:
+    def invoke(self, messages):
+        return types.SimpleNamespace(
+            content="nothing useful\n===OPEN QUESTION===\n(none this round)\n")
+
+
+sys.modules["langchain.chat_models"].init_chat_model = lambda m, **k: NoneChat()
+EPISODES[:] = [False, False,   # round 1 practice fails, updater emits junk
+               False, False]   # round 2 must be NORMAL attempts, not experiment
+result3 = L.practice_loop(suite="fake_suite", task=9, practice_seeds=[51, 52],
+                          exam_seed=0, max_rounds=2, model="fake",
+                          base_url=None, logs_root=LOGS)
+print("\n=== arc 3: placeholder question rejected ===")
+hist3 = result3["history"]
+check("junk '(none)' does not become an experiment",
+      "experiment" not in hist3[1], json.dumps(hist3))
+
 if failures:
     print(f"\nFAILED ({len(failures)}): {failures}")
     sys.exit(1)
