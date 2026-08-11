@@ -231,6 +231,23 @@ Scheduled with the perception overhaul batch (post-Friday). The index need
 itself is data-backed: gen2's selective reading orphaned the anti-spiral
 entry while t6 spiraled.
 
+**UPDATE 2026-08-12 — the predicted exposure has now been observed.** Both
+blind t5 runs in the practice-arm sweeps (`20260812-00:53:35`,
+`20260812-03:15:06`) read **all five** t5 playbook entries at seq 5–9 with
+**`inspect_image` call count 0** — the tool is absent on a blind arm. One of
+those entries, the owner-edited
+`localize_extra_bottle_clusters_geometrically_not_by_color_la.md`, instructs
+the agent to *"`back_project` the pixel and require the returned z to sit near
+table level"* — a procedure that presupposes a VLM pixel the arm cannot
+obtain. Both runs failed.
+
+**No causal claim**: the transcripts have not been read, so whether the
+unexecutable entries cost anything is unknown. What is established is that
+the exposure scenario `requires:` was specified to prevent **occurs in
+practice**, which moves the motivation from anticipated to empirical. The
+impact is unquantified and should be stated that way until someone reads the
+two transcripts.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —

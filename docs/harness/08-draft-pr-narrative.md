@@ -38,12 +38,15 @@ only one that survives a mentor:
    pre-refactor era, on unmatched cells, with the answer key readable
    ([09 §3](09-baseline-table.md#3-pre-refactor-era-upstream-harness--our-prompt-of-the-time)).
    They prove nothing and are quoted nowhere.
-2. **Not a growth curve.** The generational sequence 4 → 5 → 7 → 6 → 5 reads as
-   growth and dies under repeats: `none` = 4, 6, 6 vs `memory@gen4` = 5, 8, 5,
-   an effect of ≈ +0.7 cells against ±1.5 per-sweep spread at n=3
-   ([09 §4.1](09-baseline-table.md#41-the-comparisons-that-are-actually-licensed)).
-   The generational protocol is offered as **a measurement instrument that
-   worked**, not as a positive result.
+2. **Not a growth curve, and not a suite-mean improvement either.** The
+   generational sequence 4 → 5 → 7 → 6 → 5 reads as growth and dies under
+   repeats; the `+0.7 cells` that replaced it died too, once a fresh no-library
+   sweep at current head scored 6 and exposed the old `4` as a fixed-crash
+   casualty. **All three arms — no library, memory library, task playbooks —
+   sit at a suite mean of 6.0/10** (§6.2). What the library demonstrably buys is
+   *cell-targeted*: t6 goes 0/11 clean-room and 0/3 no-library → **5/6**. The
+   generational protocol is offered as **a measurement instrument that worked**
+   — it is what caught both dead claims — not as a positive result.
 3. **Not a complete system.** The code-as-policy arm was built, produced no
    measured result, and is excluded from this branch (§11). One sweep pass was
    cut mid-run. One of three cross-seed exams failed. The environment's own
@@ -777,21 +780,52 @@ provenance:
 
 Clean start (empty library) → sweep → observe/synthesize → human review →
 apply → next sweep. Five generations were run. Single-run scores looked like a
-growth curve, **and the curve died under repeats**:
+growth curve (4 → 5 → 7 → 6 → 5); **the curve died under repeats, and then the
+number that replaced it died too.**
 
-| arm | sweeps | scores | mean |
+The first repeat round gave `none` = 4, 6, 6 against `memory@gen4` = 5, 8, 5,
+i.e. ≈ +0.7 cells against ±1.5 spread — already too small to quote. The recount
+for this PR then found that the `4` was not a clean measurement: that sweep
+predates `f4a36c72`, the fix for the DeepSeek-400 orphan-`tool_calls` crash, and
+its t5 run logs two 400-family errors and dies at 216 k input tokens where its
+siblings spent 4–6.6 M. So a fresh `none` sweep was run at current head to
+settle it. It scored **6**:
+
+| arm | sweeps | scores | mean | spread |
+|---|---|---|---|---|
+| `none` (no library at all) | S7, S9, S13 | 6, 6, 6 | **6.0** | **0** |
+| `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | **6.0** | ±1.73 |
+| `practice` (gen 5 + task playbooks) | S11, S12, S14 | 7, 4–5, 6 | **5.67–6.0** | ±1.5 |
+| *(retired)* `none` @ gen-0 head | S2 | 4 | — | fixed-crash casualty |
+
+### **All three arms sit at 6.0 out of 10. The library buys no suite-wide lift.**
+
+That has to be written straight, and it retires the `+0.7` for good: the effect
+was the `none` arm's mean being dragged down by a harness bug we had already
+fixed. Anyone quoting "the memory library is worth +0.7 cells" — including
+earlier drafts of these notes — is quoting an artifact.
+
+**Where the library *is* worth something is one cell at a time**, and the same
+data shows it plainly:
+
+| cell | clean-room history | `none` arm (n=3) | `practice` arm, all exams |
 |---|---|---|---|
-| `none` (no library) | S2, S7, S9 | 4, 6, 6 | 5.33 |
-| `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | 6.0 |
+| **t6** | **0/11** | **0/3** | **5/6** |
+| **t5** | 3/16 all arms | 0/3 | **0/3 blind**, **1/2 with `--vision-tool`** |
 
-≈ +0.7 out of 10 against ±1.5 per-sweep spread, n=3. Stratified: the effect is
-in the middle band (t0/t1/t4/t8/t9, 9/15 vs 7/15); the easy cells don't need the
-library and the hard cells it cannot save. **Report mean ± spread; never a
-single sweep.** And a confound this branch's own recount surfaced: the three
-`none` sweeps are not at one code head, and the 4 predates the fix for the
-DeepSeek-400 orphan-`tool_calls` crash, one instance of which killed that
-sweep's t5 run at 216 k input tokens where its siblings spent 4–6.6 M
-([09 §4.1](09-baseline-table.md#41-the-comparisons-that-are-actually-licensed)).
+A cell that eleven consecutive clean-room runs could not touch, and that the
+no-library arm still cannot touch, is now solved five times in six attempts by
+an arm differing only by four gated playbook entries. That is invisible in a
+suite mean, because the mean is dominated by middle-band variance on cells the
+library neither helps nor hurts (t0 and t8 actually move *against* it — noise
+being noise).
+
+And t5 is the control on the other side: **knowledge whose tool surface is
+absent is not knowledge for that arm.** Its decisive entries presuppose a vision
+channel, so the blind arm carrying them scores 0/3 while the vision-armed exam
+solved. That is not a disappointment; it is the arm-dependence the library's
+`requires:` filter was designed for, showing up as data
+([09 §4.1a-b](09-baseline-table.md#41a-where-the-library-is-worth-something-one-cell-at-a-time)).
 
 What the generational protocol *did* demonstrate, and this is the claim worth
 making: **the review process itself measurably improved.** Across the five
@@ -1544,6 +1578,14 @@ registered protection (→ re-dump on registration).
   (7/10) and 6 of 10 cells of a second (2/6) before the owner stopped it to save
   tokens. The fragment is *worse* than the same six cells in pass 1 (4/6), so
   "7/10" is n=1 and is labelled n=1 everywhere.
+- **The library buys no suite-wide lift.** Three arms, three means, all 6.0/10.
+  The `+0.7` in earlier drafts was an artifact of a harness bug in one sweep.
+  The defensible claim is targeted wall-breaking plus attribution, never a
+  suite average.
+- **One sweep duplicates a cell.** S12 was cut and resumed, so t4 ran twice
+  under a byte-identical configuration — once failing, once solving. Reported as
+  a range (4–5/10) rather than resolved in the favourable direction, and the
+  conservative copy is used in every mean.
 - **Cross-seed transfer is 2/3, not 3/3.** `t6_s1` failed.
 - **t5 seed 0 is n=1.** One solve, one failure, on a cell whose environment
   checker is demonstrably flaky. The t5/t6 pincer (§9) is a clean *design*

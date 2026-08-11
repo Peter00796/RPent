@@ -153,49 +153,112 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 | S9 | `20260811-01:20:05` → `03:09:25` | `none` | — | 10 | **6** | `t0- t1+ t2+ t3+ t4+ t5- t6- t7+ t8+ t9-` |
 | S10 | `20260811-03:19:41` → `05:12:33` | `memory` | gen 4 | 10 | **5** | `t0- t1- t2+ t3+ t4+ t5- t6- t7+ t8+ t9-` |
 | S11 | `20260811-18:16:16` → `19:49:10` | `practice` | gen 5 + t5/t6 playbooks | 10 | **7** | `t0- t1+ t2+ t3+ t4+ t5- t6+ t7+ t8- t9+` |
-| S12 | `20260811-19:49:27` → `21:38:36` | `practice` | same | **6 of 10** | 2 | `t0- t1+ t2+ t3- t4- t5-` — **CUT by the owner to save tokens** |
+| S12 | `20260811-19:49:27` → `20260812-02:06:53` | `practice` | same | 10 | **5** (or 4 — see below) | `t0- t1+ t2+ t3- t4? t5- t6- t7+ t8- t9+` — cut mid-pass, resumed 6 h later |
+| S13 | `20260811-22:41:11` → `20260812-00:40:16` | `none` | — | 10 | **6** | `t0+ t1+ t2+ t3- t4- t5- t6- t7+ t8+ t9+` (**P2**) |
+| S14 | `20260812-02:15:33` → `04:08:00` | `practice` | same | 10 | **6** | `t0- t1+ t2+ t3+ t4- t5- t6+ t7+ t8- t9+` (**P3** pass 3) |
+
+> **⚠ S12 contains a duplicated cell, and which copy you take changes the
+> number.** Pass 2 was cut after t0–t4 on 08-11 evening, the GPU went to the t5
+> vision work and then to S13, and the pass resumed at 00:46 on 08-12 starting
+> **again at t4**. So t4 was run twice under a byte-identical configuration
+> (`20260811-20:34:31` **failed**, `20260812-00:46:00` **solved**; both
+> `--sandbox practice`, same model, same `--max-turns 50`). Taking the
+> resumption copy gives S12 = 5/10; taking the first gives **4/10**. There is no
+> principled reason to prefer the later one, and preferring it is exactly the
+> silent selection this file exists to prevent. **Reported as 4–5/10**; the
+> conservative reading is used in every mean below.
 
 ### 4.1 The comparisons that are actually licensed
 
-**Repeats at (approximately) one code head, n=3 per arm** — the only paired
-numbers in the project:
+**Repeats, n=3 per arm** — the only paired numbers in the project:
 
 | arm | runs | scores | mean | spread |
 |---|---|---|---|---|
-| `none` (no library at all) | S2, S7, S9 | 4, 6, 6 | **5.33** | ±1.15 |
+| `none` (no library at all) | S7, S9, **S13** | 6, 6, 6 | **6.0** | **0** |
 | `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | **6.0** | ±1.73 |
+| `practice` (gen 5 + t5/t6 playbooks) | S11, S12, **S14** | 7, 4–5, 6 | **5.67–6.0** | ±1.5 |
+| *(retired)* `none` @ gen-0 head | S2 | 4 | — | bug-affected, see below |
 
-Effect ≈ **+0.7 cells out of 10, against a per-sweep spread of ±1.5**. n=3.
-This does not clear its own noise floor and must never be quoted as a single
-number without the spread. Stratified, the difference is concentrated in the
-middle band (t0/t1/t4/t8/t9: 9/15 with the library vs 7/15 without); the easy
-cells (t2/t3/t7) do not need it and the hard cells (t5/t6) it cannot save.
+### **All three arms sit at a suite mean of 6.0 out of 10.**
 
-**⚠ Caveat this recount surfaced, not previously recorded**: the three `none`
-sweeps are *not* at one code head. S2 ran 2026-08-07 14:18, three days and ~30
-commits before S7/S9, and **predates `f4a36c72` (08-07 16:22), the fix for the
-DeepSeek-400 orphan-`tool_calls` crash**. S2's t5 run logs two 400-family errors
-and dies at 216 k input tokens where its siblings in the same sweep spent
-4.0–6.6 M — i.e. at least one of S2's six failures is a harness bug that no
-longer exists. So the `none`
-arm's `4,6,6` is better read as `[bug-affected 4], 6, 6`, and part of the
-apparent gen-0→later growth is the harness code improving, not the library.
-S7 and S9 are the clean pair for the `none` arm.
+That is the honest headline and it must be written straight. **The library
+produces no measurable suite-wide lift.** The earlier +0.7 reading was the
+`none` arm's mean being dragged down by S2, and P2 (S13) was run specifically
+to test that: a `none` sweep at current head scored **6**, giving the no-library
+arm `6, 6, 6` with **zero spread**. The old `4` is now positively identified as
+the casualty it was suspected to be — it predates `f4a36c72` (08-07 16:22), the
+fix for the DeepSeek-400 orphan-`tool_calls` crash, and its t5 run logs two
+400-family errors and dies at 216 k input tokens where its siblings spent
+4.0–6.6 M. **S2 is retired from the arm** and kept only as the record of a
+harness bug.
+
+So: the generational curve is dead, and so is the suite-mean claim that replaced
+it. Anyone quoting "the memory library is worth +0.7 cells" is quoting an
+artifact of a fixed crash.
+
+### 4.1a Where the library *is* worth something: one cell at a time
+
+The value is **cell-targeted, not suite-wide**, and the same data that kills the
+mean shows it clearly:
+
+| cell | clean-room history | `none` arm (S7,S9,S13) | `practice` arm, all exams |
+|---|---|---|---|
+| **t6** | **0/11** | **0/3** | **5/6** — 3/3 seed-0 exams, S11 ✓@2, S12 ✗, S14 ✓@13 |
+| **t5** | 3/16 all arms | 0/3 | **0/3 blind** (S11, S12, S14) · **1/2 with `--vision-tool`** |
+
+t6 is a cell that eleven consecutive clean-room runs could not touch and that
+the no-library arm still cannot touch, now solved five times in six attempts by
+an arm whose only difference is four gated playbook entries. **That** is the
+result. It is invisible in a suite mean because the suite mean is dominated by
+middle-band variance on cells the library neither helps nor hurts.
+
+t5 is the control on the other side: its decisive entries are
+**arm-dependent** — they presuppose a vision channel — so a blind arm carrying
+them scores 0/3 while the vision-armed exam solved. Knowledge that the tool
+surface cannot execute is not knowledge for that arm.
+
+Stratified across the older arms, the middle band (t0/t1/t4/t8/t9) is where all
+the noise lives; the easy cells (t2/t3/t7) do not need the library and the hard
+cells do not yield to it without the matching instrument.
+
+### 4.1b A predicted contamination, now observed
+
+Both blind t5 sweep runs (`20260812-00:53:35`, `20260812-03:15:06`) read **all
+five** t5 playbook entries at seq 5–9, with **`inspect_image` call count 0** —
+the tool is not on a blind arm's surface. One of those entries, the
+owner-edited `localize_extra_bottle_clusters_geometrically_not_by_color_la.md`,
+instructs the agent to *"`back_project` the pixel and require the returned z to
+sit near table level"* — a procedure that presupposes a VLM pixel the blind arm
+cannot obtain.
+
+This is exactly the arm-dependence scenario [issue 5e](04-open-issues.md)
+predicted when the `requires:` filter was specified. Both runs failed — but
+**the transcripts have not been read, so no causal claim is made**: what is
+established is that the *predicted exposure occurred*, not that it cost
+anything. The motivation for the `requires`-filtered per-run index moves from
+anticipated to empirical; its impact remains unquantified.
 
 ### 4.2 Per-cell, pooled across full sweeps
 
-| cell | `none` (S2,S7,S9) | `memory` (S3–S6,S8,S10) | `practice` (S11,S12) | pre-sandbox (S1) |
+Retired `none` sweep S2 excluded (see §4.1); `practice` pools S11/S12/S14 and
+takes the conservative copy of S12's duplicated t4.
+
+| cell | `none` (S7,S9,S13) | `memory` (S3–S6,S8,S10) | `practice` (S11,S12,S14) | pre-sandbox (S1) |
 |---|---|---|---|---|
-| t0 | 2/3 | 2/6 | 0/2 | 1/1 |
-| t1 | 2/3 | 3/6 | 2/2 | 1/1 |
-| t2 | 3/3 | 5/6 | 2/2 | 0/1 |
-| t3 | 3/3 | 5/6 | 1/2 | 0/1 |
-| t4 | 1/3 | 5/6 | 1/2 | 1/1 |
-| t5 | 0/3 | **1/6** | 0/2 | 1/1 |
-| t6 | 0/3 | **0/6** | **1/1** | 1/1 |
-| t7 | 3/3 | 6/6 | 1/1 | 1/1 |
-| t8 | 1/3 | 5/6 | 0/1 | 1/1 |
-| t9 | 1/3 | 4/6 | 1/1 | 1/1 |
+| t0 | 2/3 | 2/6 | 0/3 | 1/1 |
+| t1 | 3/3 | 3/6 | 3/3 | 1/1 |
+| t2 | 3/3 | 5/6 | 3/3 | 0/1 |
+| t3 | 2/3 | 5/6 | 2/3 | 0/1 |
+| t4 | 1/3 | 5/6 | 1/3 | 1/1 |
+| t5 | 0/3 | **1/6** | **0/3** | 1/1 |
+| t6 | **0/3** | **0/6** | **2/3** | 1/1 |
+| t7 | 3/3 | 6/6 | 3/3 | 1/1 |
+| t8 | 2/3 | 5/6 | 0/3 | 1/1 |
+| t9 | 3/3 | 4/6 | 3/3 | 1/1 |
+
+The only column that moves against the `none` arm by more than noise is **t6**
+(0/3 → 2/3 in-sweep, 5/6 counting the seed-0 exams). t0 and t8 move the *other*
+way, which is the noise being noise.
 
 ### 4.3 Cost of one sweep (S11, measured)
 
@@ -325,6 +388,14 @@ Recorded because they change claims already written down elsewhere.
    number computed from `{suite}_t{N}_s{S}.json` rather than `states.json`
    should be recomputed.
 4. Pre-refactor run count is **155 with logs** (157 directory entries), not 156.
+5. **S2 is now positively identified, not merely suspected** (P2, 2026-08-12).
+   A `none` sweep at current head scored 6, making the arm `6, 6, 6` with zero
+   spread. S2's `4` was the fixed-crash casualty, and the `+0.7 cells` the
+   library appeared to be worth was an artifact of it. **Retired from the arm.**
+6. **S12 duplicates t4** under a byte-identical configuration, once failing and
+   once solving, because the pass was cut and resumed. Reported as a range
+   (4–5/10) rather than resolved in the favourable direction; the conservative
+   copy is used in every mean.
 
 ---
 
@@ -335,9 +406,9 @@ Cost model from §4.3: one 10-cell sweep ≈ **95 min wall clock, ~30 M input /
 
 | # | gap | why it matters | cost | recommendation |
 |---|---|---|---|---|
-| P1 | **Upstream-vanilla + `deepseek-v4-flash`, sandbox off, t0–t9 s0** — the actual "before" of this PR, never measured. Everything we call a baseline already contains our prompt work. | A reviewer will ask "what did upstream score?" and we currently cannot answer. Nearest proxy is the pre-refactor era, which is leak-contaminated. | 1 sweep ≈ 95 min. ×3 for a mean ≈ 5 h | **Highest value per GPU-minute.** But needs an upstream checkout on the box — it is not just a flag. Ask before spending. |
-| P2 | **`none` arm re-run at current head** (S2 replacement) | Removes the code-head confound from `4,6,6`; the current no-library floor is really only n=2 (S7, S9). | 1 sweep ≈ 95 min | Cheap and it repairs a number we already quote. Recommended. |
-| P3 | **Finish S12/S13** — the cut passes 2 and 3 of the `practice` sweep | `practice` is currently n=1 complete sweep (7/10) + a 2/6 fragment. The fragment is worse than the same six cells in S11 (S11 t0–t5: **4/6**; S12 t0–t5: **2/6**), so "7/10" as a headline is on thin ice. | 4 remaining runs of S12 + 10 for S13 ≈ 2.2 h | Recommended before the practice arm is quoted at all. |
+| P1 **RUNNING** | **Upstream-vanilla + `deepseek-v4-flash`, sandbox off, t0–t9 s0** — the actual "before" of this PR, never measured. Everything we call a baseline already contains our prompt work. | A reviewer will ask "what did upstream score?" and we currently cannot answer. Nearest proxy is the pre-refactor era, which is leak-contaminated. | 1 sweep ≈ 95 min | **Launched 2026-08-12** from a bundle of upstream `5da2573f`, `--planner api --model deepseek:deepseek-v4-flash --max-turns 50`, HF priors sync left ON. Numbers land here when it finishes. |
+| ~~P2~~ **DONE** | **`none` arm re-run at current head** (S2 replacement) | Removes the code-head confound from `4,6,6`; the current no-library floor is really only n=2 (S7, S9). | 1 sweep ≈ 95 min | **Ran 2026-08-12 as S13 → 6/10.** It did repair the number, and the repair killed the +0.7 claim: see §4.1. |
+| ~~P3~~ **DONE** | **Finish the cut passes 2 and 3 of the `practice` sweep** | `practice` is currently n=1 complete sweep (7/10) + a 2/6 fragment. The fragment is worse than the same six cells in S11 (S11 t0–t5: **4/6**; S12 t0–t5: **2/6**), so "7/10" as a headline is on thin ice. | ran ≈ 3.5 h | **Ran 2026-08-12 → S12 4–5/10, S14 6/10.** The practice arm is `7, 4–5, 6` — mean **5.67–6.0**, i.e. level with the no-library floor. Suite-wide lift: none. Cell-targeted lift on t6: large. See §4.1a. |
 | P4 | **`--vision-tool` arm on the full suite** | Two runs exist, both on t5. Nothing supports a general claim about the vision channel. | 1 sweep ≈ 95 min + VLM calls | Only if the vision decoupling is a headline claim in the PR. |
 | P5 | **t6/t5 cross-seed at n≥5** | 2/3 and 1/3 are the current transfer evidence. | 5 runs/cell ≈ 1 h | Cheap; upgrades "it transferred" from anecdote. |
 | P6 | **A frontier-model head-to-head** | Zero data exists. | high (API cost, and the arm has to be built) | **Do not.** The claim in the doc is "cheap models + a grown harness crack cells the same cheap model alone cannot" — that needs no frontier comparison, and any such comparison we could afford would be underpowered. |
