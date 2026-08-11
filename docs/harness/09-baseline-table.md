@@ -333,6 +333,68 @@ The only column that moves against the `none` arm by more than noise is **t6**
 (0/3 → 2/3 in-sweep, 5/6 counting the seed-0 exams). t0 and t8 move the *other*
 way, which is the noise being noise.
 
+### 4.3 The upstream-vanilla baseline (P1) — 8/10, and what buys it
+
+Run 2026-08-12 from a bundle of upstream `RLinf/RPent` main at **`5da2573f`**,
+cloned standalone to `/mnt/user_dir/pengyanxin/rpent_upstream`. **A different
+codebase**, so it is not an S-number: `--planner api` (pydantic-ai),
+`--model deepseek:deepseek-v4-flash`, `--no-images`, `--max-turns 50`, no
+sandbox (upstream has none), HF priors sync left **on** — that is vanilla.
+
+| | result |
+|---|---|
+| solved | **8/10** — `t0+ t1+ t2- t3+ t4- t5+ t6+ t7+ t8+ t9+` |
+| termination key | `terminated` (upstream shape — see the counting convention) |
+| **prior reads** | **112 calls across 10/10 runs** |
+| cost | 45 min agent time, 15.8 M in / 224 k out |
+| audits | 5 runs wrote none; **3 of them solved** — audit-based counting would have scored this 5/10 |
+
+**The 8/10 is purchased, and the receipt is legible.** The clearest single case
+is t5 — the cell our entire vision arc was spent on
+([§5.2](#52-t5--pick-the-tomato-sauce-and-place-it-in-the-basket-the-perception-channel-wall-two-visually-near-identical-sauce-bottles)).
+Upstream solved it at **env step 2**. What it read, and what it then did, in
+full:
+
+```
+reads:  results_object_pert/object_swap_t5_s0.json      x3   <- the answer for this exact cell
+        results_object_pert/recipe_object_swap_t5_s0.jsonl x2
+        env_calibration.md                              x2
+commands issued:
+  step 1  pi0_pick("pick up the tomato sauce", max_chunks=25)
+  step 2  pi0_pick("pick up the tomato sauce", max_chunks=25)   -> terminated: true
+```
+
+**No `segment`. No localisation. No perception of any kind.** Two identical
+policy calls, replayed off the stored solution. The same cell defeated our blind
+arms 0/3 and cost a resident session, a vision instrument and three
+owner-adjudicated entries to crack once.
+
+That is not a criticism of upstream — the priors are part of its design, and
+with them available this is the rational thing for an agent to do. It is the
+reason the number cannot be read as a harness measurement:
+
+| arm | score | what it measures |
+|---|---|---|
+| upstream-vanilla, priors on | **8/10** | the value of the stored answers |
+| our clean-room floor (`none`, n=3) | **6/10** (6, 6, 6) | what the model + tools can do with no answers |
+| our `practice` arm (n=3) | **6.0** suite mean | same, plus grown knowledge — no suite-wide lift |
+| our grown knowledge, per cell | t6 **0/11 → 5/6** | what a measured, gated recipe is worth where it applies |
+
+Removing the answer files costs **two cells**. Winning cells back afterwards has
+to be done by a mechanism, and t6 is the case where it was.
+
+**Caveats, recorded rather than chased:**
+
+- P1 ran roughly **2× faster per cell** than our arms (123–548 s vs 145–896 s).
+  Expected: recipe replay is short, and it is a *consequence* of the priors, not
+  an independent finding.
+- Its two failures (t2, t4) are cells our arms also find middling. No anomaly.
+- P1 differs from our arms on several axes at once — prompt, planner, priors
+  access, turn accounting, and upstream's `CELL_TIMEOUT_S=1200` wall-clock cap,
+  which our deepagents runs do not have. **It is the honest "before", not a
+  controlled ablation.** The controlled comparisons remain §4.1.
+- n=1. A single upstream sweep; no repeats were run.
+
 ### 4.3 Cost of one sweep (S11, measured)
 
 ```
@@ -479,7 +541,7 @@ Cost model from §4.3: one 10-cell sweep ≈ **95 min wall clock, ~30 M input /
 
 | # | gap | why it matters | cost | recommendation |
 |---|---|---|---|---|
-| P1 **RUNNING** | **Upstream-vanilla + `deepseek-v4-flash`, sandbox off, t0–t9 s0** — the actual "before" of this PR, never measured. Everything we call a baseline already contains our prompt work. | A reviewer will ask "what did upstream score?" and we currently cannot answer. Nearest proxy is the pre-refactor era, which is leak-contaminated. | 1 sweep ≈ 95 min | **Launched 2026-08-12** from a bundle of upstream `5da2573f`, `--planner api --model deepseek:deepseek-v4-flash --max-turns 50`, HF priors sync left ON. Numbers land here when it finishes. |
+| ~~P1~~ **DONE** | **Upstream-vanilla + `deepseek-v4-flash`, sandbox off, t0–t9 s0** — the actual "before" of this PR, never measured. Everything we call a baseline already contains our prompt work. | A reviewer will ask "what did upstream score?" and we currently cannot answer. Nearest proxy is the pre-refactor era, which is leak-contaminated. | ran 45 min | **Ran 2026-08-12 → 8/10**, with 112 prior reads across 10/10 runs. See §4.3: the score is purchased with per-cell answer files, and t5 shows it at its starkest (solved at step 2 by two `pi0_pick` calls and zero perception). |
 | ~~P2~~ **DONE** | **`none` arm re-run at current head** (S2 replacement) | Removes the code-head confound from `4,6,6`; the current no-library floor is really only n=2 (S7, S9). | 1 sweep ≈ 95 min | **Ran 2026-08-12 as S13 → 6/10.** It did repair the number, and the repair killed the +0.7 claim: see §4.1. |
 | ~~P3~~ **DONE** | **Finish the cut passes 2 and 3 of the `practice` sweep** | `practice` is currently n=1 complete sweep (7/10) + a 2/6 fragment. The fragment is worse than the same six cells in S11 (S11 t0–t5: **4/6**; S12 t0–t5: **2/6**), so "7/10" as a headline is on thin ice. | ran ≈ 3.5 h | **Ran 2026-08-12 → S12 5/10, S14 6/10** (one interrupted run excluded, §4.1c). The practice arm is `7, 5, 6` — mean **6.0**, i.e. level with the no-library floor. Suite-wide lift: none. Cell-targeted lift on t6: large. See §4.1a. |
 | P4 | **`--vision-tool` arm on the full suite** | Two runs exist, both on t5. Nothing supports a general claim about the vision channel. | 1 sweep ≈ 95 min + VLM calls | Only if the vision decoupling is a headline claim in the PR. |

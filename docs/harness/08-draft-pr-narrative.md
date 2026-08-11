@@ -39,7 +39,9 @@ the shape of the claim.
 Three things this is **not**, stated up front because the honest version is the
 only one that survives a mentor:
 
-1. **Not a comparison to a frontier model.** No head-to-head has ever been run.
+1. **Not a comparison to a frontier model.** The only baseline that exists is
+   *the same model on the upstream harness* (§1.5). No head-to-head against a
+   stronger model has ever been run.
    The only non-DeepSeek runs in the project are 10 opus and 3 glm runs from the
    pre-refactor era, on unmatched cells, with the answer key readable
    ([09 §3](09-baseline-table.md#3-pre-refactor-era-upstream-harness--our-prompt-of-the-time)).
@@ -172,6 +174,49 @@ fresh observation **by default** and observational tools opt out. That is the
 same instinct as our advancing/read-only split, arrived at independently. The
 difference in destination is the point of §5: they centralized *state capture*;
 we centralized the *evidence record*, including the calls that change nothing.
+
+### 1.5 What upstream scores, and what the score is made of
+
+The obvious reviewer question — *what did the harness you replaced actually get?*
+— now has an answer. Upstream main at `5da2573f`, cloned standalone, same model,
+same `--max-turns 50`, its own prompt, its HF priors sync left on because that is
+vanilla: **8/10 on `libero_object_swap` t0–t9 seed 0**, in 45 minutes.
+
+**That number is purchased with per-cell answer files — 112 reads across 10/10
+runs** — and one cell shows exactly what "purchased" means. t5, the cell whose
+perceptual wall cost us a resident session, a vision instrument and three
+adjudicated library entries, upstream solved at **env step 2**:
+
+```
+reads:  results_object_pert/object_swap_t5_s0.json       x3   <- this cell's answer
+        results_object_pert/recipe_object_swap_t5_s0.jsonl x2
+commands:  step 1  pi0_pick("pick up the tomato sauce")
+           step 2  pi0_pick("pick up the tomato sauce")  -> terminated
+```
+
+No `segment`, no localisation, **no perception at all**: two identical policy
+calls replayed off the stored solution.
+
+This is not a knock on upstream. With the answers on disk that is the rational
+move, and the priors are part of that design. It is the reason the number cannot
+be read as a measurement *of a harness*:
+
+| arm | score | what it measures |
+|---|---|---|
+| upstream-vanilla, priors on | **8/10** | the value of the stored answers |
+| our clean-room floor (`none`, n=3) | **6/10** (6, 6, 6) | model + tools, no answers |
+| our `practice` arm (n=3) | **6.0** mean | same, plus grown knowledge — no suite-wide lift (§6.2) |
+| grown knowledge, per cell | t6 **0/11 → 5/6** | what a gated, measured recipe is worth where it applies |
+
+**So the honest arc of this PR in one line**: taking the answer files away costs
+two cells; winning cells back afterwards has to be done by a mechanism that
+produces knowledge which is measured, gated and attributable — and t6, 0/11 →
+5/6, is the case where it demonstrably was.
+
+n=1 on the upstream sweep, and it differs from our arms on several axes at once
+(prompt, planner, priors access, turn accounting, upstream's `CELL_TIMEOUT_S`
+cap). It is the honest *before*, not a controlled ablation; the controlled
+comparisons stay in [09 §4.1](09-baseline-table.md#41-the-comparisons-that-are-actually-licensed).
 
 ---
 
