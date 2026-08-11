@@ -228,17 +228,43 @@ Termination steps of the four post-fix solves: 8, 15, 7, 2.
 | `practice`, blind | 4 | 0 |
 | `practice` + `--vision-tool` | 2 | **1** (`20260811-22:05:02`, @ step 7) |
 
+**Practice-seed work on t5** (all `practice` profile, seeds ≥ 51):
+
+| run | arm | outcome |
+|---|---|---|
+| `20260811-05:33:43_t5_s51` | `--experiment` | no solve, 1 env step, 15 calls |
+| `20260811-06:29:45_t5_s53` | `--experiment` | no solve, 3 env steps, 48 calls |
+| `20260811-15:06:00_t5_s51` | `--resident`, **blind** | no solve, 66 calls. **Died at turn 19 of 150**: two consecutive turns emitted no text and no tool call, each consuming exactly 8,192 output tokens (`max_tokens`) inside the hidden reasoning channel. The model's own turn-16 line: *"Wrist probes on A are all within noise (tomato 0.551, bbq 0.574, red 0.637, brown 0.602) — language cannot separate the two sauce bottles."* This is the "no measuring channel" exhibit, and the motivation for `f9fcc18e` |
+| `20260811-20:48:01_t5_s51` | `--resident --vision-tool` | see below |
+
 **Resident vision session** `20260811-20:48:01_..._t5_s51` (`--resident
 --vision-tool`, 201 tool calls, 3 attempts):
 attempt 1 fail (22 calls) → **attempt 2 solved @ step 13** (14 calls) →
 attempt 3 fail (11 calls). **1/3 attempts within one session** — the honest
 form of "the vision arm cracked t5".
 
-> The two headline t5 claims both rest on n=1 solves inside n=2/n=3 samples.
-> t5 is *not* a never-solved cell: it also fell twice blind (S1 pre-sandbox and
-> S6 `memory`). The defensible statement is "t5 is 3/16 blind-or-vision on seed
-> 0 and the two vision-arm runs are the densest solves per attempt we have",
-> not "vision solved t5".
+#### The knowledge pincer — the two seed-0 vision exams
+
+The two `--vision-tool` exams are **the same cell, same seed, same profile, same
+model, same reader, same flags, 27 minutes apart**. The only variable is the
+library:
+
+| | `20260811-21:38:36` | `20260811-22:05:02` |
+|---|---|---|
+| playbook | 2 entries (proposals 1–3 still **held at the gate**) | **5 entries** (owner-adjudicated batch applied, `8e83affa`) |
+| result | FAILED, 17 env steps, 83 calls, `max_turns=50` exhausted, no `finish` | **SOLVED @ env step 7**, 70 calls, in=3.1 M |
+| what happened | picked the **brown BBQ** distractor and placed it, unaware; `inspect_image` caught it in-episode at seq 43/45 (*"BROWN … not the red of tomato sauce"*); recovery re-pick air-grasped (`success: true`, `min_gripper_opening 0.0020`, seq 72); budget ran out | all 5 task entries read at seq 5–9; distractor discriminated by label text (seq 39: *"Label text: 'TOMATO' and 'SAUCE'"*); `pi0_pick success: false` overruled geometrically; above-rim release per the hand-written recipe |
+
+This is the closest thing in the project to an isolated measurement of the
+marginal value of gated knowledge. **It is n=1 on each side.**
+
+> The t5 headline claims rest on n=1 solves. t5 is *not* a never-solved cell:
+> it also fell twice **blind** (S1 pre-sandbox and S6 `memory`), so it is 3/16
+> on seed 0 across all arms. The environment checker is also demonstrably flaky
+> on this cell — the admitted release recipe declares it in its own
+> `counter_evidence` (an above-rim repeat did not fire the flag). Defensible:
+> "t5 fell to the vision instrument plus three adjudicated entries, n=1, on a
+> cell with a flaky checker." Not defensible: "vision solved t5."
 
 ---
 
