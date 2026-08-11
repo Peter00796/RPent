@@ -24,6 +24,12 @@ number quoted here with its run directory.
 > the same model in the same environment could not solve before — and every step
 > of how it learned to is citable to a single tool call.
 
+Both cells that had gone dead under the clean-room sandbox fell on 2026-08-11,
+to the same planner: **t6 to the resident debug session alone** (blind, pure
+measurement) and **t5 to an added instrument plus adjudicated knowledge** (§9).
+Capability was added as tools and as text — never by swapping the model. That is
+the shape of the claim.
+
 Three things this is **not**, stated up front because the honest version is the
 only one that survives a mentor:
 
@@ -922,37 +928,155 @@ Two further properties, both deliberate:
   mid-list summarisation, which invalidates the cache from the edit point on
   (that trade was measured: 93% of input tokens on a real run were cache reads).
 
-### 8.4 The result: t6, 0/11 → 3/3, with the control arm run first
+### 8.4 The result: t6, 0/11 → 3/3 — the full evidence chain
 
-**The control arm was run before the experiment, and it is reported.** The
-amnesiac `rpent/practice` loop ran on t6 for 5 rounds / 115 minutes: **0 solves,
-2 playbook entries, ended "no new knowledge"**. Its last two rounds ran with the
-same playbook the resident session started from, which is what makes the
-comparison knowledge-fair rather than a head start.
+This is the first of the two arcs the PR rests on, so it is given in full: the
+control arm, the raw records, the model's own words, the gate, the exams.
 
-The resident session `20260811-12:50:41_libero_object_swap_t6_s51`
-(454 s agent time, 74 calls, 2.4 M input) solved attempt 1 after one in-place
-recovery, reset, and reproduced the solve in attempt 2 in 11 calls. The piece of
-knowledge that did it is exactly the kind the amnesiac loop structurally cannot
-form, because it is a **within-session contrast**:
+#### (a) The control arm ran first, and it is reported
 
-> `pi0_pick` issued from HOME reports success and closes the fingers to **0.002**
-> — an air grasp with the success flag true. The same shape-descriptive pick,
-> issued after pre-positioning above the localised footprint, closes to
-> **0.039** and pinches the 0.040 m slab.
-> — `memory/tasks/libero_object_swap/t6/grasp_the_butter_…md`, evidence
-> `run:20260811-12:50:41_…_t6_s51#seq=4,5,7,14`
+The amnesiac `rpent/practice` loop ran on t6 for 5 rounds / 115 minutes.
+`logs/practice_libero_object_swap_t6/history.json`, verbatim and complete
+enough to judge:
 
-Two revise proposals were mined from that run; both were HELD by the contract
-check (revise requires human confirmation) and the owner approved both
-(`cfb35066`).
+```
+round 1  admitted: [release_the_butter_into_the_basket_from_the_reachable_floor_.md]
+         skipped:  [proposal_01.md: hold]
+round 2  admitted: []            next: experiment
+round 3  experiment: "After a pi0_pick on the butter leaves the butter's origin
+         occupancy empty but held_object reads 0 and the wrist camera cannot see
+         the slab, does moving directly to the basket … place the butter …?"
+         admitted: [trust_a_fully_emptied_butter_origin_box_over_held_object_fal.md]
+round 4  admitted: []            next: experiment
+round 5  experiment: "… does stopping (current playbook) or issuing one or more
+         small re-seating/release motions until libero_terminated flips yield an
+         episode that terminates successfully?"
+         admitted: []            next: "no new knowledge"
+```
 
-**Exam, seed 0, playbook-armed, single attempt, no resident tools on the
-surface: 3/3**, terminating at env steps 8, 15 and 7
-(`20260811-13:48:21`, `-14:02:01`, `-14:18:59`); a fourth solve followed in the
-next full sweep (`20260811-19:15:49`, step 2). **Cross-seed: 2/3** —
-`t6_s2` solved at step 9, `t6_s3` at step 7, **`t6_s1` failed** after 21 env
-steps and 120 tool calls.
+**0 solves, 2 entries admitted, self-terminated at `"no new knowledge"`.** Its
+last two rounds ran with the same playbook the resident session would start
+from, which is what makes the comparison knowledge-fair rather than a head
+start. Note what the loop *could* do — raise good experiment questions — and
+what it could not: it never formed the contrast that solved the cell.
+
+#### (b) The discriminator, as the two records actually read
+
+The resident session is
+`20260811-12:50:41_libero_object_swap_t6_s51` (454 s agent time, 74 calls,
+2.4 M input). Attempt 1 opens with a `pi0_pick` issued from HOME
+(`attempt_01/tool_calls.jsonl`, **seq 41**):
+
+```json
+{"name": "pick", "instruction": "pick up the flat butter slab",
+ "success": true, "chunks_used": 17,
+ "peak_lift_m": 0.0790,
+ "min_gripper_opening": 0.0020264387130737305,
+ "diagnostics": {"descent_m": 0.2333, "descent_done": true, …}}
+```
+
+`success: true`. The fingers closed to **2.0 mm** — on a 40 mm slab. The
+harness's own geometry called it immediately (**seq 42**,
+`world_extent(mode="held_object")`):
+
+> `"gripper_width": 0.0027, "n_points": 41781, "xy_extent_m": 0.1188,`
+> `"holding": false,`
+> `"shape_warning": "these points span 0.119 m across, wider than the gripper
+> can hold — they may include the container or the table rather than only the
+> grasped object…",`
+> `"note": "the points below the eef are geometry, not a grasped object:
+> reaches the window's floor clamp, so the window included the table. **Gripper
+> width alone cannot tell these apart — it read the same on steps that were
+> holding and steps that were not.**"`
+
+The model then pre-positioned (**seq 49**, `move_to [0.05, -0.101, 0.15]`,
+gripper open) and re-issued the *identical prompt* (**seq 50**):
+
+```json
+{"name": "pick", "instruction": "pick up the flat butter slab",
+ "success": true, "chunks_used": 7,
+ "peak_lift_m": 0.1038,
+ "min_gripper_opening": 0.0394313782453537,
+ "diagnostics": {"descent_m": 0.1331, …}}
+```
+
+**Same prompt, same cell, same policy: 0.0020 vs 0.0394.** The `success` flag
+says `true` for both. The two records differ only in whether the eef was
+pre-positioned — and that pair *is* the knowledge. It exists only because both
+attempts live in one context; an amnesiac updater sees one of them per round and
+has nothing to contrast.
+
+#### (c) The model's own diagnosis, in the reset call
+
+`reset_episode` requires a `reason` of ≥ 20 chars (schema-enforced). What the
+model actually wrote, live log **seq 1**, verbatim and unedited:
+
+> "Attempt 1 SOLVED (libero_terminated=true fired during the release descent).
+> Recipe that worked: (1) localize the butter by low-slab elimination — name
+> prompts fail, flat cluster at (0.05,-0.10) with footprint 0.077x0.040 and flat
+> top z~0.018 from world_extent occupancy; (2) pre-position at (0.05,-0.101,0.15)
+> gripper open then pi0_pick('pick up the flat butter slab', max_chunks 24) —
+> real grasp shows final finger opening 0.039 (pinching the 0.04 slab) vs air
+> grasp 0.002; (3) verify in open air by held_object holding=true AND origin box
+> emptied with the arm moved clear (iou 0.0); (4) carry to basket with gripper +1
+> via waypoints and descend over the rim interior until termination fires. Next
+> attempt reproduces this exact sequence; **first pick from home air-grasped, so
+> pre-positioning above the butter is the decisive rung.**"
+
+That paragraph is the whole argument for residency in one artifact: a diagnosis,
+a plan, and a stated decisive variable — written *between* attempts, by the same
+context that ran the first one.
+
+#### (d) What the session wrote down
+
+The model's `resident_notes.md` is a recipe in relative terms with a citation on
+every rung. Two excerpts:
+
+> **§2. Grasp — PRE-POSITION then pi0_pick (the decisive rung)**
+> - pi0_pick from HOME air-grasps the low slab (closes beside it). Do NOT rely on
+>   pi0_pick.success — it returns true either way.
+> - Pre-position: `move_to (butter_center_xy, table_z + ~0.15)` with gripper OPEN
+>   (gives pi0 a ~0.13 m descent onto the slab). [attempt 1 seq 49; attempt 2 seq 3]
+> - REAL-grasp discriminator: `min_gripper_opening ≈ 0.039` (fingers STOP at the
+>   0.040 slab width — pinching it). Air grasp ≈ 0.002 (fully closed on nothing).
+>   **[attempt 1 seq 41 vs 50]**
+
+> **Key pitfalls** — pi0_pick.success, finger separation at rest, and origin-box
+> emptiness with the arm nearby are **all unreliable**; use (a)
+> `min_gripper_opening` during the pick, (b) `held_object` in open air, (c)
+> origin compare with the arm clear. [attempt 1 seq 42-46, 51-55]
+
+Note `[attempt 1 seq 41 vs 50]` — the citation format the folding middleware
+mints and `view_attempt_call` resolves, used by the model unprompted as its own
+note-taking grammar.
+
+Attempt 2, after the reset, re-measured everything from scratch (*"Re-measured
+butter slab (identical …) and basket (identical rim/interior, moved 0.001 m)"*),
+executed the recipe, and terminated in 11 calls. **The same recipe solved the
+cell twice from clean resets.**
+
+#### (e) Gate, then exams
+
+Two `revise` proposals were mined
+(`logs/resident_libero_object_swap_t6/mine_01/proposals/`), both **HELD** by the
+contract check — `revise` touches an existing entry and requires human
+confirmation — and the owner approved both (`cfb35066`). The admitted entry
+carries both actions in its provenance:
+
+```yaml
+provenance:
+- action: add     # from an earlier experiment episode
+  evidence: [run:20260811-06:20:22_…_t6_s52#seq=32, …#seq=35, …#step=2]
+- action: revise  # from the resident session
+  evidence: [run:20260811-12:50:41_…_t6_s51#seq=4, …#seq=5, …#seq=7, …#seq=14]
+```
+
+**Exam, seed 0, `practice` profile, single attempt, no resident tools on the
+surface: 3/3** — terminating at env steps 8, 15 and 7 (`20260811-13:48:21`,
+`-14:02:01`, `-14:18:59`; exam 1 consumed all four playbook entries at seq 5–8).
+A fourth solve followed in the next full sweep (`20260811-19:15:49`, step 2).
+**Cross-seed: 2/3** — `t6_s2` solved at step 9, `t6_s3` at step 7, and
+**`t6_s1` failed** after 21 env steps and 120 tool calls.
 
 **Correction to how this result has been stated.** It has been written down as
 *"t6: 0/11 on seed 0 all-time"*. That is wrong as phrased, and the recount for
@@ -1031,31 +1155,320 @@ The design commitments, all of them the owner's:
   `init_chat_model` syntax, so swapping `openai:glm-4.6v` for
   `anthropic:claude-sonnet-4-6` is the ablation, not a rewrite.
 
-### 9.2 The thesis, and what the evidence for it actually is
+### 9.2 The t5 arc in five acts — the decoupling story, with its receipts
 
-The owner considers the decoupling itself the point: **reasoning runs on
-`deepseek-v4-flash`; perception runs on `glm-4.6v`; neither is asked to be the
-other.** The group's parallel work tests monolithic VLMs. The structural
-argument is that a monolithic VLM makes the perception channel unattributable —
-you cannot ask what the vision was worth, because there is no seam. Here there
-is a seam, it is one CLI flag wide, and every crossing of it is a line in
-`tool_calls.jsonl` with the image path attached.
+The thesis first: **reasoning runs on `deepseek-v4-flash`; perception runs on
+`glm-4.6v`; neither is asked to be the other.** The structural argument for the
+split is attribution — a monolithic VLM makes the perception channel
+unattributable, because there is no seam to measure across. Here the seam is one
+CLI flag wide and every crossing of it is a line in `tool_calls.jsonl` with the
+image path, the exact question, and the verbatim answer.
 
-**The measured evidence is thin and must be reported as thin.** Two runs, both
-on t5:
+What follows is the whole arc on one cell, in order, because the acts only mean
+something as a sequence.
 
-- resident + vision session `20260811-20:48:01_..._t5_s51`, 201 tool calls,
-  three attempts: attempt 1 failed, **attempt 2 solved at env step 13**,
-  attempt 3 failed. **1 of 3 attempts.**
-- exam, t5 seed 0, `--vision-tool`: `20260811-21:38:36` failed;
-  **`20260811-22:05:02` solved at env step 7.** **1 of 2 runs.**
+---
 
-And the caveat that has to travel with them: **t5 is not a never-solved cell.**
-It also fell blind twice — once pre-sandbox (`20260807-00:29:54`) and once on
-the `memory` profile (`20260810-20:46:39`) — for 3/16 on seed 0 across all arms
-([09 §5.2](09-baseline-table.md#52-t5--pick-the-tomato-sauce-and-place-it-in-the-basket-the-perception-channel-wall-two-visually-near-identical-sauce-bottles)).
-The defensible sentence is *"the two vision-arm runs are the densest solves per
-attempt we have on the cell whose wall is perceptual"*, not *"vision solved t5"*.
+#### Act 1 — The wall, and what hitting it looks like from inside
+
+Run `20260811-15:06:00_libero_object_swap_t5_s51` — resident session,
+**blind** (no vision tool). The model works the problem competently for
+seventeen turns. Its own `[model]` lines, from `run.log`:
+
+> **turn 7** — "All bottle-language prompts collapse to the SAME mask (collision
+> warnings at 0.000 m) — SAM3 is not separating the bottles; this is exactly the
+> 'localize geometrically' case."
+>
+> **turn 9** — "**I cannot access prior runs.** Let me enumerate the tabletop
+> geometrically — tiling `world_extent` occupancy in a coarse grid."
+>
+> **turn 13** — "Finer scan reveals 6 food clusters: A[-0.185,-0.08] (small
+> bottle), B[-0.12,-0.24] (low), C[0.07,-0.10] (carton), D[0.125,-0.20] (tall
+> bottle), E[0.15,0.03] (flat), F[0.02,-0.11] (small). Now I need to identify
+> which is tomato sauce."
+>
+> **turn 14** — "Color probes are contradictory on A (both 'small red' 0.711 and
+> 'brown sauce' 0.902 land there) — SAM3 can't discriminate color from
+> agentview."
+>
+> **turn 16** — "**Wrist probes on A are all within noise (tomato 0.551, bbq
+> 0.574, red 0.637, brown 0.602) — language cannot separate the two sauce
+> bottles.**"
+
+Turn 9 is the sandbox working, stated by the model itself. Turn 16 is the wall,
+stated precisely: *the discriminating attribute has no measuring channel.* Then
+turns 18 and 19, from the usage lines:
+
+```
+turn 17   in=833469   out=35814   (a [model] line: "Now wrist probes on F…")
+turn 18   in=955921   out=44006   (NO [model] line — empty content)
+          [deep_agent] model ended turn without a tool call at turn 18 — nudging once
+turn 19   in=1049405  out=52198   (NO [model] line — empty content)
+          [deep_agent] model ended turn without a tool call. Stopping.
+```
+
+44006 − 35814 = **8192**. 52198 − 44006 = **8192**. That is `max_tokens`,
+exactly, twice in a row: the model burned its entire output budget inside the
+hidden reasoning channel and emitted nothing — no text, no tool call. It did not
+fail at the task; **it tried to settle a perceptual question by thinking, and
+the thinking had no bottom.** The run died at turn 19 of 150.
+
+This is also where `f9fcc18e` came from: resident sessions now get up to five
+nudges and a *dedicated* message for the empty/truncated shape, while **exam runs
+keep exactly one nudge, byte-identical** — a fix motivated by practice that does
+not perturb the scoring arm.
+
+---
+
+#### Act 2 — The instrument, and both of its faces
+
+Run `20260811-20:48:01_libero_object_swap_t5_s51` — resident **+ `--vision-tool
+openai:glm-4.6v`**, 201 calls, three attempts. It is the single most useful run
+in the project, because it contains the channel working and the channel lying,
+an hour apart, in one context.
+
+**It working** (archived `attempt_02`, the attempt that terminated). The model
+asks a pixel question, then *checks the answer against geometry*:
+
+```
+seq 13  inspect_image(image_cam_hi_02.png,
+          "…Give the approximate pixel coordinates (row, col) of the CENTER of
+           the small red tomato sauce bottle that is standing on the table…")
+        -> answer: "row=485, col=415"
+seq 14  back_project(agentview, row=485, col=415, step=2)
+        -> world_xyz: [-0.1511, -0.0956, 0.0287]        # z = 2.9 cm: table level ✓
+```
+
+**It lying** (live `attempt_04`, the same question shape, a different step):
+
+```
+seq 7   inspect_image(image_cam_hi_02.png,
+          "…the CENTER of the small red tomato sauce bottle LYING on the floor
+           right of the milk carton…")
+        -> answer: "row=500, col=420"
+seq 8   back_project(agentview, row=500, col=420, step=2)
+        -> world_xyz: [0.0469, -0.074, 0.1321]          # z = 13.2 cm: milk-carton height ✗
+```
+
+and then, asked to look again at a crop centred on its own answer (seq 22):
+
+> **"The object in the center is the milk carton; no small red tomato sauce
+> bottle is visible."**
+
+The VLM contradicted itself about the same pixels. Note the run record makes
+this auditable at all only because the tool records what it *sent*
+(`sent: {system, question, crop_labels}`) alongside the verbatim answer.
+
+The release evidence from the same run is the environment-checker wall:
+
+```
+attempt_02 seq 41  move_to [-0.009, 0.272, 0.25] gripper=+1   # above the rim (rim ~0.10)
+attempt_02 seq 42  release                     -> libero_terminated: TRUE  (env step 13)
+attempt_01 seq 74  release, after descending into the interior
+                                               -> libero_terminated: FALSE (bottle physically in)
+```
+
+---
+
+#### Act 3 — The gate catches a blind spot the machine could not see
+
+The mining pass over that session produced three proposals
+(`logs/resident_libero_object_swap_t5/mine_02_vision/proposals/`). Proposal 2 is
+the interesting one, because **the miner could only see the LIVE attempt** —
+archived attempts are invisible to `observe`, which is [issue 5c](04-open-issues.md)
+biting the *mining* side as well as the citation side. The live attempt is the
+one where the VLM misfired. So the machine wrote a ban:
+
+> **`proposal_02.md` (as generated)**
+> *title:* **Do not use VLM pixel centers to localize the tomato-sauce bottle**;
+> a single empty occupancy box is not absence proof
+> *body:* "VLM pixel centers are **not a localization source** for the
+> tomato-sauce bottle: the supplied centers back-projected above table level, and
+> the same image was later described as showing the milk carton centered and no
+> tomato-sauce bottle. …"
+
+That is a correct reading of the evidence it could see, and a **wrong rule** —
+because in the attempt it could not see, the same channel *rescued the run*. The
+human interrupt is where that got fixed. The owner's rewrite:
+
+> **`proposal_02_owner_edit.md` (as admitted)**
+> *title:* **Validate VLM pixel centers by back-projected height**; a single
+> empty occupancy box is not absence proof
+> *body:* "VLM pixel centers need a **HEIGHT sanity check** before use:
+> `back_project` the pixel and require the returned z to sit near table level for
+> a tabletop object. In this session the same channel both **rescued a lost
+> bottle** (pixel → z=0.030, at table level, re-pick succeeded — archived attempt
+> 2) **and misfired twice** (pixels back-projected to z~0.13, the milk carton's
+> height; the VLM later described the same view as centered on the milk carton
+> with no bottle visible). A failed check means the VLM looked at the wrong
+> object: re-ask with a cropped region or fall back to geometric elimination —
+> **do not command a motion from an unvalidated pixel.** …"
+
+A ban became a validation rule. The distance between those two titles is the
+whole case for `review → human edits verdicts.yaml → apply`: the mechanical
+checks passed the proposal's contract, its citations resolved, its numbers
+traced — and it was still the wrong rule, for a reason no check could reach.
+**A gate that only had machines in it would have admitted the ban.**
+
+Proposal 3, hand-written by the owner from the model's `resident_notes.md`, is
+the other half — and its `counter_evidence` block is the honesty mechanism doing
+real work:
+
+```yaml
+evidence:
+  - cite: run:…_t5_s51#seq=41   role: "ARCHIVED attempt 2: closed-gripper move to
+                                       (-0.009, 0.272, 0.25) — above the rim plane"
+  - cite: run:…_t5_s51#seq=42   role: "ARCHIVED attempt 2: release -> libero_terminated=true
+                                       at env step 13 (the session's only flag)"
+  - cite: run:…_t5_s51#seq=74   role: "ARCHIVED attempt 1: release AFTER descending into
+                                       the interior -> bottle physically inside, flag never fired"
+counter_evidence:
+  - cite: run:…_t5_s51#seq=42   role: "ARCHIVED attempt 3 repeated the above-rim release and
+                                       the flag did NOT fire — the checker is flaky on this
+                                       cell, so the recipe raises the odds, it does not guarantee"
+```
+
+Every cite is labelled `ARCHIVED … (unresolvable pre-5c)` — the entry documents
+the limitation of the tooling that produced it.
+
+---
+
+#### Act 4 — Knowledge-thin exam: FAILED, and the failure is now *legible*
+
+Run `20260811-21:38:36_libero_object_swap_t5_s0` — `practice` profile,
+`--vision-tool`, seed 0, single attempt. **It ran while proposals 1–3 were still
+held at the gate**, so the agent had the instrument but not the knowledge. 83
+calls, 17 env steps, `max_turns=50` exhausted, no `finish`. A clean three-layer
+failure chain:
+
+**(a) the identity trap fires.** seq 19 `move_to [-0.19, -0.074, 0.2]`, seq 20
+`pi0_pick("pick up the tomato sauce bottle")` → `success: true`,
+`min_gripper_opening: 0.0365` — a *real* grasp, of the **wrong bottle**. seq
+24–28 carry it to the basket, seq 29 `release`. The agent believed it was done.
+
+**(b) the instrument catches it — in-episode.** Twelve turns later the agent
+audits its own placement, and the VLM answers:
+
+> seq 43 — *"A small bottle is standing inside a wicker basket in this crop.
+> What is its dominant color: RED (tomato-sauce red) or BROWN (bbq-sauce
+> brown)?"*
+> → **"BROWN. The bottle in the crop has a brown hue consistent with bbq-sauce
+> brown, not the red of tomato sauce."**
+>
+> seq 45 (re-asked, telling the reader to ignore the wicker) →
+> **"BROWN — the bottle's visible surface is brown."**
+>
+> seq 48 (a bottle still *on the table*) → **"RED, as the bottle's main body has
+> a red hue."**
+
+The agent put the brown BBQ bottle in the basket and the red one is still out
+there. **Historically this is a silent, unrecoverable death** — the agent
+finishes, claims success, and only a human replaying the video ever learns
+otherwise. Here it is a detected error at step 12 with a citable record.
+
+**(c) the policy wall, then the buzzer.** The recovery re-pick, seq 72:
+
+```json
+{"instruction": "pick up the tomato sauce", "success": true,
+ "min_gripper_opening": 0.0020386320538818836}
+```
+
+`success: true`, fingers at 2.0 mm — **the same air-grasp signature as t6 seq
+41**, on a different cell and a different object. The VLM confirms it at seq 76:
+
+> **"The gripper is closed on nothing (empty). Below the gripper, a yellow orange
+> juice carton and a red carton are visible."**
+
+Turn budget ran out mid-recovery. The right way to report this run is not "the
+vision arm failed" but: **the instrument converted an invisible failure into a
+diagnosed one, and the run then died at a different wall (policy) with the
+diagnosis on the record.**
+
+---
+
+#### Act 5 — Full-knowledge exam: SOLVED
+
+Run `20260811-22:05:02_libero_object_swap_t5_s0` — **same cell, same seed, same
+profile, same model, same vision reader, same flags, one hour later.** The only
+difference: the three owner-adjudicated entries had been applied (`8e83affa`),
+so the playbook was five entries deep instead of two. 70 calls, terminated at
+**env step 7**.
+
+All five task entries consumed first, then six general-tier entries — read
+straight out of `tool_calls.jsonl`:
+
+```
+seq 3   list_dir   tasks/libero_object_swap/t5
+seq 5   read_text_file  t5/ignore_butter_and_chocolate_pudding_as_expected_distractors.md
+seq 6   read_text_file  t5/localize_extra_bottle_clusters_geometrically_not_by_color_la.md   ← the owner-edited one
+seq 7   read_text_file  t5/release_from_above_the_rim_do_not_descend_into_the_basket.md      ← the hand-written recipe
+seq 8   read_text_file  t5/act_after_the_first_tomato_sauce_and_basket_segmentation.md       ← proposal 1's target
+seq 9   read_text_file  t5/treat_the_tomato_sauce_small_red_bottle_wrist_split_as_confi.md
+seq 10-15  six entries from memory/libero and memory/common
+```
+
+The identity trap that killed act 4 was walked through, not stumbled into:
+
+> seq 23 → **"The bottle is brown/dark (BBQ sauce). Its dominant color is
+> brown/dark, and the visible label text is 'BBQ'."**
+>
+> seq 29 → *"…what does the label say?"* → **"The bottle is brown. … the can (not
+> a bottle) has 'TOMATO' on its label."**
+>
+> seq 39 → **"The object is a can of tomato sauce. Label text: 'TOMATO' and
+> 'SAUCE'. Label colors: red, green, and white."**
+
+The target was never a bottle at all — it is a red/green **can**, and the "small
+red bottle" phrasing that the whole cell's language had been organised around was
+pointing at the distractor's shape. Then pi0 lied in the *other* direction (seq
+49: `success: false`, `min_gripper_opening: 0.0617`) and the agent overruled it
+geometrically. Its own `finish` summary, verbatim:
+
+> "Picked the tomato sauce (red/green TOMATO-SAUCE can — distinguished from the
+> brown BBQ-bottle distractor that SAM3's name prompts all mislabeled) and placed
+> it in the basket. **Pi0's pick returned tool-success=false but was verified
+> geometrically as a successful grasp** (can mask tracked the eef, origin box
+> emptied, wrist reader confirmed the hold). Carried with gripper closed and
+> **released from above the rim** (eef z 0.231, rim 0.124, can centered over
+> basket interior via measured held-offset). libero_terminated fired at step 7;
+> placement corroborated by basket-interior voxels_added and the can mask inside
+> the basket rim bbox."
+
+Every clause maps to a playbook entry: the distractor discrimination to the
+owner-edited localisation rule, the geometric override to proposal 1's target
+entry, the above-rim release to the hand-written recipe.
+
+---
+
+#### What the pincer isolates, and what it does not
+
+Acts 4 and 5 are **the same cell, the same arm, the same day, 27 minutes
+apart**, separated by exactly three owner-adjudicated library entries. That is
+as close to a controlled measurement of *the marginal value of knowledge* as
+this project has produced — and it is still **n=1 on each side.**
+
+Stated honestly:
+
+- **t5 seed 0 is n=1.** t6 is n=3 (plus a fourth in-sweep solve) and 2/3
+  cross-seed; t5 has one solve on the scoring seed and one failure.
+- **t5 is not a never-solved cell.** It also fell blind twice — pre-sandbox
+  (`20260807-00:29:54`) and on the `memory` profile (`20260810-20:46:39`) — for
+  3/16 on seed 0 across all arms
+  ([09 §5.2](09-baseline-table.md#52-t5--pick-the-tomato-sauce-and-place-it-in-the-basket-the-perception-channel-wall-two-visually-near-identical-sauce-bottles)).
+- **The vision resident session solved 1 of 3 attempts**, and the winning
+  release recipe's own entry declares in `counter_evidence` that a repeat of it
+  did *not* fire the flag.
+- **The environment's checker is flaky on this cell**, which caps how sharp any
+  t5 measurement can ever be.
+
+And the contrast that is worth putting in front of a mentor, because it is
+structural rather than statistical: **both dead cells fell on the same day, to
+the same brain.** t6 fell to the resident method alone — blind, no vision, pure
+measurement and one within-session contrast. t5 needed an instrument added and
+knowledge adjudicated. Same planner (`deepseek-v4-flash`) throughout; capability
+was added as **tools and text**, never by swapping the model. That is the
+decoupling claim, and it is a claim about *where capability lives*, which the
+two arcs demonstrate jointly whatever the n on either one.
 
 ---
 
@@ -1068,8 +1481,8 @@ kinds of evidence, four different remedies:
 | wall | cell | what the evidence shows | remedy that worked / is needed |
 |---|---|---|---|
 | **knowledge** | t6 | localisation by name fails; the recipe that works is measurable and transferable — `run:20260811-05:27:15_…_t6_s51#seq=11,12,13,24,26,29` | resident session → gated playbook entries → **3/3 exam, 2/3 cross-seed** |
-| **perception channel** | t5 | the discriminating attribute has no measuring channel; SAM3 collapses six bottle nouns onto one xyz, wrong candidates scoring 0.930–0.949 *above* the target's 0.734 | a queryable vision channel (`inspect_image`); 1/3 attempts, 1/2 exams — **thin** |
-| **policy** | t6 | `pi0_pick` from HOME closes to **0.002** (air grasp, success flag *true*); pre-positioned, the same prompt closes to **0.039** on a 0.040 m slab — `run:20260811-12:50:41_…_t6_s51#seq=4,5,7,14` | a discriminator the planner can *check*, since the policy cannot be retrained here |
+| **perception channel** | t5 | the model says it itself: *"wrist probes on A are all within noise (tomato 0.551, bbq 0.574, red 0.637, brown 0.602) — language cannot separate the two sauce bottles"*, then burns 2 × 8192 output tokens in the reasoning channel and dies (§9 act 1) | a queryable vision channel (`inspect_image`) + three adjudicated entries → **solved at step 7**, but **n=1** on the scoring seed |
+| **policy** | t6, t5 | `pi0_pick` from HOME: `success: true`, `min_gripper_opening: 0.0020` on a 0.040 m slab; pre-positioned, same prompt: `0.0394`. The identical 0.0020 air-grasp signature reappears on t5 (`21:38:36#seq=72`) — it is a policy property, not a cell property | a discriminator the planner can *check*, since the policy cannot be retrained here. Now a gated entry on both cells |
 | **environment checker** | t5 | the bottle was physically inside the basket and the flag **never fired**; an above-rim drop did fire it, and one above-rim repeat did not — `run:20260811-20:48:01_…_t5_s51#seq=41,42,74` (with `#seq=42` recorded as its own *counter*-evidence) | not fixable from here. The gated recipe tells the agent to check interior occupancy once and then **write an honest audit and stop** rather than re-place a bottle that is already in |
 
 That last row plus `pi0_pick.success` (§5.4) is the general lesson and the reason
@@ -1132,6 +1545,14 @@ registered protection (→ re-dump on registration).
   tokens. The fragment is *worse* than the same six cells in pass 1 (4/6), so
   "7/10" is n=1 and is labelled n=1 everywhere.
 - **Cross-seed transfer is 2/3, not 3/3.** `t6_s1` failed.
+- **t5 seed 0 is n=1.** One solve, one failure, on a cell whose environment
+  checker is demonstrably flaky. The t5/t6 pincer (§9) is a clean *design*
+  demonstration and a weak *statistical* one, and is labelled as such wherever
+  it appears.
+- **The mining pass cannot see archived attempts** — [issue 5c](04-open-issues.md)
+  bites `observe` as well as citation resolution. It produced a proposal that
+  generalised a ban from the one attempt it could see (§9 act 3). The human
+  interrupt caught it; a fully automated gate would not have.
 - **`compare_extent` does not separate success from failure**, and the
   whole-episode comparison is worthless (a 50× swing driven by camera distance).
   Both are in the tool's own documentation.
