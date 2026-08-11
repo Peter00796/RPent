@@ -67,13 +67,13 @@ KNOWN_TOOL_NAMES = {
     "reset_episode",
     # common
     "read_text_file", "write_text_file", "list_dir", "finish", "read_image",
-    "view_attempt_call",
+    "view_attempt_call", "inspect_image",
 }
 
 # Backticked terms in descriptions that are legitimately not tool names
 # (argument names and returned-field names quoted in the prose).
 NON_TOOL_TERMS = {"path", "max_chars", "world_xyz", "steps", "entity", "shape",
-                  "reason", "attempt_NN/"}
+                  "reason", "attempt_NN/", "answer", "reasoning", "sent"}
 
 # A hit on any of these in a rendered description is a prior leak: it either
 # advertises that priors exist or hands the model the path to them.
@@ -91,7 +91,7 @@ FORBIDDEN_PATTERNS = [
 # --- 1+2+3: the structured docs and their rendered surface -------------------
 LIBERO_EXPECTED = KNOWN_TOOL_NAMES - {
     "read_text_file", "write_text_file", "list_dir", "finish", "read_image",
-    "view_attempt_call",
+    "view_attempt_call", "inspect_image",
 }
 check(
     set(libero_docs.LIBERO_TOOL_DOCS) == LIBERO_EXPECTED,
@@ -142,6 +142,7 @@ else:
         (langchain_common.read_image, "read_image"),
         (langchain_common.read_image_text_only, "read_image_text_only"),
         (langchain_common.view_attempt_call, "view_attempt_call"),
+        (langchain_common.inspect_image, "inspect_image"),
     ]
     for t, key in pairs:
         check(

@@ -66,7 +66,8 @@ class LiberoToolkit(Toolkit):
         )
 
     def langchain_tools(self, *, no_images: bool = False,
-                        resident: bool = False) -> list[Any]:
+                        resident: bool = False,
+                        vision: bool = False) -> list[Any]:
         """Common tools plus the LIBERO tools, as native LangChain tools.
 
         ``resident=True`` appends ``reset_episode`` — the tool exists only in
@@ -74,7 +75,8 @@ class LiberoToolkit(Toolkit):
         reset (the read_image-variant pattern: mechanism, not prohibition).
         """
         return [
-            *super().langchain_tools(no_images=no_images, resident=resident),
+            *super().langchain_tools(no_images=no_images, resident=resident,
+                                     vision=vision),
             *libero_tools.LIBERO_TOOLS,
             *(libero_tools.RESIDENT_TOOLS if resident else []),
         ]

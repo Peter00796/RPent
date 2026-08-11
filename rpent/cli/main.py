@@ -207,6 +207,20 @@ def _build_argparser() -> argparse.ArgumentParser:
                          "never scored. Pair with --sandbox practice.")
     ap.add_argument("--experiment-trials", type=int, default=5,
                     help="Max trials inside an experiment episode (default 5).")
+    ap.add_argument("--vision-tool", default=None, metavar="MODEL_SPEC",
+                    help="Arm the inspect_image channel: a vision model in "
+                         "init_chat_model syntax (e.g. openai:glm-4.6v, "
+                         "anthropic:claude-sonnet-4-6) that answers image "
+                         "questions as a TOOL — the planner itself stays "
+                         "text-only. Its replies pass through verbatim; "
+                         "every call is recorded with the exact text sent. "
+                         "deepagents planner only.")
+    ap.add_argument("--vision-base-url", default=None,
+                    help="Base URL for the --vision-tool model's API "
+                         "(e.g. https://cloud.infini-ai.com/maas/v1).")
+    ap.add_argument("--vision-max-tokens", type=int, default=1000,
+                    help="Generation budget for one inspect_image reply "
+                         "(a budget, never a post-hoc cut; default 1000).")
     ap.add_argument("--resident", action="store_true",
                     help="Resident debug session: one continuous session "
                          "debugs the SAME cell across multiple attempts. "
@@ -259,6 +273,16 @@ def main() -> int:
 
     env_name = args.env_name
 
+    if args.vision_tool:
+        if args.planner != "deepagents":
+            parser.error("--vision-tool requires --planner deepagents")
+        from rpent.tools import vision
+
+        vision.configure(args.vision_tool, base_url=args.vision_base_url,
+                         max_tokens=args.vision_max_tokens)
+        logger.info("vision channel armed: %s (base_url=%s)",
+                    args.vision_tool, args.vision_base_url or "provider default")
+
     if args.resident:
         # The resident surface (reset_episode, folding) exists only on the
         # deepagents planner, and a reset on a scoring seed would turn an
@@ -310,6 +334,7 @@ def main() -> int:
         no_images=args.no_images,
         program_file=args.program_file,
         resident=args.resident,
+        vision=bool(args.vision_tool),
     )
     prompt_bundle = env_spec.prompts
     prompt_vars = {

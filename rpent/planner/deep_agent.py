@@ -111,6 +111,7 @@ class DeepAgentPlanner:
         chat_model: Any,
         no_images: bool = False,
         resident: bool = False,
+        vision: bool = False,
         dashboard_events: DashboardEventSink,
     ) -> None:
         """Store the already-constructed chat model.
@@ -129,6 +130,7 @@ class DeepAgentPlanner:
         self._chat_model = chat_model
         self._no_images = no_images
         self._resident = resident
+        self._vision = vision
         self._dashboard_events = dashboard_events
 
     def solve(
@@ -162,7 +164,8 @@ class DeepAgentPlanner:
         )
         context = toolkit.tool_context
         tools = toolkit.langchain_tools(
-            no_images=self._no_images, resident=self._resident)
+            no_images=self._no_images, resident=self._resident,
+            vision=self._vision)
         # Log the image mode explicitly. It decides which perception channels the
         # agent actually has, so it must be visible in the run log rather than
         # inferred from a flag nobody recorded.

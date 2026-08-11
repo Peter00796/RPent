@@ -110,9 +110,9 @@ class FakeToolkit(Toolkit):
         return {"step": 0}
 
     def langchain_tools(self, *, no_images: bool = False,
-                        resident: bool = False):
+                        resident: bool = False, vision: bool = False):
         return [*super().langchain_tools(no_images=no_images,
-                                         resident=resident),
+                                         resident=resident, vision=vision),
                 *T.LIBERO_TOOLS,
                 *(T.RESIDENT_TOOLS if resident else [])]
 

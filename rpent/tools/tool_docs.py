@@ -153,6 +153,45 @@ COMMON_TOOL_DOCS: dict[str, dict[str, object]] = {
             "re-read a whole attempt",
         ],
     },
+    "inspect_image": {
+        "what": (
+            "Ask a vision model ONE question about an on-disk image and get "
+            "its reply VERBATIM. The image goes to the reader model, never "
+            "into your own context."
+        ),
+        "need": (
+            "an image path produced by an earlier tool call in this run; "
+            "for crops, pixel bounds you got from a segment mask bbox."
+        ),
+        "returns": (
+            "the reader's complete unedited reply in `answer` (plus its "
+            "hidden reasoning in `reasoning` when the provider exposes it), "
+            "the exact text that was sent in `sent`, and the reader's token "
+            "usage. The tool adds nothing and removes nothing."
+        ),
+        "when": (
+            "a question geometry cannot answer — which of two look-alike "
+            "candidates matches a name, a colour, a printed label. Prefer "
+            "DISCRIMINATIVE questions over open descriptions: crop the "
+            "competing candidates as regions in one call and ask which is "
+            "which."
+        ),
+        "how": (
+            "regions crops up to 3 [r0, c0, r1, c1] pixel boxes from the "
+            "one image and sends them as labeled crops — cheaper and more "
+            "reliable than the full frame when candidates are small."
+        ),
+        "failure_modes": [
+            "the answer is an OPINION, not a measurement — it can be "
+            "confidently wrong; cross-check geometrically before committing "
+            "a motion to it, and treat disagreement with geometry as a "
+            "signal to re-measure",
+            "a region outside the image bounds is refused with a structured "
+            "error",
+            "a path outside this run's sandbox is refused with a structured "
+            "error",
+        ],
+    },
     "read_image_text_only": {
         "what": (
             "DISABLED in this run: image input is off (text-only model), so "

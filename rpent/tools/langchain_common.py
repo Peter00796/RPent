@@ -73,6 +73,26 @@ class ReadImageInput(BaseModel):
     path: str = Field(description="Path to a local image file")
 
 
+class InspectImageInput(BaseModel):
+    """One image, one question, optional focus crops."""
+
+    path: str = Field(description="Path to an image file from this run")
+    question: str = Field(
+        description=(
+            "The question for the vision model. Prefer discriminative "
+            "questions (which crop is X) over open descriptions."
+        ),
+    )
+    regions: list[list[int]] | None = Field(
+        default=None,
+        max_length=3,
+        description=(
+            "Up to 3 pixel boxes [row0, col0, row1, col1] to crop and send "
+            "as labeled crops instead of the full frame"
+        ),
+    )
+
+
 class ViewAttemptCallInput(BaseModel):
     """Which archived tool call to retrieve."""
 
@@ -172,8 +192,18 @@ def view_attempt_call(attempt: int, seq: int) -> dict:
     return common.view_attempt_call(attempt, seq)
 
 
-def common_tools(*, no_images: bool = False,
-                 resident: bool = False) -> list[BaseTool]:
+@tool(args_schema=InspectImageInput,
+      description=render_description("inspect_image"))
+def inspect_image(path: str, question: str,
+                  regions: list[list[int]] | None = None) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    from rpent.tools import vision
+
+    return vision.inspect_image(path, question, regions)
+
+
+def common_tools(*, no_images: bool = False, resident: bool = False,
+                 vision: bool = False) -> list[BaseTool]:
     """Return the environment-independent tools every planner gets.
 
     Args:
@@ -184,6 +214,9 @@ def common_tools(*, no_images: bool = False,
             attempts. Exists only in resident debug sessions — exam runs have
             no attempts to drill into, and not shipping the tool is the
             mechanism form of that statement.
+        vision: Add ``inspect_image``, the VLM-as-instrument channel. Exists
+            only when ``--vision-tool`` armed the channel — a blind arm does
+            not ship a tool it cannot honour.
     """
     tools = [
         read_text_file,
@@ -194,4 +227,6 @@ def common_tools(*, no_images: bool = False,
     ]
     if resident:
         tools.append(view_attempt_call)
+    if vision:
+        tools.append(inspect_image)
     return tools

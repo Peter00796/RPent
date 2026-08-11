@@ -159,7 +159,8 @@ class Toolkit:
         )
 
     def langchain_tools(self, *, no_images: bool = False,
-                        resident: bool = False) -> list[Any]:
+                        resident: bool = False,
+                        vision: bool = False) -> list[Any]:
         """Return this toolkit's tools as native LangChain tools.
 
         The LangChain planner consumes these instead of the
@@ -172,10 +173,13 @@ class Toolkit:
                 text-only models.
             resident: Expose the resident-debug-session tools
                 (``view_attempt_call`` here; env toolkits add their reset).
+            vision: Expose ``inspect_image`` (the VLM-as-instrument channel;
+                requires ``rpent.tools.vision.configure``).
         """
         from rpent.tools.langchain_common import common_tools
 
-        return common_tools(no_images=no_images, resident=resident)
+        return common_tools(no_images=no_images, resident=resident,
+                            vision=vision)
 
     def execute_tool(self, name: str, input_dict: dict[str, Any]) -> ToolResult:
         """Dispatch a tool call to its registered handler."""

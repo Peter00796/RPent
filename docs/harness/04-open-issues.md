@@ -189,14 +189,17 @@ tool_calls.jsonl with the image path as evidence. The tool's answer is an
 OPINION, not a measurement — its docs entry must say to cross-check
 geometrically, same rule as wrist readings vs agentview anchors.
 
-The ablation triangle this creates (each arm a fingerprinted configuration):
+The ablation arms (each a fingerprinted configuration):
 1. flash blind (baseline — all existing data);
 2. flash + inspect_image (`--vision-tool`): what a QUERYABLE vision channel
-   is worth;
-3. glm-4.6v full swap (probe queued 2026-08-11 overnight): what a natively
-   seeing planner is worth beyond querying.
-Arm 3 minus arm 2 separates "eyes as instrument" from "eyes in the brain",
-and arm 2 dodges the model confound arm 3 carries alone.
+   is worth. **IMPLEMENTED** (`rpent/tools/vision.py`, verbatim-pipe
+   contract per the owner: the reply passes through unedited, the exact
+   text sent is recorded, the reader gets zero task context;
+   `tests/harness/test_vision_tool.py`).
+3. full VLM swap: CANCELLED as a routine arm by the owner (experiment time
+   / cost); kept as an OPTIONAL strong-model comparison (sonnet / gemini
+   via the same `--model` + `--base-url` route, verified working) for when
+   the modality question deserves the spend.
 
 Relation to the perception overhaul (5b/认东西链大修): complementary, not
 competing — inspect_image gives fast semantic discrimination (opinion-grade),

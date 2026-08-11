@@ -114,6 +114,7 @@ def build_planner(
     no_images: bool = False,
     program_file: str | None = None,
     resident: bool = False,
+    vision: bool = False,
 ):
     """Build a planner for the given backend, resolving credentials from env vars.
 
@@ -196,6 +197,7 @@ def build_planner(
             ),
             no_images=no_images,
             resident=resident,
+            vision=vision,
             dashboard_events=dashboard_events,
         )
     if planner_type == "claude_code":
