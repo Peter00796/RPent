@@ -1,5 +1,27 @@
 # Baseline inventory — every arm we have actually run
 
+> ## The counting convention — read this before quoting any number
+>
+> **A run solved iff some entry in its `states.json` carries the environment's
+> own termination flag.** Nothing else counts as evidence of a solve.
+>
+> - **this framework**: `any(step["libero_terminated"] is True)`, where
+>   `states.json` is a JSON **list** of step blobs.
+> - **upstream RPent** (from `#73`, `rpent/tools/state.py`): the key is
+>   `terminated`, not `libero_terminated`, and `states.json` is a **dict**
+>   `{"run_artifacts": [...], "steps": [...]}`. Same env flag, different
+>   shape — a counting script must handle both or upstream will silently
+>   score zero.
+> - **never** count from the agent's audit file (`{suite}_t{N}_s{S}.json`).
+>   It is written only when the agent calls `finish`, so a run that solves and
+>   then exhausts its turn budget scores as a failure. This is not
+>   hypothetical: it costs us the t5 solve (`20260811-22:05:02`).
+> - **never** count `pi0_pick.success` as anything. It is false on good grasps
+>   and true on air grasps; both directions are demonstrated in
+>   [08 §8.4/§9.2](08-draft-pr-narrative.md).
+> - resident sessions: read each `attempt_NN/states.json` as well as the live
+>   one; report per-attempt, not just per-run.
+
 Written 2026-08-11 for the Friday draft PR, so that no number in the doc has to
 be recalled. Every row here was recomputed from the run artifacts on the box on
 2026-08-11; where it disagrees with an earlier note, this file is the one that
