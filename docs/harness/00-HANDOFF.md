@@ -1,5 +1,11 @@
 # Handoff — read this first
 
+> **2026-08-11 update**: this file describes the state as of the tool
+> refactor. A later session built the gate/replay/practice layers, ran
+> five library generations, and left an OPEN DESIGN DISCUSSION with the
+> owner. Read [07-handoff-20260811.md](07-handoff-20260811.md) IMMEDIATELY
+> after this file — the next session's first job is defined there.
+
 You are picking up an in-flight refactor of the agent harness in this repo. The
 previous session left no memory of it; everything it knew that is not in the code is
 in this directory. This file is the orientation. The other five are reference.
