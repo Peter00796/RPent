@@ -16,6 +16,10 @@ The rest is reference.
 | [03-findings.md](03-findings.md) | Measured findings — the evidence base, including defects found and fixed |
 | [04-open-issues.md](04-open-issues.md) | What is not done, in priority order |
 | [05-operations.md](05-operations.md) | How to run it, where the boxes and logs are, gotchas |
+| [06-aspire-replication.md](06-aspire-replication.md) | ASPIRE (arXiv 2607.00272) replication checklist — the CaP arm is parked, see the banner |
+| [07-handoff-20260811.md](07-handoff-20260811.md) | Session handoff: gate/replay/practice/resident, five generations, the t6 crack |
+| **[08-draft-pr-narrative.md](08-draft-pr-narrative.md)** | **The change narrative for the PR** — every change from upstream in build order, code-grounded |
+| **[09-baseline-table.md](09-baseline-table.md)** | **Every arm we have run**, its configuration, n, results and run-dir pointers; gaps as costed proposals |
 
 ## One-paragraph summary
 
