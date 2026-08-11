@@ -206,6 +206,31 @@ competing — inspect_image gives fast semantic discrimination (opinion-grade),
 LocateAnything + colour/size stats give auditable numbers (measurement-grade).
 Build order: inspect_image first (hours), overhaul after Friday.
 
+## 5e. The one-line library index, with `conditions` as its key and
+## `requires` as its filter
+
+Agreed with the owner 2026-08-11 evening. Every entry already carries a
+prose `conditions:` line ("when it applies") — kept PROSE by explicit owner
+decision: structure only what a mechanism actually consumes, and today
+that is exactly one thing. The package:
+
+- entries gain an OPTIONAL structured `requires: [tool names]` field
+  (arm-dependent knowledge, e.g. a recipe that leans on `inspect_image`);
+- the long-queued one-line index is generated PER RUN by the harness:
+  one line per entry = name + conditions + one-line what;
+- the generator consumes `requires` against the run's actual tool
+  surface: an entry whose requirement is absent does not appear in that
+  run's index — the library-side twin of prompt capability leveling
+  ("a technique the surface cannot honour is not advertised");
+- later, the ledger can audit consumption QUALITY against conditions
+  (entry consumed outside its stated conditions + run failed = a revise/
+  evict signal), and structured preconditions are the long-run bridge
+  between text memory and the CaP program library.
+
+Scheduled with the perception overhaul batch (post-Friday). The index need
+itself is data-backed: gen2's selective reading orphaned the anti-spiral
+entry while t6 spiraled.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —
