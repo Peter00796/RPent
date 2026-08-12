@@ -896,6 +896,28 @@ Subsequent seed-0 exams, single attempt with no resident tooling on the surface,
 solved 3/3 at environment steps 8, 15 and 7. Cross-seed transfer was
 \textbf{2/3}: one seed failed.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.47\textwidth]{figures/t6-butter-name-fails.png}\hfill
+\includegraphics[width=0.47\textwidth]{figures/t6-shape-prompt-fails.png}
+\caption[Why t6 needed elimination]{\textbf{Why t6 had to be localised by
+elimination.} \emph{Left, agentview:} the prompt \texttt{"yellow rectangular
+stick of butter"} (0.562) masks the \textbf{orange-juice carton} --- and returns
+the same coordinate as the \texttt{"orange juice carton"} prompt (0.855). The
+actual butter is the small flat box lying on the table, centre-left, plainly
+labelled, and untouched by the mask. \emph{Right, wrist camera:} a shape-based
+phrasing, \texttt{"flat rectangular block on the table"} (0.535), masks the
+\textbf{chocolate-pudding box} while \textsc{farm fresh butter} sits unmasked in
+the centre of frame.
+\textbf{No overlay in this run shows the butter correctly segmented, because no
+phrasing ever found it.} The localisation that worked used no segmentation at
+all --- an occupancy sweep and a raised-slab discriminator, which produce
+numbers rather than overlays. The missing figure is the finding.
+Source: \texttt{exam1\_t6\_s0/segments/}, records \texttt{segment\_00\_09} and
+\texttt{segment\_01\_00}.}
+\end{figure}
+
+
 \begin{caution}[title={A claim this project had to correct about itself}]
 This was written down internally as ``0/11 all-time''. It is false: the cell was
 solved 6/7 times \emph{before} the sandbox existed, and four of those runs read
@@ -924,6 +946,28 @@ tomato sauce.''
 \noindent
 The tomato sauce is a can. ``The only bottle'' is the distractor by
 construction. The instrument worked; the inference on top of it did not.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.47\textwidth]{figures/t5-collapse-bbq.png}\hfill
+\includegraphics[width=0.47\textwidth]{figures/t5-target-can.png}
+\caption[The t5 identity trap]{\textbf{The t5 identity trap, in two segmentation
+overlays.} \emph{Left:} the prompt \texttt{"bbq sauce bottle"} scores 0.930 and
+masks the standing bottle at $[-0.19,-0.074]$. Three further mutually exclusive
+prompts --- \texttt{"small red tomato sauce bottle"} (0.859),
+\texttt{"small red bottle"} (0.852) and \texttt{"brown sauce bottle"} (0.898) ---
+return the \emph{identical} world coordinate. Four incompatible nouns, one
+object: this is the collapse the databus reports and no single score reveals.
+\emph{Right:} changing the noun from \emph{bottle} to \emph{can} finds the real
+target --- \texttt{"tomato sauce can"} (0.785) at $[-0.099,-0.237]$, the metal
+can behind the orange-juice carton.
+\textbf{Caption caveat:} the red tint \emph{is the mask}, not the object's
+colour. The BBQ bottle is brown, as it appears unmasked on the right; masked, it
+looks red --- which is precisely the confusion the cell exploits.
+Source: \texttt{exam\_t5\_s0\_solved/segments/}, records
+\texttt{segment\_00\_02} and \texttt{segment\_02\_01}.}
+\end{figure}
+
 
 % ==========================================================================
 \chapter{Issues, open and closed}

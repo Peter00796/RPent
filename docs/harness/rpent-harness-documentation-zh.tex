@@ -727,6 +727,24 @@ seq 50 --- pi0\_pick("pick up the flat butter slab")\ \ \textrm{\emph{（预置�
 考试（单次尝试、工具面上没有任何驻场工具）解开了 3/3，终止于环境第 8、15、7 步。跨种子
 迁移是 \textbf{2/3}：有一个种子失败。
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.47\textwidth]{figures/t6-butter-name-fails.png}\hfill
+\includegraphics[width=0.47\textwidth]{figures/t6-shape-prompt-fails.png}
+\caption[t6 为什么必须靠排除法]{\textbf{t6 为什么必须靠排除法定位。}\emph{左，agentview：}
+提示词 \texttt{"yellow rectangular stick of butter"}（0.562）把掩膜打在了\textbf{橙汁盒}
+上——而且返回的坐标与 \texttt{"orange juice carton"} 提示词（0.855）完全相同。真正的黄油
+是桌面中偏左那个平躺的小盒子，标签清清楚楚，却完全没有被掩膜覆盖。\emph{右，腕部相机：}
+一个基于形状的说法 \texttt{"flat rectangular block on the table"}（0.535）把掩膜打在了
+\textbf{巧克力布丁盒}上，而 \textsc{farm fresh butter} 就摆在画面正中，未被掩膜。
+\textbf{这次运行里没有任何一张叠加图显示黄油被正确分割，因为没有任何一种说法找到过它。}
+真正奏效的定位完全没有用分割——用的是占据栅格扫描加一个“抬高薄板”判别式，它们产出的是
+数字，不是叠加图。\textbf{这张缺席的图本身就是结论。}
+来源：\texttt{exam1\_t6\_s0/segments/}，记录 \texttt{segment\_00\_09} 与
+\texttt{segment\_01\_00}。}
+\end{figure}
+
+
 \begin{caution}[title={这个项目不得不纠正自己的一个说法}]
 它在内部被写成了“历史上 0/11”。这是假的：这一格在沙箱存在\emph{之前}被解开过 6/7 次，
 其中四次读了那一格的答案文件。准确的说法是\textbf{“净室时代 0/11”}——而这个说法更强。
@@ -750,6 +768,25 @@ seq 50 --- pi0\_pick("pick up the flat butter slab")\ \ \textrm{\emph{（预置�
 \noindent
 番茄酱是一个\textbf{罐}。“唯一的瓶子”按构造就是那个干扰物。仪器工作正常；建立在它之上的
 推断没有。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.47\textwidth]{figures/t5-collapse-bbq.png}\hfill
+\includegraphics[width=0.47\textwidth]{figures/t5-target-can.png}
+\caption[t5 的身份陷阱]{\textbf{t5 的身份陷阱，两张分割叠加图。}\emph{左：}提示词
+\texttt{"bbq sauce bottle"} 得分 0.930，掩膜落在 $[-0.19,-0.074]$ 那个立着的瓶子上。
+另外三个互斥的提示词——\texttt{"small red tomato sauce bottle"}（0.859）、
+\texttt{"small red bottle"}（0.852）、\texttt{"brown sauce bottle"}（0.898）——返回
+\emph{完全相同}的世界坐标。四个互不相容的名词，一个物体：这就是数据总线会报告、而任何
+单个分数都看不出来的\textbf{塌缩}。\emph{右：}把名词从\emph{瓶}换成\emph{罐}，才找到真正
+的目标——\texttt{"tomato sauce can"}（0.785），位于 $[-0.099,-0.237]$，橙汁盒后面那个
+金属罐。
+\textbf{读图提醒：}那层红色\emph{是掩膜}，不是物体本身的颜色。BBQ 瓶其实是棕色的——它在
+右图未被掩膜时就是棕色；一旦被掩膜就显得发红，而这恰恰就是这一格所利用的那种混淆。
+来源：\texttt{exam\_t5\_s0\_solved/segments/}，记录 \texttt{segment\_00\_02} 与
+\texttt{segment\_02\_01}。}
+\end{figure}
+
 
 % ==========================================================================
 \chapter{问题：已关闭与仍开放}
