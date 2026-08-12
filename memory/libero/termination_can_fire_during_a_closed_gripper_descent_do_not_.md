@@ -44,7 +44,32 @@ provenance:
   - run:20260810-20:46:39_libero_object_swap_t5_s0#seq=34
   - run:20260810-20:46:39_libero_object_swap_t5_s0#seq=36
   counter_evidence: []
+- action: revise
+  proposal: logs/fix_5f_proposals/p1.md
+  batch: fix_5f
+  date: '2026-08-12'
+  evidence:
+  - run:20260812-12:06:23_libero_object_swap_t5_s0#seq=62
+  - run:20260812-14:15:31_libero_object_swap_t5_s0#seq=38
+  - run:20260812-12:56:23_libero_object_swap_t9_s0#seq=46
+  counter_evidence: []
 ---
 
-Keep the existing fact that termination can fire during a closed-gripper descent and that a release call is not required. Extend it: termination is a signal to verify, not an oracle. It can fire while nothing is grasped and the target is still on the table; it can also fail to fire when the object is already inside the basket. Before declaring success, require at least two independent physical checks (origin box emptied, held/table absence, basket-interior occupancy, or a lowered wrist view). If the object is confirmed inside the basket and the origin is empty but termination has not fired, treat the task as complete; do not keep re-seating the object with closed-gripper descents.
----
+Keep the existing fact that termination can fire during a closed-gripper
+descent and that a release call is not required, and keep the requirement of
+at least two independent physical checks (origin box emptied, held/table
+absence, basket-interior occupancy, or a lowered wrist view). REPLACE the
+old closing licence ("treat the task as complete"): if the checks pass and
+termination has STILL not fired, you have a CONTRADICTION between your own
+verification and the environment's scoring authority — and the flag is the
+authority. Presence checks cannot detect a wrong-object placement: putting
+the WRONG object in the basket passes every one of them while the checker
+rightly stays silent. Before stopping, verify the IDENTITY of the object
+actually inside the basket (read its label via the vision channel if armed,
+or match its measured geometry against the target's signature) — not merely
+that something you placed is present. If the identity check fails, treat the
+run as a wrong-object failure and recover. Only if the verified TARGET is
+inside and the flag is still silent may checker flakiness be considered:
+record the contradiction explicitly in the audit and finish with an honest
+status describing it — never an unqualified success. Do not keep re-seating
+the object with closed-gripper descents in either case.

@@ -3,7 +3,7 @@ title: Release from above the rim with the gripper still closed; do not descend 
   the basket first
 type: technique
 scope: task
-conditions: bottle verified held and carried to the basket; release phase
+conditions: bottle-or-can verified held and carried to the basket; release phase
 support: 1
 provenance:
 - action: add
@@ -16,14 +16,21 @@ provenance:
   - run:20260811-20:48:01_libero_object_swap_t5_s51#seq=74
   counter_evidence:
   - run:20260811-20:48:01_libero_object_swap_t5_s51#seq=42
+- action: revise
+  proposal: logs/fix_5f_proposals/p2.md
+  batch: fix_5f
+  date: '2026-08-12'
+  evidence:
+  - run:20260812-12:06:23_libero_object_swap_t5_s0#seq=62
+  - run:20260812-14:15:31_libero_object_swap_t5_s0#seq=38
+  counter_evidence: []
 ---
 
-Carry the bottle above the basket and release from ABOVE the rim plane
-(eef z ~= 0.25 with the rim at ~0.10) with the gripper still closed until
-the pose is reached. Do not descend the eef into the basket interior
-before opening: in this session the interior-release placement left the
-bottle physically inside with the flag never firing, while the above-rim
-drop fired it. The checker on this cell is flaky (one above-rim repeat
-also failed to fire): after an above-rim release, check the interior
-occupancy once; if the flag has not fired, write the honest audit and
-stop — do not keep re-placing a bottle that is already in the basket.
+Keep the above-rim release technique unchanged. CORRECT the checker claim:
+of the three recorded non-firings on this cell, two are now explained by a
+wrong-object placement — the checker was RIGHT both times. The flakiness
+claim therefore rests on a single archived repeat (resident attempt 3) and
+is UNCONFIRMED. Treat any non-firing as a contradiction per the env-tier
+termination entry: verify the IDENTITY of what is actually in the basket
+before attributing anything to the checker, and never end an episode as an
+unqualified success on a silent flag.
