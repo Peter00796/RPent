@@ -248,6 +248,47 @@ practice**, which moves the motivation from anticipated to empirical. The
 impact is unquantified and should be stated that way until someone reads the
 two transcripts.
 
+## 5f. A gated entry became an excuse (found 2026-08-12)
+
+The sharpest negative result the vision sweep produced, and it is about our own
+mechanism rather than the model's.
+
+`memory/tasks/libero_object_swap/t5/release_from_above_the_rim_do_not_descend_into_the_basket.md`
+says, correctly and with resolving citations, that this cell's checker is flaky:
+after an above-rim release, verify interior occupancy once, and if the flag has
+not fired, **write the honest audit and stop** rather than re-place a bottle
+that is already in the basket. It was admitted through the gate properly — its
+numbers trace, its cites resolve, and its `counter_evidence` even declares the
+repeat that failed to fire.
+
+Both t5 failures in the vision sweep (`20260812-12:06:23`, `20260812-14:15:31`)
+picked the **wrong object** — the BBQ bottle at `[-0.19,-0.07]`, over the
+instrument's own correct "brown / BBQ sauce" reads — placed it in the basket,
+and then cited this entry to explain the non-firing checker. The checker was
+right. The entry gave a wrong-object run a ready-made, honest-sounding reason to
+stop looking, and both runs took it and wrote confident audits
+([09 §4.1e](09-baseline-table.md)).
+
+**No gate check can catch this.** The entry is true; the problem is that its
+stopping condition is satisfiable by a failure it was never meant to cover.
+
+Shape of the fix, in preference order:
+
+1. **Preconditions on stopping advice.** An entry that licenses "stop" must
+   state what has to be *verified* first — here, that the placed object is the
+   target, not merely that an object was placed. Structured `requires:` (issue
+   5e) is the natural carrier, extended from "which tools" to "which
+   verifications".
+2. **Ledger signal.** Consumption crossed with outcome already exists; an entry
+   consumed in N runs that all failed is a `negative` in the ledger's own
+   vocabulary. This entry should surface there now.
+3. **A gate lint for stopping verbs.** Entries whose body contains stop/abort
+   advice get flagged for a human to check the precondition is discriminating.
+
+Related revision: of the three t5 non-firings on record, **two are now explained
+by the wrong object being placed**, so the flaky-checker claim itself rests on
+less evidence than believed — the resident session's attempt-3 repeat alone.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —

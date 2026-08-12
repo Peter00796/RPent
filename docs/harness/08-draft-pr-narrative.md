@@ -46,19 +46,24 @@ only one that survives a mentor:
    pre-refactor era, on unmatched cells, with the answer key readable
    ([09 §3](09-baseline-table.md#3-pre-refactor-era-upstream-harness--our-prompt-of-the-time)).
    They prove nothing and are quoted nowhere.
-2. **Not a growth curve, and not a suite-mean improvement either.** The
+2. **Not a growth curve, and the library buys no suite-mean improvement.** The
    generational sequence 4 → 5 → 7 → 6 → 5 reads as growth and dies under
    repeats; the `+0.7 cells` that replaced it died too, once a fresh no-library
    sweep at current head scored 6 and exposed the old `4` as a fixed-crash
-   casualty. **All three arms — no library, memory library, task playbooks —
-   sit at a suite mean of 6.0/10** (§6.2). What the library demonstrably buys is
-   *cell-targeted*: t6 goes 0/11 clean-room and 0/3 no-library → **5/6**. The
-   generational protocol is offered as **a measurement instrument that worked**
-   — it is what caught both dead claims — not as a positive result.
-3. **Not a complete system.** The code-as-policy arm was built, produced no
-   measured result, and is excluded from the PR branch (§11). One sweep pass was
-   cut mid-run. One of three cross-seed exams failed. The environment's own
-   checker is flaky on one cell. All below.
+   casualty. **No library, memory library and blind task playbooks all sit at
+   6.0/10** (§6.2). What the library demonstrably buys is *cell-targeted*: t6
+   goes 0/11 clean-room and 0/3 no-library → **5/6**. The one thing that does
+   move the suite mean is the **vision instrument** (+2.0, single variable,
+   §6.3) — and even that gain turns out to live entirely in two cells nobody had
+   diagnosed. The generational protocol is offered as **a measurement instrument
+   that worked** — it is what caught every dead claim here — not as a result.
+3. **Not a complete system, and one of its own mechanisms misfired.** The
+   code-as-policy arm was built, produced no measured result, and is excluded
+   from the PR branch (§11). One of three cross-seed exams failed. A cell
+   regressed 3/3 → 1/3 under the instrument and we cannot yet say why. And a
+   correctly-gated library entry **supplied a wrong-object run with a
+   ready-made excuse to stop** — the sharpest negative here, because no gate
+   check could have caught it (§6.3, [04 issue 5f](04-open-issues.md)).
 
 ---
 
@@ -201,17 +206,25 @@ This is not a knock on upstream. With the answers on disk that is the rational
 move, and the priors are part of that design. It is the reason the number cannot
 be read as a measurement *of a harness*:
 
-| arm | score | what it measures |
-|---|---|---|
-| upstream-vanilla, priors on | **8/10** | the value of the stored answers |
-| our clean-room floor (`none`, n=3) | **6/10** (6, 6, 6) | model + tools, no answers |
-| our `practice` arm (n=3) | **6.0** mean | same, plus grown knowledge — no suite-wide lift (§6.2) |
-| grown knowledge, per cell | t6 **0/11 → 5/6** | what a gated, measured recipe is worth where it applies |
+| arm | score | n | what it measures |
+|---|---|---|---|
+| upstream-vanilla, priors on | **8/10** | 1 | the value of the stored answers |
+| our clean-room floor (`none`) | **6.0** (6, 6, 6) | 3 | model + tools, no answers |
+| our blind `practice` arm | **6.0** (7, 5, 6) | 3 | same, plus grown knowledge — no suite-wide lift (§6.2) |
+| **our full harness** (`practice` + vision) | **8.0 ± 1.0** (9, 7, 8) | 3 | the complete design, **0 prior reads** |
+| grown knowledge, per cell | t6 **0/11 → 5/6** | — | what a gated recipe is worth where it applies |
 
-**So the honest arc of this PR in one line**: taking the answer files away costs
-two cells; winning cells back afterwards has to be done by a mechanism that
-produces knowledge which is measured, gated and attributable — and t6, 0/11 →
-5/6, is the case where it demonstrably was.
+**So the honest arc of this PR**: taking the answer files away costs two cells
+(8 → 6). Winning them back has to be done by a mechanism instead of a lookup —
+and the full harness does, reaching **8.0 across three passes with the answer
+files unreachable by construction**, where upstream's 8 is a single sweep that
+on t5 is literally two `pi0_pick` calls and no perception at all.
+
+Two things that sentence is not allowed to become. It is **design vs design**,
+not a controlled comparison — the two sides differ on prompt, planner, priors,
+turn accounting and timeout at once. And the parity is a *mean of three* against
+a *single sweep*; the honest reading is "reaches the answer-fed score without the
+answers", never "beats upstream".
 
 n=1 on the upstream sweep, and it differs from our arms on several axes at once
 (prompt, planner, priors access, turn accounting, upstream's `CELL_TIMEOUT_S`
@@ -889,6 +902,76 @@ gen 2** — the consultation tax died and t0/t2 recovered — but selectivity
 **orphaned the anti-spiral entry**, which sat unread while t6 spiralled. That is
 the data behind [issue 5e](04-open-issues.md), the one-line library index: a
 need measured, not a preference.
+
+### 6.3 The vision ablation, and the mechanism misfiring inside it
+
+`practice` vs `practice + --vision-tool`: same sandbox, same library, same
+model, same budget, same ten cells, n=3 per side, **one variable**. This is the
+only controlled comparison in the project.
+
+**6.0 ± 1.0 → 8.0 ± 1.0. +2.0 cells.**
+
+Three things about that number are more interesting than the number.
+
+**(a) The entire gain is two cells nobody had diagnosed.** t0 and t8 go 0/3 →
+3/3; everything else nets to zero (t3 +1, t4 +1, t5 +1, t1 −1, t9 −2). The
+predictions were filed before the sweep ran, and they were *wrong about where
+the value would be*: the instrument was built for t5 and predicted irrelevant
+elsewhere. It barely moved t5 and carried t0 and t8 instead. t6 was predicted
+vision-indifferent because its wall is knowledge, and that held exactly (2/3 →
+2/3). In the records, `inspect_image` is used early and for identity
+discrimination in all six t0/t8 runs — the designed role — but some of its
+answers there are flatly wrong, and no matched-pair counterfactual exists, so
+**no causal claim is made**. It is the next diagnostic target, not a finding.
+
+**(b) A cell regressed and the pre-registered explanation is refuted.** t9 went
+3/3 → 1/3. The predicted shape of a cost finding was turns burned on instrument
+calls — but one of the two failures called `inspect_image` **zero** times, and
+both used exactly 46 tool calls. A cell cannot lose to instrument turn-burn in a
+run that never used the instrument. Unexplained, and recorded as unexplained.
+
+**(c) t5: the instrument was right and the planner overruled it.** The designed
+target moved only 0/3 → 1/3, and both failures picked the **BBQ distractor** at
+`[-0.19,-0.07]` — the exact position the solved run identifies as
+*"TANGY BBQ SAUCE"* — after the VLM had correctly said *"It looks like a BBQ
+sauce bottle (dark brown)"*. The agent reasoned around it: *"since the env
+guarantees a pickable tomato_sauce_1 and exactly one bottle exists on the table,
+the standing bottle was taken as the tomato sauce."* The tomato sauce is a
+**can**. "The only bottle" is the distractor by construction.
+
+#### The negative result that matters most, and it is about our own mechanism
+
+Both of those failures then explained their non-firing checker by citing **our
+own gated playbook entry**:
+
+> *"libero_terminated did NOT fire — the documented flaky-checker behavior on
+> this cell; per the playbook I stopped instead of re-seating a bottle already
+> in the basket."*
+
+The checker was right — a BBQ bottle was in the basket. But the library holds a
+properly-admitted entry saying *this cell's checker is flaky, verify once and
+stop*, and that entry handed a wrong-object run a ready-made, honest-sounding
+reason to stop looking. Both took it and wrote confident audits.
+
+**No check in the gate could have caught this.** The entry is true, its
+citations resolve, its numbers trace, its `counter_evidence` is honest. The
+defect is that its stopping condition is satisfiable by a failure it was never
+meant to cover — grown knowledge that licenses giving up. Filed as
+[issue 5f](04-open-issues.md); the fix shape is that stopping advice must carry
+a discriminating precondition (*the target was verified*, not merely *an object
+was placed*).
+
+It also revises a claim made earlier in these notes: of three t5 non-firings on
+record, **two are now explained by the wrong object**, so the flaky-checker
+evidence is thinner than §10 implies and rests on the resident session's
+attempt-3 repeat alone.
+
+**Two smaller honesty items.** Three of the thirty vision runs carried
+`--vision-tool` and called `inspect_image` zero times — functionally blind runs
+in the vision column, surfaced by the counter's instrument-usage check. And two
+solves again wrote no audit, which an audit-based count would have lost.
+
+---
 
 ---
 
@@ -1652,6 +1735,18 @@ silently costing evidence.
   All four are listed with their evidence in
   [09 §4.1c](09-baseline-table.md#41c-interrupted-runs--the-exclusion-register),
   so the exclusions are auditable rather than assumed.
+- **A gated library entry supplied an excuse.** Two t5 vision failures picked
+  the wrong object and cited a correctly-admitted flaky-checker entry to explain
+  the non-firing flag. No gate check could have caught it (§6.3, issue 5f).
+- **t9 regressed 3/3 → 1/3 under the instrument and we cannot say why.** The
+  pre-registered cost explanation (turns burned on instrument calls) is refuted
+  by the records: one of the two failures never called the instrument.
+- **Three of thirty vision-arm runs never used the instrument**, so "the only
+  variable is the flag" is exact and "the only variable is the behaviour" is
+  not.
+- **The suite gain is two undiagnosed cells, not the designed target.** t0 and
+  t8 carry all of +2.0; t5, the cell the instrument was built for, moved 0/3 →
+  1/3. Causation for t0/t8 is *not* established — no matched pairs exist.
 - **Cross-seed transfer is 2/3, not 3/3.** `t6_s1` failed.
 - **t5 seed 0 is n=1.** One solve, one failure, on a cell whose environment
   checker is demonstrably flaky. The t5/t6 pincer (§9) is a clean *design*

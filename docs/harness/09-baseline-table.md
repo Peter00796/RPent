@@ -169,6 +169,9 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 | S12 | `20260811-19:49:27` → `20260812-02:06:53` | `practice` | same | 10 | **5** | `t0- t1+ t2+ t3- t4+ t5- t6- t7+ t8- t9+` — cut mid-pass, resumed 6 h later; see §4.1c |
 | S13 | `20260811-22:41:11` → `20260812-00:40:16` | `none` | — | 10 | **6** | `t0+ t1+ t2+ t3- t4- t5- t6- t7+ t8+ t9+` (**P2**) |
 | S14 | `20260812-02:15:33` → `04:08:00` | `practice` | same | 10 | **6** | `t0- t1+ t2+ t3+ t4- t5- t6+ t7+ t8- t9+` (**P3** pass 3) |
+| V1 | `20260812-09:26:21` → `11:09:30` | `practice` **+ `--vision-tool`** | same | 10 | **9** | `t0+ t1+ t2+ t3+ t4+ t5+ t6+ t7+ t8+ t9-` |
+| V2 | `20260812-11:19:55` → `12:56:23` | `practice` **+ `--vision-tool`** | same | 10 | **7** | `t0+ t1+ t2+ t3+ t4+ t5- t6- t7+ t8+ t9-` |
+| V3 | `20260812-13:06:12` → `15:04:39` | `practice` **+ `--vision-tool`** | same | 10 | **8** | `t0+ t1- t2+ t3+ t4+ t5- t6+ t7+ t8+ t9+` |
 
 > **S12's apparent duplicate t4 is resolved by exclusion, not preference** —
 > the first copy was externally killed and is not a measurement. Evidence chain
@@ -183,12 +186,17 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 | `none` (no library at all) | S7, S9, **S13** | 6, 6, 6 | **6.0** | **0** |
 | `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | **6.0** | ±1.73 |
 | `practice` (gen 5 + t5/t6 playbooks) | S11, S12, **S14** | 7, 5, 6 | **6.0** | ±1.0 |
+| **`practice` + `--vision-tool`** | **V1, V2, V3** | **9, 7, 8** | **8.0** | ±1.0 |
 | *(retired)* `none` @ gen-0 head | S2 | 4 | — | bug-affected, see below |
 
-### **All three arms sit at a suite mean of 6.0 out of 10.**
+### Three of the four arms sit at 6.0/10; the vision arm is the first to move
 
-That is the honest headline and it must be written straight. **The library
-produces no measurable suite-wide lift.** The earlier +0.7 reading was the
+**The library produces no measurable suite-wide lift** — `none`, `memory` and
+blind `practice` are indistinguishable at 6.0. Adding the vision instrument to
+the `practice` arm moves it to **8.0 ± 1.0**, and that comparison is the one
+controlled experiment in this project (§4.1d). Everything below about the
+library's flatness still stands: it is the *instrument*, not the library, that
+moved the mean. The earlier +0.7 reading was the
 `none` arm's mean being dragged down by S2, and P2 (S13) was run specifically
 to test that: a `none` sweep at current head scored **6**, giving the no-library
 arm `6, 6, 6` with **zero spread**. The old `4` is now positively identified as
@@ -227,6 +235,156 @@ Stratified across the older arms, the middle band (t0/t1/t4/t8/t9) is where all
 the noise lives; the easy cells (t2/t3/t7) do not need the library and the hard
 cells do not yield to it without the matching instrument.
 
+### 4.1d The vision ablation — the one controlled comparison in the project
+
+`practice` vs `practice + --vision-tool`: same sandbox, same library, same
+model, same turn budget, same ten cells, n=3 per side. **`--vision-tool` is the
+only variable.** Nothing else in this file is this clean.
+
+| | blind (S11, S12, S14) | vision (V1, V2, V3) | Δ |
+|---|---|---|---|
+| suite | 7, 5, 6 → **6.0 ± 1.0** | 9, 7, 8 → **8.0 ± 1.0** | **+2.0** |
+
+Per cell, and this is where the result actually lives:
+
+| cell | blind | vision | Δ | reading |
+|---|---|---|---|---|
+| **t0** | 0/3 | **3/3** | **+3** | unpredicted; see below |
+| t1 | 3/3 | 2/3 | −1 | noise |
+| t2 | 3/3 | 3/3 | 0 | saturated |
+| t3 | 2/3 | 3/3 | +1 | noise |
+| t4 | 2/3 | 3/3 | +1 | noise |
+| **t5** | 0/3 | 1/3 | +1 | the designed target — **moved weakly, and not for the reason the design predicted** |
+| t6 | 2/3 | 2/3 | 0 | **knowledge-bound, predicted vision-indifferent — confirmed** |
+| t7 | 3/3 | 3/3 | 0 | saturated |
+| **t8** | 0/3 | **3/3** | **+3** | unpredicted; see below |
+| **t9** | 3/3 | 1/3 | **−2** | the pre-registered cost outcome — **but not from instrument turn-burn** |
+
+**The entire suite gain is t0 and t8.** +3 and +3 against a net +6; every other
+cell nets to zero (t3 +1, t4 +1, t5 +1, t1 −1, t9 −2). That is a much sharper
+attribution than a mean, and it is not what the pre-registration predicted.
+
+#### Against the pre-registered predictions (filed before any number existed)
+
+| prediction | outcome |
+|---|---|
+| t5 should move (designed target) | **partly wrong** — 0/3 → 1/3, and its two failures are not vision failures (§4.1e) |
+| t6 unchanged (knowledge-bound) | **correct** — 2/3 → 2/3 |
+| t1/t2/t7/t9 saturated, unchanged | **wrong for t9** (3/3 → 1/3); correct for the rest |
+| t3/t4 noise ±1 | correct (both +1) |
+| t0/t8 — declined to predict | 0/3 → **3/3** each, and they are the whole gain |
+
+So the mechanism model was **wrong about where the instrument's value would
+show**. It was predicted to pay off on the cell it was built for and to be
+irrelevant elsewhere; instead it barely moved that cell and carried two others
+entirely. Declining to predict t0/t8 was the right call — and the reason those
+two were unpredictable is that nobody had ever diagnosed why they failed.
+
+One pre-commitment has to be applied to its author: *"the one number I'd
+distrust on sight is a big suite-mean jump without t5 moving."* That is
+literally what happened. The rule does not fire only because the movement is
+**not** middle-band noise — it is concentrated in two chronic zeros, +3 each,
+which noise at n=3 cannot manufacture. Recorded rather than quietly dropped.
+
+#### What the instrument was doing in t0 and t8
+
+Established from the records: `inspect_image` was called in **all six** t0/t8
+runs (t0: 10, 7, 4 calls; t8: 16, 2, 14), and in both cells it is used **early
+and for object identity discrimination** — the designed role:
+
+```
+t0 seq 15/116  "What is it? Choose from: a red alphabet soup can, a y…"
+t8 seq 14/96   "Which item is the chocolate pudding — de…"
+```
+
+**Not established: causation.** No matched pairs exist (the blind runs are
+different runs, not a paired counterfactual), and some of the instrument's
+answers in these very runs are **wrong** — t0 seq 15 calls the target "a white
+cream cheese tub". So the honest statement is: the instrument was present, used
+in its designed role, and both cells went 0/3 → 3/3; *why* is the next
+diagnostic target, and it wants a matched read of one blind t0 failure against
+one vision t0 solve. **No causal story is asserted here.**
+
+#### The t9 regression, and the cost hypothesis it refutes
+
+t9 was pre-registered as the shape a *cost* finding would take: turns burned on
+instrument calls. **The records do not support it.** Of the two t9 failures,
+`20260812-12:56:23` made **zero** `inspect_image` calls, and both failures used
+exactly 46 tool calls each. A cell cannot lose to instrument turn-burn in a run
+that never called the instrument. The regression is real (3/3 → 1/3) and
+**unexplained**; it is the second item on the diagnostic list.
+
+#### ⚠ Three runs were armed but never used the instrument
+
+`20260812-11:43:27` (t2, solved), `20260812-12:56:23` (t9, failed) and
+`20260812-14:34:26` (t6, solved) carried `--vision-tool` and called
+`inspect_image` **zero** times. They are functionally blind runs sitting in the
+vision column. So "the only variable is the flag" is exactly true and
+"the only variable is the behaviour" is not: **3/30 vision-arm runs behaved as
+blind runs.** Surfaced by the counter's instrument-usage check, which exists
+for precisely this failure mode; recorded because it slightly softens the
+ablation's cleanliness and a reader deserves to know the direction (it makes
+the +2.0 a mild *under*-statement of what using the instrument is worth, and a
+mild over-statement of what arming it is worth).
+
+### 4.1e t5 adjudicated — the instrument was right and the planner overruled it
+
+t5 went 0/3 blind → **1/3** with the instrument. Both failures were adjudicated
+with `t5_adjudicate.py` under the procedure fixed **before the sweep produced a
+number**, and both came back `UNDETERMINED` from the tool — correctly, because
+the tool refuses to convert a keyword screen into a verdict. Reading the
+records settles them, and the answer is neither 2a nor 2b as originally framed:
+
+**The instrument was correct. The planner overrode it.**
+
+Ground truth, established by the solved run `20260812-10:22:09`: the target is
+a **silver can with a red/green label** at `[-0.118, -0.241]`; the brown bottle
+at `[-0.19, -0.07]` reads **"TANGY BBQ SAUCE"**.
+
+Both failures picked the bottle at `[-0.19, -0.07]` — the BBQ distractor:
+
+- `20260812-12:06:23` moved to the bottle and picked it. The VLM had already
+  said so: seq 45 *"It looks like a BBQ sauce bottle (dark brown)"*, seq 59
+  *"Brown … Not legible … Brown"*. The agent overrode it with an availability
+  argument, in its own audit: *"since the env guarantees a pickable
+  tomato_sauce_1 and exactly one bottle exists on the table, the standing bottle
+  was taken as the tomato sauce."*
+- `20260812-14:15:31` did the same, `move_to [-0.19, -0.074, 0.21]` then pick,
+  reasoning to *"the scene's only small bottle"*.
+
+**The inference is the failure.** The tomato sauce is a *can*; "the only
+bottle" is the distractor by construction. The instrument said brown/BBQ and
+was talked out of it.
+
+#### The finding that matters most, and it is against us
+
+Both runs then explained their non-firing checker by **citing our own playbook
+entry**:
+
+> `20260812-12:06:23`: *"libero_terminated did NOT fire — the documented flaky-checker behavior on this cell; per the playbook I stopped instead of re-seating a bottle already in the basket."*
+>
+> `20260812-14:15:31`: *"matching the documented flaky checker on this cell (an above-rim drop is the recipe that normally fires it, and one repeat is on record as also failing). Per the memory playbook, after confirming…"*
+
+The checker was **right**: the agent had put the BBQ bottle in the basket. But
+the library contained a gated, evidence-backed entry saying *this cell's checker
+is flaky, verify once and stop*, and that entry supplied a **ready-made,
+honest-sounding explanation for a wrong-object failure**. Both failures took it,
+wrote a confident audit, and stopped.
+
+**A gated entry became an excuse.** That is an unintended consequence of grown
+knowledge that no check in the gate would catch: the entry is true, its
+citations resolve, its numbers trace, and it was admitted correctly. It is
+nonetheless capable of terminating a run that should have kept looking. Filed
+as a new open issue — the shape of the fix is that a "stop, the checker is
+flaky" entry must carry a precondition that the *right object* was verified,
+not merely that *an* object was placed.
+
+This also revises the flaky-checker claim itself: of the three t5 non-firings
+now on record, **two are explained by the wrong object being placed.** The
+genuine flaky-checker evidence is thinner than
+[§5.2](#52-t5--pick-the-tomato-sauce-and-place-it-in-the-basket-the-perception-channel-wall-two-visually-near-identical-sauce-bottles)
+implies, and rests on the resident session's attempt-3 repeat alone.
+
 ### 4.1b A predicted contamination, now observed
 
 Both blind t5 sweep runs (`20260812-00:53:35`, `20260812-03:15:06`) read **all
@@ -243,6 +401,17 @@ predicted when the `requires:` filter was specified. Both runs failed — but
 established is that the *predicted exposure occurred*, not that it cost
 anything. The motivation for the `requires`-filtered per-run index moves from
 anticipated to empirical; its impact remains unquantified.
+
+**Resolution (2026-08-12).** The vision sweep puts those same entries on an arm
+that *can* execute them: all three t5 vision runs called `inspect_image`, and
+the cell went 0/3 → 1/3. So the exposure is no longer arm-inappropriate for t5.
+But the resolution is narrower than it looks — §4.1e shows both remaining
+failures had **correct** instrument output and lost to planner inference, so
+putting executable knowledge on an executing arm was necessary and not
+sufficient. And the same sweep produced the sharper version of the same problem
+in the other direction: an entry that *is* executable on this arm
+(the flaky-checker recipe) actively supplied a wrong explanation. Arm-matching
+the library fixes what a run *can* do, not what it *should conclude*.
 
 ### 4.1c Interrupted runs — the exclusion register
 
@@ -316,18 +485,18 @@ so that is a decision rather than an accident.
 Retired `none` sweep S2 excluded (see §4.1); interrupted runs excluded per
 §4.1c; `practice` pools S11/S12/S14.
 
-| cell | `none` (S7,S9,S13) | `memory` (S3–S6,S8,S10) | `practice` (S11,S12,S14) | pre-sandbox (S1) |
-|---|---|---|---|---|
-| t0 | 2/3 | 2/6 | 0/3 | 1/1 |
-| t1 | 3/3 | 3/6 | 3/3 | 1/1 |
-| t2 | 3/3 | 5/6 | 3/3 | 0/1 |
-| t3 | 2/3 | 5/6 | 2/3 | 0/1 |
-| t4 | 1/3 | 5/6 | 2/3 | 1/1 |
-| t5 | 0/3 | **1/6** | **0/3** | 1/1 |
-| t6 | **0/3** | **0/6** | **2/3** | 1/1 |
-| t7 | 3/3 | 6/6 | 3/3 | 1/1 |
-| t8 | 2/3 | 5/6 | 0/3 | 1/1 |
-| t9 | 3/3 | 4/6 | 3/3 | 1/1 |
+| cell | `none` (S7,S9,S13) | `memory` (S3–S6,S8,S10) | `practice` blind (S11,S12,S14) | `practice`+vision (V1–V3) | pre-sandbox (S1) |
+|---|---|---|---|---|---|
+| t0 | 2/3 | 2/6 | 0/3 | **3/3** | 1/1 |
+| t1 | 3/3 | 3/6 | 3/3 | 2/3 | 1/1 |
+| t2 | 3/3 | 5/6 | 3/3 | 3/3 | 0/1 |
+| t3 | 2/3 | 5/6 | 2/3 | 3/3 | 0/1 |
+| t4 | 1/3 | 5/6 | 2/3 | 3/3 | 1/1 |
+| t5 | 0/3 | **1/6** | **0/3** | **1/3** | 1/1 |
+| t6 | **0/3** | **0/6** | **2/3** | 2/3 | 1/1 |
+| t7 | 3/3 | 6/6 | 3/3 | 3/3 | 1/1 |
+| t8 | 2/3 | 5/6 | 0/3 | **3/3** | 1/1 |
+| t9 | 3/3 | 4/6 | 3/3 | **1/3** | 1/1 |
 
 The only column that moves against the `none` arm by more than noise is **t6**
 (0/3 → 2/3 in-sweep, 5/6 counting the seed-0 exams). t0 and t8 move the *other*
@@ -381,7 +550,27 @@ reason the number cannot be read as a harness measurement:
 | our grown knowledge, per cell | t6 **0/11 → 5/6** | what a measured, gated recipe is worth where it applies |
 
 Removing the answer files costs **two cells**. Winning cells back afterwards has
-to be done by a mechanism, and t6 is the case where it was.
+to be done by a mechanism.
+
+#### The head-to-head the owner asked for
+
+| arm | score | n | what it is made of |
+|---|---|---|---|
+| upstream-vanilla, priors on | **8/10** | 1 | its own prompt, its planner, **112 answer-file reads across 10/10 runs** |
+| ours, `practice` + vision, clean-room | **8.0 ± 1.0** (9, 7, 8) | 3 | cleansed prompt, always-on sandbox, **0 prior reads**, grown+gated library, VLM instrument |
+
+**Level, and reached from opposite directions.** Upstream's 8 is the stored
+solution replayed — on t5 it is literally two `pi0_pick` calls and no
+perception. Ours is 8.0 with the answer files unreachable by construction, and
+it is the mean of three passes rather than a single sweep.
+
+Stated carefully, because it is the sentence a reviewer will test hardest:
+**this is a design-vs-design comparison, not a controlled one.** The two sides
+differ on prompt, planner, priors access, turn accounting and timeout
+simultaneously. What it licenses is *"the harness reaches the answer-fed
+score without the answers, and does it three times"*; what it does not license
+is any per-component attribution. The controlled result is §4.1d, and it is a
+different claim: **+2.0 from the instrument alone, single variable.**
 
 **Caveats, recorded rather than chased:**
 
