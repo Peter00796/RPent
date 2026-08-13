@@ -769,6 +769,19 @@ methodological gain.
 results form a separate table with the protocol noted, and are never pooled
 with the 50-turn `object_swap` columns.** A budget change is an arm change.
 
+When results land, the table carries **`turns=100` in its title**, not in a
+footnote, and **the 50-turn results are never restated upward**.
+
+And the reason for declaring this so loudly, stated plainly because a reader
+will otherwise wonder: **this is the first protocol change this project has made
+in the flattering direction.** Every earlier correction — the retired growth
+curve, the retired `+0.7`, the audit-counting fix, the interrupted-run
+exclusions — moved a number down or left it flat. This one plausibly moves
+numbers up, so it is declared louder than the others rather than more quietly.
+A reviewer who sees "they doubled their budget and their scores rose" is right
+to discount the table unless the change is unmissable and the old columns are
+left standing at the old budget. Both conditions are met here.
+
 ### Pre-registration (light form)
 
 - **`libero_object_swap`: 8 ± 1 of 10.** Extrapolated from generation 7 at 50
