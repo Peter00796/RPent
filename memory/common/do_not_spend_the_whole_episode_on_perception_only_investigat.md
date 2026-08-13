@@ -2,9 +2,9 @@
 title: Do not spend the whole episode on perception-only investigation
 type: failure_mode
 scope: common
-conditions: When the run has spent many tool calls on segments/back-projections/occupancy
-  at an early env step; when the target name repeatedly fails to segment; when a camera-FOV
-  exploration move is being considered without an immediate manipulation plan.
+conditions: When the run has made many perception calls but no manipulation env-step;
+  when it is still at step 0 or step 1; when each perception call is followed by another
+  perception call rather than a pick/place attempt.
 support: 3
 provenance:
 - action: add
@@ -58,7 +58,16 @@ provenance:
   - run:20260810-21:14:37_libero_object_swap_t8_s0#seq=104
   - run:20260810-21:14:37_libero_object_swap_t8_s0#seq=108
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_10_swap/proposals/proposal_07.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-17:02:11_libero_10_swap_t1_s0#seq=1
+  - run:20260813-17:02:11_libero_10_swap_t1_s0#seq=120
+  - run:20260813-18:08:26_libero_10_swap_t5_s0#seq=71
+  - run:20260813-18:08:26_libero_10_swap_t5_s0#seq=115
+  counter_evidence: []
 ---
 
-Perception ends after a bounded number of name variants per camera and one complete low-z occupancy enumeration. If the target still has no name, the best-supported unclaimed cluster is the target; execute a pick and verify it geometrically. Moving the wrist to inspect beyond the current view is also perception: if it is not followed by an attempt to manipulate, the episode is lost. A run that never leaves early environment steps, or leaves them only to hover, cannot succeed.
----
+A run that never leaves the early environment steps cannot succeed. Set a hard budget: a bounded set of name variants per camera, one wrist pass, one low-z occupancy enumeration. After the budget is exhausted, act on the best candidate and verify the result geometrically. Moving the arm to inspect a new viewpoint is still perception; if it is not followed by a manipulation attempt, the episode is lost.

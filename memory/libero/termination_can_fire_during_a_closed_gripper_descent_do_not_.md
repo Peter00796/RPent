@@ -73,3 +73,5 @@ inside and the flag is still silent may checker flakiness be considered:
 record the contradiction explicitly in the audit and finish with an honest
 status describing it — never an unqualified success. Do not keep re-seating
 the object with closed-gripper descents in either case.
+
+Gen-0 full-benchmark additions (batch gen0full_night, manual merge; evidence: run:20260813 object_swap/goal sweeps): the flag also will NOT fire while the placed object still protrudes above the container rim — a non-firing flag with a protruding object is a seating problem, not checker flakiness. And a fire DURING a closed-gripper descent or before the arm retreats still counts: the episode is over the moment it fires; do not issue further motions after it.

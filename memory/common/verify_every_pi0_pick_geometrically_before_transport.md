@@ -2,9 +2,9 @@
 title: Verify every pi0 pick geometrically before transport
 type: failure_mode
 scope: common
-conditions: After any pi0_pick call, regardless of whether the tool reports success
-  or failure; before any transport; before trusting a termination signal that fires
-  during a pick.
+conditions: After any pi0_pick call regardless of its reported status; before transport;
+  before deciding the object did not move; when the run is about to re-pick because
+  held_object is empty.
 support: 13
 provenance:
 - action: add
@@ -69,7 +69,19 @@ provenance:
   - run:20260810-21:58:40_libero_object_swap_t2_s0#seq=8
   - run:20260810-21:58:40_libero_object_swap_t2_s0#seq=26
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_10_swap/proposals/proposal_05.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=34
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=96
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=41
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=42
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=59
+  - run:20260813-17:32:49_libero_10_swap_t8_s0#seq=31
+  - run:20260813-17:32:49_libero_10_swap_t8_s0#seq=75
+  counter_evidence: []
 ---
 
-The pi0_pick success/failure string is not a contact report. A success can be an air-grasp that displaces the object, and a failure can occur after the object was actually moved. Never transport, release, or accept a termination signal until held-object geometry and origin-box removal agree that the target left its start. If the pick reports failure, do not treat that as proof that no transport happened; verify geometrically either way.
----
+The pi0_pick status string is not a contact report. A success can be an air grasp that leaves the object in place (t6); a success can also displace the object into the destination without a verified grasp (t7); and repeated failures can leave the object untouched until a scripted grasp is used (t8). After every pick, check both the origin box and the destination/held-object state. If the object moved without a grasp, do not treat the pick as failed for task purposes: advance the state, re-localize, and continue.

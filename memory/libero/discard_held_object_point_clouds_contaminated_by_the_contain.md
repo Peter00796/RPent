@@ -2,8 +2,8 @@
 title: Discard held-object point clouds contaminated by the container near the basket
 type: failure_mode
 scope: env
-conditions: Applies when the wrist is over or near the basket and held_object returns
-  a shape_warning, an implausibly wide span, or a failed wrist segmentation.
+conditions: When the wrist is over or near the basket and held_object returns a shape_warning,
+  an implausibly wide span, or basket-contaminated points.
 support: 7
 provenance:
 - action: add
@@ -38,9 +38,18 @@ provenance:
   - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=53
   - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=54
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_object_task/proposals/proposal_04.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-10:17:41_libero_object_task_t3_s0#seq=12
+  - run:20260813-10:17:41_libero_object_task_t3_s0#seq=7
+  - run:20260813-10:34:08_libero_object_task_t5_s0#seq=13
+  - run:20260813-10:34:08_libero_object_task_t5_s0#seq=14
+  - run:20260813-11:19:24_libero_object_task_t8_s0#seq=10
+  - run:20260813-11:19:24_libero_object_task_t8_s0#seq=5
+  counter_evidence: []
 ---
 
-When the EEF is over the basket, the held-object mask can include the container, producing an implausibly wide span. Do not use such a reading to compute release coordinates. Record a clean held-object offset in open air before the final approach; when the contaminated warning appears, use that clean offset or agentview re-segmentation so that the object, not the EEF, is centered over the opening.
----
-
-
+A held-object query taken with the wrist over the basket returns container-contaminated clouds: shape_warning, large span, or interior points. These are unusable for release coordinates. Capture the held-object offset once in open air after the grasp; if an over-basket query is contaminated, reuse the clean offset and compute the release from a fresh basket re-segmentation. Do not repeatedly re-query over the basket.

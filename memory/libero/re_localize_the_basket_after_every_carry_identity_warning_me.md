@@ -3,8 +3,8 @@ title: Re-localize the basket after every carry; identity_warning means movement
   not noise
 type: technique
 scope: env
-conditions: Applies while carrying the target toward the basket, after any stalled
-  move, or when a re-segmentation returns an identity_warning.
+conditions: After any pick, before any carry/release; when the basket was last segmented
+  at step 0; when the arm has moved and the previous basket anchor may be stale.
 support: 11
 provenance:
 - action: add
@@ -55,10 +55,17 @@ provenance:
   - run:20260810-17:51:34_libero_object_swap_t2_s0#seq=31
   - run:20260810-19:07:57_libero_object_swap_t9_s0#seq=50
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_object_swap/proposals/proposal_12.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-12:05:21_libero_object_swap_t1_s0#seq=3
+  - run:20260813-12:05:21_libero_object_swap_t1_s0#seq=33
+  - run:20260813-12:11:38_libero_object_swap_t3_s0#seq=23
+  - run:20260813-12:10:54_libero_object_swap_t4_s0#seq=22
+  - run:20260813-12:26:26_libero_object_swap_t7_s0#seq=13
+  counter_evidence: []
 ---
 
-The basket is an unanchored object and can be bumped by the arm or by a stalled move. A segmentation identity_warning or a changed rim reading is a displacement signal, not sensor noise. Re-localize the container and re-check occupancy before computing the release target; never reuse the step-0 basket mask for a later placement.
----
-
-
-
+The step-0 basket segment goes stale as soon as the arm moves. After the pick is verified, re-segment the basket from agentview and derive the rim opening from the fresh mask. Use the fresh reading, not the stored interior-median, for the carry and release pose. Repeating the same stale basket anchor produces release targets that stall on the rim.

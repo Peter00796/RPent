@@ -2,8 +2,9 @@
 title: Do not treat a name-based segment result as identity ground truth
 type: invariant
 scope: common
-conditions: When a target object is identified by language prompts, and when look-alike
-  objects share category/color names.
+conditions: When two task-name prompts return the same mask; when object labels are
+  unreadable; when candidates share a category or color name; when a generic name
+  is being reused for several instances.
 support: 4
 provenance:
 - action: add
@@ -22,6 +23,20 @@ provenance:
   - run:20260807-19:38:26_libero_object_swap_t5_s0#seq=17
   - run:20260807-19:38:26_libero_object_swap_t5_s0#seq=22
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_10_swap/proposals/proposal_01.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-15:52:15_libero_10_swap_t0_s0#seq=2
+  - run:20260813-15:52:15_libero_10_swap_t0_s0#seq=3
+  - run:20260813-16:37:01_libero_10_swap_t4_s0#seq=4
+  - run:20260813-16:37:01_libero_10_swap_t4_s0#seq=5
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=3
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=6
+  - run:20260813-19:02:53_libero_10_swap_t9_s0#seq=2
+  - run:20260813-19:02:53_libero_10_swap_t9_s0#seq=3
+  counter_evidence: []
 ---
 
-A `found=true` from one text prompt is not proof that the prompt's category is the object's identity, and a `found=false` for the canonical task name is not proof the object is absent. Several task names can collapse onto one mask, while a color/shape phrasing may be the only one that separates the true target. Before committing a pick, require either independent phrasings landing on the same candidate, a close-up wrist probe that discriminates candidates, or an occupancy/back-projection map that locates the candidate geometrically. When no name succeeds, do not keep re-probing; switch to geometric scene enumeration and act on the best candidate.
+A `found=true` for a name prompt is a hypothesis about identity, never proof. If two names bind to the same mask, or one generic name is called twice and returns one mask, the run has not found two objects. Do not assign task names to masks under those conditions. Separate the candidates with at least one independent channel before committing a pick: color/shape prompts, crop-label reading via VLM, splitting a merged mask by pixel columns, wrist close-up reads, or geometric enumeration. For identity that remains ambiguous after separation, use task-checker feedback as the final oracle; do not pick under an unverified name.

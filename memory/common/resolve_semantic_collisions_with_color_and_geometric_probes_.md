@@ -3,9 +3,9 @@ title: Resolve semantic collisions with color and geometric probes before commit
   to a target
 type: technique
 scope: common
-conditions: When several object-name prompts land on the same mask; when the scene
-  list contains more names than a full enumeration finds; when a second instance is
-  being hunted after one complete sweep.
+conditions: When several object-name prompts land on the same mask; when two identical
+  instances must be told apart by distance/height to a named reference or support
+  surface; when a second instance is being hunted after one complete sweep.
 support: 4
 provenance:
 - action: add
@@ -43,6 +43,17 @@ provenance:
   - run:20260810-18:25:20_libero_object_swap_t5_s0#seq=13
   - run:20260810-18:58:23_libero_object_swap_t8_s0#seq=44
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_spatial_task/proposals/proposal_02.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-12:54:46_libero_spatial_task_t1_s0#seq=82
+  - run:20260813-13:07:06_libero_spatial_task_t2_s0#seq=43
+  - run:20260813-13:21:24_libero_spatial_task_t6_s0#seq=49
+  - run:20260813-13:28:44_libero_spatial_task_t8_s0#seq=17
+  - run:20260813-13:31:27_libero_spatial_task_t9_s0#seq=5
+  counter_evidence: []
 ---
 
-The scene object-name list is not an object-count oracle. When two names collapse onto one mask, that mask is one object unless a second distinct cluster appears. After one complete enumeration, including a lowered z-band when needed, if no extra cluster has appeared, stop hunting; the phantom object does not exist. Resolve the visible instance with wrist/color probes or the pick policy's own language grounding, commit to it, and execute the pick.
+When the category/color prompt cannot separate instances, measure the candidate's relation to the task reference: distance to the named object, or height relative to the named support surface. Select the candidate that matches the task's spatial relation, and treat the shared name prompt as corroboration only. Re-check before the pick with an independent point-prompt/back-projection probe or a second spatially-phrased segment.

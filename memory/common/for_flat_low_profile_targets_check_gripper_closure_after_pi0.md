@@ -3,9 +3,9 @@ title: For flat low-profile targets, check gripper closure after pi0_pick; repea
   empty held_object with unchanged width means air grasp
 type: failure_mode
 scope: common
-conditions: When the target is a flat low-profile slab; when pi0_pick reports success
-  but held_object stays empty; when the reported gripper width is essentially unchanged
-  across repeated empty held-object readings at about 0.039 m.
+conditions: When the target is flat or low-profile; when pi0_pick reports success
+  but held_object shows no held body; when the gripper width after repeated attempts
+  is essentially unchanged; when geometric and vision readings about the grasp conflict.
 support: 2
 provenance:
 - action: add
@@ -19,6 +19,19 @@ provenance:
   - run:20260810-17:36:14_libero_object_swap_t1_s0#seq=95
   - run:20260810-17:36:14_libero_object_swap_t1_s0#seq=96
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_10_swap/proposals/proposal_04.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=34
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=35
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=46
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=47
+  - run:20260813-17:04:02_libero_10_swap_t6_s0#seq=96
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=23
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=26
+  counter_evidence: []
 ---
 
-Flat slabs are unreliable pi0 targets: the pick can close with the fingers beside the slab without pinching it. When held_object is empty and the reported gripper width is essentially unchanged from the pre-pick width, classify the event as an air grasp immediately; do not keep re-probing the same grasp. Re-localize the slab and attempt a different approach, such as re-posing the object, an edge-on pick, or a scripted grasp with contact verification. A single empty reading is not decisive, but a constant gripper width across repeated empty readings marks the miss.
+Flat targets are unreliable for pi0: the tool can report success while the fingers close beside the object. When held_object stays empty and the gripper width is essentially unchanged, classify the event as an air grasp immediately. Repeated identical re-picks will not fix it. When geometric sensors and vision conflict, a wrist close-up or a fresh clear-view point segment decides; do not trust the tool success string, the VLM grasp claim, or a contaminated held-object cloud.

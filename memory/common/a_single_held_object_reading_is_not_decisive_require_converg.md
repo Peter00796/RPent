@@ -2,8 +2,9 @@
 title: A single held-object reading is not decisive; require convergent evidence
 type: failure_mode
 scope: common
-conditions: After a pick, during transport, or when held-object reports contradictory
-  states.
+conditions: After a pick, during transport, when held_object contradicts other evidence;
+  when the reported gripper width is above the held-object tool's open threshold;
+  when the held object is small relative to point-cloud resolution.
 support: 5
 provenance:
 - action: add
@@ -31,7 +32,21 @@ provenance:
   - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=75
   - run:20260808-12:34:51_libero_object_swap_t8_s0#seq=87
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_10_task/proposals/proposal_03.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-15:27:56_libero_10_task_t8_s0#seq=77
+  - run:20260813-15:27:56_libero_10_task_t8_s0#seq=79
+  - run:20260813-15:27:56_libero_10_task_t8_s0#seq=81
+  - run:20260813-14:54:42_libero_10_task_t6_s0#seq=71
+  - run:20260813-14:54:42_libero_10_task_t6_s0#seq=74
+  - run:20260813-14:54:42_libero_10_task_t6_s0#seq=72
+  - run:20260813-14:02:23_libero_10_task_t0_s0#seq=51
+  - run:20260813-14:02:23_libero_10_task_t0_s0#seq=63
+  - run:20260813-14:02:23_libero_10_task_t0_s0#seq=65
+  counter_evidence: []
 ---
 
-`held_object=true` can follow a push that displaced the object without grasping it, and `held_object=false`/0 points can follow a successful grasp when the object is occluded or outside the queried volume. Do not trust one reading. Confirm with at least one independent signal: origin-box voxel removal, wrist close-up occupancy, or camera re-segmentation of an elevated object. If readings conflict, retreat to a clear viewpoint, re-localize, and re-check before any release.
-
+held_object has hardware-like biases: a clamp wider than roughly 0.06 m can be read as "open", a small held item can produce no cluster, and a check taken with the EEF inside the queried volume can return table/container points. Do not let a single false or true decide a grasp. After every pick, compare origin-box voxel removal at a clearance pose and add a wrist-camera close-up. For small objects, origin-box emptiness is the primary signal because held_object may never see them.

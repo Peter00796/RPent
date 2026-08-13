@@ -2,9 +2,9 @@
 title: Do not conclude emptiness from a single tight occupancy box
 type: failure_mode
 scope: common
-conditions: When a tight occupancy box at the expected landing spot returns only floor
-  points after a release; when a basket-interior zero is about to be used to start
-  a re-pick.
+conditions: When an occupancy/compare_extent query with arm exclusion returns zero
+  points directly beneath the EEF; when a zero reading is about to trigger a re-pick
+  or a wrong conclusion.
 support: 3
 provenance:
 - action: add
@@ -47,7 +47,14 @@ provenance:
   - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=61
   - run:20260810-20:31:41_libero_object_swap_t4_s0#seq=62
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_object_swap/proposals/proposal_06.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-12:16:54_libero_object_swap_t6_s0#seq=29
+  - run:20260813-12:16:54_libero_object_swap_t6_s0#seq=73
+  counter_evidence: []
 ---
 
-A tight box at the exact expected landing point can miss an object that is standing slightly offset, tilted, or occluded by the basket wall. The floor-only reading is one vote against placement; before re-picking, clear the arm, lower the wrist into view of the basket interior, and segment/back-project the object. Only if the object is still not inside the basket should the run treat the placement as failed and re-pick.
----
+A zero-point occupancy answer obtained while the EEF is over the queried box is not evidence of emptiness: the arm-exclusion sphere can cover the object itself. Do not start a re-pick or declare a location empty from such a reading. Re-query with the arm clear, shrink/disable the arm exclusion, or verify with a camera/segment before acting on the zero.

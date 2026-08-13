@@ -2,8 +2,9 @@
 title: After release, verify placement geometry; a release call is not task success
 type: failure_mode
 scope: env
-conditions: Applies after any release over the basket, especially when the termination
-  flag has not fired.
+conditions: When a release or placement is geometrically confirmed but libero_terminated
+  stays false; when the run is considering endless re-verification loops or destructive
+  recovery; when two candidate objects are identity-ambiguous.
 support: 9
 provenance:
 - action: add
@@ -46,9 +47,18 @@ provenance:
   - run:20260808-11:49:24_libero_object_swap_t4_s0#seq=50
   - run:20260808-11:49:24_libero_object_swap_t4_s0#seq=52
   counter_evidence: []
+- action: revise
+  proposal: logs/gate_gen0full_libero_10_swap/proposals/proposal_10.md
+  batch: gen0full_night
+  date: '2026-08-14'
+  evidence:
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=59
+  - run:20260813-18:43:04_libero_10_swap_t7_s0#seq=85
+  - run:20260813-15:52:15_libero_10_swap_t0_s0#seq=90
+  - run:20260813-15:52:15_libero_10_swap_t0_s0#seq=91
+  - run:20260813-16:37:01_libero_10_swap_t4_s0#seq=78
+  - run:20260813-16:37:01_libero_10_swap_t4_s0#seq=79
+  counter_evidence: []
 ---
 
-Release is complete when the gripper opens; task success is a separate condition. If the termination flag stays false, retreat to an unoccluded view, re-segment the object and the basket, and compare the object's extent against the basket opening. If the object is on the rim, outside the opening, or the container has moved, start a repick rather than calling finish.
----
-
-
+Placement verification establishes physics, not task success. Once occupancy or a clear view confirms the object is physically inside the destination, believe that verification. If libero_terminated still does not fire, read that as negative task-level feedback: the placed instance may be the wrong one, or the task needs an additional state change. Try the remaining candidate or re-read the task; do not burn the episode re-verifying the same placement or knocking objects off the destination.

@@ -1,0 +1,89 @@
+# Night adjudication — gen-0 full benchmark (owner-delegated)
+
+Batch: gen0full_night. Rules: 5f doctrine, no universal bans, one winner per convergent target, mechanical rejects honored.
+
+- ADMIT libero_10_swap/proposal_01: revised memory/common/do_not_treat_a_name_based_segment_result_as_identity_ground_.md
+- ADMIT libero_10_swap/proposal_02: revised memory/common/enumerate_in_low_z_bands_and_identify_unnameable_targets_by_.md
+- DUP libero_10_swap/proposal_03 -> winner libero_object_task/proposal_01 (evidence preserved in proposal file)
+- ADMIT libero_10_swap/proposal_04: revised memory/common/for_flat_low_profile_targets_check_gripper_closure_after_pi0.md
+- ADMIT libero_10_swap/proposal_05: revised memory/common/verify_every_pi0_pick_geometrically_before_transport.md
+- DUP libero_10_swap/proposal_06 -> winner libero_10_task/proposal_03 (evidence preserved in proposal file)
+- ADMIT libero_10_swap/proposal_07: revised memory/common/do_not_spend_the_whole_episode_on_perception_only_investigat.md
+- ADMIT libero_10_swap/proposal_08: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/localize_unnameable_environment_fixtures_by_occupancy_back_p.md (support 4)
+- ADMIT libero_10_swap/proposal_09: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/break_move_to_move_pose_stalls_by_changing_wrist_orientation.md (support 4)
+- ADMIT libero_10_swap/proposal_10: revised memory/libero/after_release_verify_placement_geometry_a_release_call_is_no.md
+- ADMIT libero_10_swap/proposal_11: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/do_not_re_issue_the_same_pi0_pick_after_the_object_s_support.md (support 1)
+- DUP libero_10_swap/proposal_12 -> winner libero_goal_task/proposal_01 (evidence preserved in proposal file)
+- DUP libero_10_task/proposal_01 -> winner libero_object_task/proposal_01 (evidence preserved in proposal file)
+- ADMIT libero_10_task/proposal_02: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/back_project_every_vlm_pixel_box_before_treating_it_as_a_det.md (support 4)
+- ADMIT libero_10_task/proposal_03: revised memory/common/a_single_held_object_reading_is_not_decisive_require_converg.md
+- DUP libero_10_task/proposal_04 -> winner libero_10_swap/proposal_05 (evidence preserved in proposal file)
+- DUP libero_10_task/proposal_05 -> winner libero_10_swap/proposal_10 (evidence preserved in proposal file)
+- DUP libero_10_task/proposal_06 -> winner libero_goal_swap/proposal_08 (evidence preserved in proposal file)
+- DUP libero_10_task/proposal_07 -> winner libero_10_swap/proposal_07 (evidence preserved in proposal file)
+- ADMIT libero_10_task/proposal_08: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/libero/judge_drawer_state_by_occupancy_geometry_not_by_full_frame_v.md (support 1)
+- ADMIT libero_10_task/proposal_09: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/validate_wrist_camera_spatial_language_by_back_projecting_im.md (support 2)
+- DUP libero_goal_swap/proposal_01 -> winner libero_object_task/proposal_01 (evidence preserved in proposal file)
+- DUP libero_goal_swap/proposal_02 -> winner libero_10_swap/proposal_05 (evidence preserved in proposal file)
+- DUP libero_goal_swap/proposal_03 -> winner libero_goal_task/proposal_01 (evidence preserved in proposal file)
+- HOLD libero_goal_swap/proposal_04: night table said admit but mechanical checks said reject — needs the owner
+- ADMIT libero_goal_swap/proposal_05: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/a_phantom_surface_in_occupancy_or_back_projection_may_be_the.md (support 3)
+- DUP libero_goal_swap/proposal_06 -> winner libero_10_swap/proposal_10 (evidence preserved in proposal file)
+- DUP libero_goal_swap/proposal_07 -> winner libero_object_task/proposal_04 (evidence preserved in proposal file)
+- HOLD libero_goal_swap/proposal_08: night table said admit but mechanical checks said reject — needs the owner
+- ADMIT libero_goal_swap/proposal_09: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/when_pi0_contact_skill_cannot_open_a_drawer_use_clamped_slow.md (support 1)
+- ADMIT libero_goal_swap/proposal_10: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/when_repeated_pushes_to_a_landmark_do_not_terminate_re_ident.md (support 1)
+- ADMIT libero_goal_swap/proposal_11: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/release_into_hollow_interiors_for_slatted_fixtures_rather_th.md (support 1)
+- DUP libero_goal_swap/proposal_12 -> winner libero_10_swap/proposal_07 (evidence preserved in proposal file)
+- ADMIT libero_goal_task/proposal_01: revised memory/common/retry_failed_pi0_picks_from_a_clear_home_viewpoint_before_gi.md
+- DUP libero_goal_task/proposal_02 -> winner libero_10_task/proposal_03 (evidence preserved in proposal file)
+- DUP libero_goal_task/proposal_03 -> winner libero_object_task/proposal_01 (evidence preserved in proposal file)
+- ADMIT libero_goal_task/proposal_04: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/vlm_scene_and_state_verdicts_are_not_ground_truth_decide_fro.md (support 4)
+- DUP libero_goal_task/proposal_05 -> winner libero_goal_swap/proposal_08 (evidence preserved in proposal file)
+- ADMIT libero_goal_task/proposal_06: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/pre_position_the_eef_aligned_with_the_contact_target_before_.md (support 3)
+- REJECT libero_goal_task/proposal_07: dilutes the flag-is-scoring-authority doctrine (5f); the useful negative-direction half is already carried by the repaired termination entry and the release-verify winner
+- DUP libero_goal_task/proposal_08 -> winner libero_10_swap/proposal_10 (evidence preserved in proposal file)
+- DUP libero_goal_task/proposal_09 -> winner libero_10_swap/proposal_07 (evidence preserved in proposal file)
+- DUP libero_goal_task/proposal_10 -> winner libero_spatial_task/proposal_02 (evidence preserved in proposal file)
+- DUP libero_object_swap/proposal_01 -> winner libero_10_swap/proposal_01 (evidence preserved in proposal file)
+- DUP libero_object_swap/proposal_02 -> winner libero_object_task/proposal_02 (evidence preserved in proposal file)
+- ADMIT libero_object_swap/proposal_03: revised memory/common/pre_position_pi0_from_the_agentview_anchor_when_wrist_and_ag.md
+- DUP libero_object_swap/proposal_04 -> winner libero_10_task/proposal_03 (evidence preserved in proposal file)
+- DUP libero_object_swap/proposal_05 -> winner libero_object_task/proposal_04 (evidence preserved in proposal file)
+- ADMIT libero_object_swap/proposal_06: revised memory/common/do_not_conclude_emptiness_from_a_single_tight_occupancy_box.md
+- HOLD libero_object_swap/proposal_07: container-grasp fallback overlaps the vertical-stall winner (object_task p05); merge candidate for the owner
+- ADMIT libero_object_swap/proposal_08: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/use_sam_point_prompt_segmentation_with_vlm_crop_naming_when_.md (support 1)
+- ADMIT libero_object_swap/proposal_09: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/when_wrist_point_segmentation_fails_localise_with_a_z_banded.md (support 1)
+- ADMIT libero_object_swap/proposal_10: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/libero/aim_basket_descents_at_the_fresh_rim_opening_if_a_descent_st.md (support 2)
+- ADMIT libero_object_swap/proposal_11: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/libero/do_not_try_to_flatten_an_upright_bottle_inside_the_basket_by.md (support 1)
+- ADMIT libero_object_swap/proposal_12: revised memory/libero/re_localize_the_basket_after_every_carry_identity_warning_me.md
+- HOLD libero_object_swap/proposal_13: touches the 5f-repaired termination entry; manual merged revision applied separately as gen0full_night_manual
+- ADMIT libero_object_task/proposal_01: revised memory/common/when_target_name_segmentation_fails_retry_with_color_shape_p.md
+- ADMIT libero_object_task/proposal_02: revised memory/common/resolve_identity_with_color_shape_probes_and_wrist_close_ups.md
+- DUP libero_object_task/proposal_03 -> winner libero_10_task/proposal_03 (evidence preserved in proposal file)
+- ADMIT libero_object_task/proposal_04: revised memory/libero/discard_held_object_point_clouds_contaminated_by_the_contain.md
+- ADMIT libero_object_task/proposal_05: revised memory/common/after_pi0_exhaustion_use_a_scripted_grasp_with_geometric_ver.md
+- DUP libero_object_task/proposal_06 -> winner libero_10_swap/proposal_10 (evidence preserved in proposal file)
+- DUP libero_object_task/proposal_07 -> winner libero_10_swap/proposal_07 (evidence preserved in proposal file)
+- ADMIT libero_object_task/proposal_08: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/when_sam3_point_probes_back_project_impossibly_swap_the_row_.md (support 1)
+- ADMIT libero_object_task/proposal_09: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/move_the_arm_out_of_the_agentview_center_before_declaring_a_.md (support 1)
+- ADMIT libero_spatial_swap/proposal_01: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/disambiguate_identical_instances_by_measured_geometry_agains.md (support 9)
+- DUP libero_spatial_swap/proposal_02 -> winner libero_10_task/proposal_02 (evidence preserved in proposal file)
+- ADMIT libero_spatial_swap/proposal_03: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/common/re_measure_the_held_object_offset_before_computing_the_relea.md (support 8)
+- ADMIT libero_spatial_swap/proposal_04: added /mnt/user_dir/pengyanxin/rpent_refactor/memory/libero/treat_libero_terminated_true_on_release_as_authoritative_suc.md (support 8)
+- DUP libero_spatial_swap/proposal_05 -> winner libero_10_swap/proposal_01 (evidence preserved in proposal file)
+- DUP libero_spatial_swap/proposal_06 -> winner libero_10_swap/proposal_05 (evidence preserved in proposal file)
+- DUP libero_spatial_swap/proposal_07 -> winner libero_object_task/proposal_01 (evidence preserved in proposal file)
+- DUP libero_spatial_swap/proposal_08 -> winner libero_10_swap/proposal_10 (evidence preserved in proposal file)
+- DUP libero_spatial_swap/proposal_09 -> winner libero_goal_task/proposal_01 (evidence preserved in proposal file)
+- DUP libero_spatial_task/proposal_01 -> winner libero_10_swap/proposal_01 (evidence preserved in proposal file)
+- ADMIT libero_spatial_task/proposal_02: revised memory/common/resolve_semantic_collisions_with_color_and_geometric_probes_.md
+- DUP libero_spatial_task/proposal_03 -> winner libero_goal_task/proposal_04 (evidence preserved in proposal file)
+- DUP libero_spatial_task/proposal_04 -> winner libero_10_task/proposal_03 (evidence preserved in proposal file)
+- DUP libero_spatial_task/proposal_05 -> winner libero_object_task/proposal_04 (evidence preserved in proposal file)
+- DUP libero_spatial_task/proposal_06 -> winner libero_goal_swap/proposal_08 (evidence preserved in proposal file)
+- DUP libero_spatial_task/proposal_07 -> winner libero_10_swap/proposal_10 (evidence preserved in proposal file)
+- DUP libero_spatial_task/proposal_08 -> winner libero_object_swap/proposal_06 (evidence preserved in proposal file)
+
+Totals: admitted 37, duplicates 40, rejected 1, held for owner 4.
+Library-size note: this batch roughly doubles the common tier; the one-line index (issue 5e) is now urgent, not queued.
