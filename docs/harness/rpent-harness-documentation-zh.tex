@@ -597,7 +597,7 @@ turn 17\quad out=35{,}814\qquad turn 18\quad out=44{,}006\qquad turn 19\quad out
 \toprule
 \textbf{臂} & \textbf{成绩} & \textbf{n} & \textbf{构成} \\
 \midrule
-上游，先验开启 & \textbf{8/10} & 1 & 上游提示词与规划器；\textbf{10/10 次运行共 112 次答案文件读取} \\
+上游，先验开启 & \textbf{8.5}（8、9） & 2 & 上游提示词与规划器；\textbf{10/10 次运行共 112 次答案文件读取}——载荷里的逐格答案\textbf{只覆盖 seed 0}（156 个文件，seeds 1--9 为零）\\
 净室，无库 & \textbf{6.0}（6、6、6） & 3 & 沙箱开启、空库、0 次先验读取 \\
 净室 + 库 & \textbf{6.0}（7、5、6） & 3 & 加上已晋升记忆与任务小本子 \\
 \rowcolor{soft} 完整设计 & \textbf{8.0\,$\pm$\,1.0}（9、7、8） & 3 & 再加视觉仪器 \\

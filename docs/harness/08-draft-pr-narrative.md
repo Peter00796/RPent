@@ -209,11 +209,25 @@ be read as a measurement *of a harness*:
 
 | arm | score | n | what it measures |
 |---|---|---|---|
-| upstream-vanilla, priors on | **8/10** | 1 | the value of the stored answers |
+| upstream-vanilla, priors on | **8.5** (8, 9) | 2 | the value of the stored answers — **seed 0 only**, see below |
 | our clean-room floor (`none`) | **6.0** (6, 6, 6) | 3 | model + tools, no answers |
 | our blind `practice` arm | **6.0** (7, 5, 6) | 3 | same, plus grown knowledge — no suite-wide lift (§6.2) |
 | **our full harness** (`practice` + vision) | **8.0 ± 1.0** (9, 7, 8) | 3 | the complete design, **0 prior reads** |
 | grown knowledge, per cell | t6 **0/11 → 5/6** | — | what a gated recipe is worth where it applies |
+
+**One scope limit that has to travel with every upstream number here.** The
+synced payload carries **156 per-cell answer files and every one is seed 0** —
+zero for seeds 1–9, across all four suites, counted directly in the clone. Our
+measurements are the seed-0 column, so they are answer-available *by
+construction* and the 112-reads evidence stands; but the finding cannot be
+generalised across seeds. On other seeds what remains is a **cross-cell priors
+package** — the repository guides including the 187-constant calibration table,
+plus a freely-written memory library — which is a real advantage over a clean
+room, but a weaker one than a stored solution for the exact cell. A
+ten-by-ten matrix on that harness would have at most **10% of its cells**
+answer-fed, so the fair description of such a result is *"strong model plus a
+cross-cell priors package, mostly without per-cell answers"*, and 90% of its
+cells would be directly comparable against a clean-room matrix of ours.
 
 **So the honest arc of this PR**: taking the answer files away costs two cells
 (8 → 6). Winning them back has to be done by a mechanism instead of a lookup —

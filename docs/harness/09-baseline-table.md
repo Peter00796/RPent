@@ -648,12 +648,55 @@ reason the number cannot be read as a harness measurement:
 Removing the answer files costs **two cells**. Winning cells back afterwards has
 to be done by a mechanism.
 
+#### ⚠ Scope: the answer files exist for seed 0 ONLY
+
+Counted directly in the upstream clone's synced payload
+(`rpent_upstream/resources/libero/`):
+
+| suite payload | files | `_s0` | seeds 1–9 |
+|---|---|---|---|
+| `results_object_pert` | 40 | 40 | **0** |
+| `results_goal_pert` | 40 | 40 | **0** |
+| `results_spatial_pert` | 39 | 39 | **0** |
+| `results_10_pert` | 37 | 37 | **0** |
+
+**156 per-cell answer files, every one of them seed 0.** This bounds every claim
+in this section and must travel with them.
+
+*What it does not change.* Our P1 measurements are the seed-0 column, so they
+are answer-available **by construction**, and the 112-reads evidence stands
+exactly as recorded.
+
+*What it does change.* The finding must not be generalised across seeds. On
+seeds 1–9 there is no per-cell answer to read, and what remains is a
+**cross-cell priors package**: the repository's own guides — including the
+187-constant calibration table — plus the freely-written HF memory library
+(207 KB). That is still a substantial prior advantage over a clean room, but it
+is a different and weaker kind than a stored solution for the exact cell.
+
+*Why this matters beyond our own arms.* A ten-seeds-by-ten-tasks matrix run on
+the upstream harness has **at most its seed-0 column answer-fed** — 10% of
+cells. The honest characterisation of such a matrix is therefore
+**"strong model plus a cross-cell priors package, mostly without per-cell
+answers"**, which is both sharper and fairer than the seed-0 story, and it makes
+90% of the cells of any clean-room matrix of ours **directly comparable**.
+
+*Caveat pending.* How such a matrix counted a solve is not yet known to us. If
+it counted from agent audit files rather than the environment flag, its numbers
+are **under**-reported — that error cost three of eight solves in our own P1
+sweep. A specification has been requested; this line stays until it arrives.
+
 #### The head-to-head the owner asked for
 
 | arm | score | n | what it is made of |
 |---|---|---|---|
-| upstream-vanilla, priors on | **8/10** | 1 | its own prompt, its planner, **112 answer-file reads across 10/10 runs** |
+| upstream-vanilla, priors on | **8.5** (8, 9) | 2 | its own prompt, its planner, **112 answer-file reads across 10/10 runs**; seed-0 answers by construction (see above). Repeat 3 in flight, excluded |
 | ours, `practice` + vision, clean-room | **8.0 ± 1.0** (9, 7, 8) | 3 | cleansed prompt, always-on sandbox, **0 prior reads**, grown+gated library, VLM instrument |
+
+With the repaired library at 8.67 ± 0.58 (n=3) and upstream at 8.5 (n=2), the
+two are **statistically indistinguishable** — the spreads overlap entirely and
+the arms differ on every axis at once. Nothing here supports "we beat upstream",
+and the sentence to use remains the one below.
 
 **Level, and reached from opposite directions.** Upstream's 8 is the stored
 solution replayed — on t5 it is literally two `pi0_pick` calls and no
