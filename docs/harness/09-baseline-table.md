@@ -736,6 +736,69 @@ Per run: 145 s – 748 s, 0.55 M – 7.7 M input, 15 k – 88 k output.
 
 ---
 
+## 4.4 Full-benchmark generation 0 — protocol and pre-registration
+
+**Written 2026-08-13, launched 09:29 CST, before any number from this run
+exists.** Recorded now precisely so the reading cannot be chosen afterwards.
+Results fold in a later pass.
+
+### The run
+
+All eight LIBERO-Pro suites (`object`, `spatial`, `goal`, `10` × `task`,
+`swap`), tasks 0–9, seed 0, **one pass** — 80 cells. Arm: **clean-room**
+(`--sandbox none`, no library, no playbooks) **plus the vision instrument**,
+`--max-turns 100`. Two GPUs, suites split across them. Configuration verified
+from the live command line rather than the plan:
+
+```
+--sandbox none --max-turns 100 --vision-tool openai:glm-4.6v --no-images
+--planner deepagents --model deepseek-v4-flash --cuda-device {0,1}
+```
+
+### ⚠ This is a NEW protocol. Do not mix it with the tables above
+
+Every arm in §4 ran at `--max-turns 50`. This runs at **100**, which is
+**upstream's own default** — we had been running at half the published budget.
+The change is deliberate: comparable published work runs few-shot with a
+generous wall-clock budget, a bootstrap phase with a reset primitive and no
+stated attempt cap, and reports no token budget. Staying inside the rules while
+imposing a tighter budget on ourselves was leaving points on the table for no
+methodological gain.
+
+**Consequence, and it is a counting rule, not a preference: the full-benchmark
+results form a separate table with the protocol noted, and are never pooled
+with the 50-turn `object_swap` columns.** A budget change is an arm change.
+
+### Pre-registration (light form)
+
+- **`libero_object_swap`: 8 ± 1 of 10.** Extrapolated from generation 7 at 50
+  turns; doubling the budget can only help. This is the one suite with a
+  history.
+- **The other seven suites: no prediction. Declared unknown.** This is first
+  contact — the harness has never been run outside `object_swap`.
+- **Tool and prompt generality is itself under test.** Every mechanism in this
+  document was built and tuned against one suite. Whether the admission rule,
+  the perception algorithm and the tool contracts transfer is an open empirical
+  question, and a poor result on a new suite is a finding about generality, not
+  a bug report.
+
+### Counting-convention addendum
+
+**A suite that fails to load is `N/A`, not a failure.** Infrastructure that
+cannot start a cell has produced no measurement of the planner, and scoring it
+zero would understate the arm in exactly the way the interrupted-run rule
+(§4.1c) exists to prevent. N/A cells are reported with their count and excluded
+from denominators.
+
+### P1 repeat 3: permanently excluded
+
+The box was rebooted to install the second GPU and repeat 3 died mid-sweep at
+t4, with its final run at zero env steps. Under the interrupted-run rule this
+was already excluded; the exclusion is now **permanent**. **Upstream stays at
+n=2 (8, 9), mean 8.5**, and will not be completed.
+
+---
+
 ## 5. Single-cell arms — the t6 and t5 case studies
 
 ### 5.1 t6 — *"Pick the butter and place it in the basket"*
