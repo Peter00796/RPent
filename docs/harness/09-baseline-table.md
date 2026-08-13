@@ -172,6 +172,9 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 | V1 | `20260812-09:26:21` → `11:09:30` | `practice` **+ `--vision-tool`** | same | 10 | **9** | `t0+ t1+ t2+ t3+ t4+ t5+ t6+ t7+ t8+ t9-` |
 | V2 | `20260812-11:19:55` → `12:56:23` | `practice` **+ `--vision-tool`** | same | 10 | **7** | `t0+ t1+ t2+ t3+ t4+ t5- t6- t7+ t8+ t9-` |
 | V3 | `20260812-13:06:12` → `15:04:39` | `practice` **+ `--vision-tool`** | same | 10 | **8** | `t0+ t1- t2+ t3+ t4+ t5- t6+ t7+ t8+ t9+` |
+| G1 | `20260813-01:26:08` → `03:43:07` | `practice` + vision, **library repaired (`b6d14092`, `0c6dceb7`)** | gen 7 | 10 | **9** | `t0+ t1- t2+ t3+ t4+ t5+ t6+ t7+ t8+ t9+` |
+| G2 | `20260813-03:49:21` → `05:33:20` | same | gen 7 | 10 | **9** | `t0+ t1- t2+ t3+ t4+ t5+ t6+ t7+ t8+ t9+` |
+| G3 | `20260813-05:40:17` → `07:26:17` | same | gen 7 | 10 | **8** | `t0- t1- t2+ t3+ t4+ t5+ t6+ t7+ t8+ t9+` |
 
 > **S12's apparent duplicate t4 is resolved by exclusion, not preference** —
 > the first copy was externally killed and is not a measurement. Evidence chain
@@ -187,6 +190,7 @@ Every complete sweep, chronological. `deepseek-v4-flash`, `--planner deepagents`
 | `memory` @ gen 4 | S6, S8, S10 | 5, 8, 5 | **6.0** | ±1.73 |
 | `practice` (gen 5 + t5/t6 playbooks) | S11, S12, **S14** | 7, 5, 6 | **6.0** | ±1.0 |
 | **`practice` + `--vision-tool`** | **V1, V2, V3** | **9, 7, 8** | **8.0** | ±1.0 |
+| **`practice` + vision, repaired library (gen 7)** | **G1, G2, G3** | **9, 9, 8** | **8.67** | ±0.58 |
 | *(retired)* `none` @ gen-0 head | S2 | 4 | — | bug-affected, see below |
 
 ### Three of the four arms sit at 6.0/10; the vision arm is the first to move
@@ -218,7 +222,7 @@ mean shows it clearly:
 | cell | clean-room history | `none` arm (S7,S9,S13) | `practice` arm, all exams |
 |---|---|---|---|
 | **t6** | **0/11** | **0/3** | **5/6** — 3/3 seed-0 exams, S11 ✓@2, S12 ✗, S14 ✓@13 |
-| **t5** | 3/16 all arms | 0/3 | **0/3 blind** (S11, S12, S14) · **1/2 with `--vision-tool`** |
+| **t5** | 3/16 all arms | 0/3 | **0/3 blind** · 1/3 vision (gen 6) · **3/3 vision, repaired library (gen 7)**, plus 3/3 in the post-fix re-exams — **6/6 post-fix** |
 
 t6 is a cell that eleven consecutive clean-room runs could not touch and that
 the no-library arm still cannot touch, now solved five times in six attempts by
@@ -385,6 +389,34 @@ genuine flaky-checker evidence is thinner than
 [§5.2](#52-t5--pick-the-tomato-sauce-and-place-it-in-the-basket-the-perception-channel-wall-two-visually-near-identical-sauce-bottles)
 implies, and rests on the resident session's attempt-3 repeat alone.
 
+### 4.1g Two labelling notes from the gen-7 night
+
+**The three t9 seed-0 exams of `20260813-00:33`, `-00:45`, `-01:05` are
+BARE-ARM data, not post-resident measurements.** The mining step between the t9
+resident session and those exams silently no-op'd — the box's `/tmp` had been
+cleared and the mining script was gone, so the invocation failed with nothing
+but a *"can't open"* line. The exams therefore ran with the instrument armed and
+**zero t9 playbook entries**, verified per run from consumption records
+(`t9 playbook reads: 0`; `inspect_image` calls 5, 16, 7). They score **1/3**,
+consistent with the gen-6 sweep's 1/3, and they are recorded here as
+confirmation of the bare arm rather than as evidence about the resident
+session's output.
+
+The armed measurement exists anyway and cost no extra GPU: mining was re-run at
+~01:4x and committed before pass 1 of generation 7 reached t9 — t9 runs last in
+each pass — so **generation 7's three t9 runs are the post-resident exam**,
+n=3, and they are 3/3.
+
+**Tooling lesson, registered because it is the same shape as two others.** A
+dependency that can silently vanish will. `/tmp` was wiped by routine cleanup;
+the mining step did not fail loudly, it failed *quietly and continued*. Scripts
+are now staged durably under `tools_staging/`. This joins the editable-install
+trap (an import that silently resolves to the wrong tree) and the hardcoded
+cross-references in the LaTeX sources (correct when written, wrong later) as
+instances of one class: **failures that produce a plausible result instead of an
+error.** Every one of them was caught by checking an artifact rather than
+trusting a exit code.
+
 ### 4.1b A predicted contamination, now observed
 
 Both blind t5 sweep runs (`20260812-00:53:35`, `20260812-03:15:06`) read **all
@@ -479,6 +511,70 @@ unknown message shape recorded is worth more than an exception.
 Two of the other three exclusions were already outside every table in this
 file, but only by where the globs happened to start. They are registered here
 so that is a decision rather than an accident.
+
+### 4.1f Generation 7: the repair generation, and the cell it cost
+
+After [issue 5f](04-open-issues.md) was closed (`b6d14092`) and the t9 resident
+session's findings were mined in (`0c6dceb7`, five clean adds), the vision arm
+was re-run three passes: **9, 9, 8 → mean 8.67 ± 0.58**, up from 8.0 ± 1.0.
+
+The two cells the repair targeted both moved, and the movement is the sharpest
+knowledge result in the project:
+
+| cell | blind | vision (gen 6) | **vision, repaired (gen 7)** |
+|---|---|---|---|
+| **t5** | 0/3 | 1/3 | **3/3** |
+| **t9** | 3/3 | 1/3 | **3/3** |
+
+t5's three seed-0 re-exams immediately after the fix were themselves 3/3
+(`20260812-23:51:56` @10, `20260813-00:00:09` @10, `20260813-00:07:19` @22), so
+t5 is now **6/6 post-fix** across two independent batches. The identity entry
+and the contradiction rule worked on first contact.
+
+#### ⚠ t1 regressed to 0/3, and the obvious suspect is innocent
+
+t1 went 3/3 blind → 2/3 in gen 6 → **0/3 in gen 7**. The immediate worry was
+that the environment-tier entry revision had broken it — fixing one wall by
+knocking a hole in another. **It did not.** Three lines of evidence:
+
+1. **Two of the three failures never read the revised entry** (consumption
+   records: 0, 0, 1 reads).
+2. **All three died on `reached max_turns` with no `finish`.** The old licence's
+   failure mode was *stopping early while believing success*; these ran out of
+   budget still working. Opposite behaviour.
+3. **A licence-assisted solve is structurally impossible to lose.** Scoring uses
+   the environment flag, so a licence-assisted stop — agent stops, flag stays
+   silent — *already scored as a failure*. The licence could never manufacture a
+   counted solve, therefore withdrawing it cannot remove one. Gen 6's t1 solves
+   had the flag fire; they were genuine.
+
+**What actually killed them**, as a gradient rather than an assertion:
+
+| run | motion calls | perception calls | ratio | outcome |
+|---|---|---|---|---|
+| blind `20260811-18:31:38` | 9 | 32 | **0.28** | solved |
+| gen 6 `20260812-09:45:11` | 9 | 41 | **0.22** | solved |
+| gen 7 `20260813-05:55:29` | 11 | 72 | 0.15 | failed |
+| gen 7 `20260813-03:58:03` | 12 | 93 | 0.13 | failed |
+| gen 7 `20260813-01:49:21` | 3 | 153 | **0.02** | failed |
+
+**Motion stays flat at 9–12; perception climbs 32 → 153.** They are not acting
+less, they are looking vastly more, and the turn budget goes to looking.
+`01:49:21` spent 167 calls — 22 `segment` plus 22 `inspect_image` — and issued
+three motions in total.
+
+This is **[issue 2](04-open-issues.md) returning with a new channel**: the
+gen-0 signature of a run spending its whole budget on perception, now with the
+instrument available to spiral in as well. The arc supports that reading — t1's
+decline **began when the instrument was added, one generation before the entry
+was revised**.
+
+**Limits.** n=3 per arm, and t1 was variance-prone historically. Three passes
+cannot separate "the instrument costs t1 specifically" from "the instrument
+costs marginal cells generally" — t0 also slipped to 2/3 this generation. The
+remedy and the experiment that would separate them are filed in
+[04](04-open-issues.md); neither is built, because the method is frozen through
+the Friday delivery.
 
 ### 4.2 Per-cell, pooled across full sweeps
 

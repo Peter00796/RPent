@@ -747,6 +747,7 @@ Upstream, priors on & \textbf{8/10} & 1 & upstream prompt and planner; \textbf{1
 Clean-room, no library & \textbf{6.0} (6,\,6,\,6) & 3 & sandbox on, empty library, 0 prior reads \\
 Clean-room + library & \textbf{6.0} (7,\,5,\,6) & 3 & + promoted memory and task playbooks \\
 \rowcolor{soft} Full design & \textbf{8.0\,$\pm$\,1.0} (9,\,7,\,8) & 3 & + the vision instrument \\
+\rowcolor{soft} Full design, repaired library & \textbf{8.67\,$\pm$\,0.58} (9,\,9,\,8) & 3 & + issue 5f closed, t9 resident mined in \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -842,6 +843,68 @@ The regression on t9 is part of it. The pre-registered explanation --- turns
 burned on instrument calls --- is refuted by the records: one of the two
 failures called the instrument \emph{zero} times, and both used exactly 46 tool
 calls. Both picked the correct object with real grasps and stopped early.
+
+\section{Generation 7: the repair, and the cell it cost}
+
+Closing the stopping-licence defect and mining the t9 resident session produced
+a repaired library. Three further passes: \textbf{9, 9, 8 --- mean
+8.67\,$\pm$\,0.58}. Both targeted cells moved, and t5 is now \textbf{6/6}
+post-fix across two independent batches.
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}l c c c@{}}
+\toprule
+\textbf{Cell} & \textbf{blind} & \textbf{instrument} & \textbf{instrument + repaired library} \\
+\midrule
+t5 & 0/3 & 1/3 & \textbf{3/3} \\
+t9 & 3/3 & 1/3 & \textbf{3/3} \\
+\textbf{t1} & 3/3 & 2/3 & \textbf{0/3} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{And t1 fell to 0/3.} The immediate suspicion was that the entry revision
+had broken it --- fixing one wall by knocking a hole in another. It had not, and
+the argument that settles it is structural rather than statistical:
+
+\begin{caution}[title={Why a licence-assisted solve cannot be lost}]
+Scoring uses the environment's flag. A licence-assisted stop is by definition
+one where the agent stopped while the flag stayed \emph{silent} --- which
+\textbf{already scored as a failure}. The old clause could never manufacture a
+counted solve, so withdrawing it cannot remove one. The earlier t1 solves had
+the flag fire; they were genuine.
+\end{caution}
+
+\noindent
+Two of the three failures never read the revised entry, and all three died on
+\texttt{reached max\_turns} with no \texttt{finish} --- the opposite of stopping
+early. The measured cause is a gradient:
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}l c c c l@{}}
+\toprule
+\textbf{run} & \textbf{motion calls} & \textbf{perception calls} & \textbf{ratio} & \\
+\midrule
+blind, solved      & 9  & 32  & \textbf{0.28} & solved \\
+instrument, solved & 9  & 41  & \textbf{0.22} & solved \\
+generation 7       & 11 & 72  & 0.15 & failed \\
+generation 7       & 12 & 93  & 0.13 & failed \\
+generation 7       & 3  & 153 & \textbf{0.02} & failed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Motion stays flat; perception climbs fivefold.} They are not acting
+less, they are looking more, and the budget goes to looking --- one run issued
+three motions across 167 calls, 44 of them perception. This is the gen-0
+perception spiral returning \emph{with a new channel to spiral in}, and the arc
+agrees: t1's decline began when the instrument was added, one generation before
+the entry was revised. Remedy filed and not built; the method is frozen through
+delivery. $n=3$, and t1 was variance-prone historically.
 
 % ==========================================================================
 \chapter{Two case studies}

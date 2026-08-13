@@ -55,7 +55,8 @@ only one that survives a mentor:
    goes 0/11 clean-room and 0/3 no-library → **5/6**. The one thing that does
    move the suite mean is the **vision instrument** (+2.0, single variable,
    §6.3) — and even that gain turns out to live entirely in two cells nobody had
-   diagnosed. The generational protocol is offered as **a measurement instrument
+   diagnosed. A later repair generation reaches **8.67 ± 0.58**, and costs a cell
+   while doing it. The generational protocol is offered as **a measurement instrument
    that worked** — it is what caught every dead claim here — not as a result.
 3. **Not a complete system, and one of its own mechanisms misfired.** The
    code-as-policy arm was built, produced no measured result, and is excluded
@@ -970,6 +971,44 @@ attempt-3 repeat alone.
 `--vision-tool` and called `inspect_image` zero times — functionally blind runs
 in the vision column, surfaced by the counter's instrument-usage check. And two
 solves again wrote no audit, which an audit-based count would have lost.
+
+---
+
+#### Generation 7: the repair, and the cell it cost
+
+Closing [issue 5f](04-open-issues.md) and mining the t9 resident session gave a
+repaired library, and the vision arm was re-run three passes: **9, 9, 8 → mean
+8.67 ± 0.58**, up from 8.0 ± 1.0. Both targeted cells moved:
+
+| cell | blind | vision (gen 6) | vision, repaired (gen 7) |
+|---|---|---|---|
+| **t5** | 0/3 | 1/3 | **3/3** (and 3/3 in the immediate post-fix re-exams: **6/6**) |
+| **t9** | 3/3 | 1/3 | **3/3** |
+
+**And t1 regressed to 0/3.** The immediate suspicion was that the entry revision
+had broken it — fixing one wall by knocking a hole in another. It had not, and
+the argument that settles it is structural rather than statistical:
+
+> **A licence-assisted solve is impossible to lose, because it was never a
+> counted solve.** Scoring uses the environment flag. A licence-assisted stop is
+> by definition one where the agent stopped while the flag stayed *silent* —
+> which already scored as a failure. The old clause could never manufacture a
+> counted solve, so withdrawing it cannot remove one.
+
+Two of the three failures never read the revised entry at all, and all three
+died on `reached max_turns` with no `finish` — the opposite of stopping early.
+What killed them is visible as a gradient: **motion calls stay flat at 9–12
+while perception calls climb 32 → 41 → 72 → 93 → 153**, monotonically with
+failure. One run issued three motions across 167 calls, 44 of them perception.
+
+That is [issue 2](04-open-issues.md) returning with a new channel — the gen-0
+signature of a run spending its whole budget on perception, now with the
+instrument available to spiral in too. The arc agrees: t1's decline began when
+the instrument was added, a generation *before* the entry was revised. The
+remedy (a perception budget with the instrument counted inside it, shadow-mode
+first) and the experiment that would separate "costs t1" from "costs marginal
+cells generally" are both filed and neither is built; the method is frozen
+through delivery. **n=3, and t1 was variance-prone historically.**
 
 ---
 

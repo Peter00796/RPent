@@ -289,6 +289,43 @@ Related revision: of the three t5 non-firings on record, **two are now explained
 by the wrong object being placed**, so the flaky-checker claim itself rests on
 less evidence than believed — the resident session's attempt-3 repeat alone.
 
+## 5g. A perception budget, with the instrument counted inside it
+
+Filed 2026-08-13 as the remedy for the **t1 regression** in generation 7
+(0/3, diagnosed in [09 §4.1f](09-baseline-table.md)). **Not built** — the
+method is frozen through the Friday delivery.
+
+The diagnosis is that [issue 2](#2-two-sweep-runs-never-issued-a-motion-command)
+has returned with a new channel. Motion calls stay flat at 9–12 across solved
+and failed t1 runs while perception calls climb 32 → 153; the failures are not
+acting less, they are looking more, and the turn budget is consumed by looking.
+One run issued three motions across 167 calls, 44 of which were `segment` and
+`inspect_image`.
+
+The instrument is implicated but not indicted: t1's decline began when the
+instrument was added (3/3 blind → 2/3 gen 6), one generation *before* the entry
+revision that was initially suspected.
+
+**Remedy shape**, in the order it should be tried:
+
+1. **A perception budget** — after N perception calls without an advancing
+   call, instruct the agent to commit to its best current estimate and say so
+   in the audit. `ToolCallLimitMiddleware` is prebuilt.
+2. **Count `inspect_image` inside that budget.** It is now part of the spiral,
+   not an exemption from it — an instrument that can be queried indefinitely is
+   another way to postpone acting.
+3. **Shadow mode first**, per the standing rule for gates: log "this would have
+   been capped", collect the trigger rate and the false-positive rate before
+   anything is enforced, and keep the matched-pair data that makes a later A/B
+   interpretable.
+
+**The experiment that would settle attribution, parked.** Three passes cannot
+separate "the instrument costs t1 specifically" from "the instrument costs
+marginal cells generally" — t0 also slipped to 2/3 in generation 7. The clean
+test is a t1-only vision-arm comparison with and without a perception cap,
+n≥5 per side. Roughly 1–2 GPU hours. Not scheduled; GPU is reserved pending the
+owner's decision on the full-matrix question.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —
