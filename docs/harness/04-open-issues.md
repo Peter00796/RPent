@@ -227,9 +227,18 @@ that is exactly one thing. The package:
   evict signal), and structured preconditions are the long-run bridge
   between text memory and the CaP program library.
 
-Scheduled with the perception overhaul batch (post-Friday). The index need
-itself is data-backed: gen2's selective reading orphaned the anti-spiral
-entry while t6 spiraled.
+**URGENT as of 2026-08-14** (promoted from queued). The gen-0 distillation
+admitted 37 new entries in one batch, roughly doubling the common tier. A
+library that a run must scan in full is a library whose consultation cost grows
+with every generation, and the ledger has already measured the failure mode
+once: selective reading in generation 2 recovered two cells and simultaneously
+orphaned an entry that then sat unread while the cell it addressed spiralled.
+At the new size that trade stops being a curiosity. The one-line index, filtered
+by the run's actual tool surface, is now the blocking dependency for further
+growth rather than a nicety.
+
+The index need itself is data-backed: gen2's selective reading orphaned the
+anti-spiral entry while t6 spiraled.
 
 **UPDATE 2026-08-12 — the predicted exposure has now been observed.** Both
 blind t5 runs in the practice-arm sweeps (`20260812-00:53:35`,

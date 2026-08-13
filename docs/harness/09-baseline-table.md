@@ -832,6 +832,34 @@ zero would understate the arm in exactly the way the interrupted-run rule
 (§4.1c) exists to prevent. N/A cells are reported with their count and excluded
 from denominators.
 
+### The three E-cells are N/A — classified, with the cause
+
+`libero_spatial_task` t3 and t7, and `libero_10_task` t2, produced no
+`states.json`, no `tool_calls.jsonl`, no natural-exit marker, and a run log
+ending at `env_server spawned`. **The planner never received a step 0.** The
+cause is in the environment server, not the harness:
+
+```
+File "robots/libero/env_server.py", line 98, in make_env
+    rid = first_id + (seed % trials)
+ZeroDivisionError: integer modulo by zero
+```
+
+`trials` is zero — the suite registers no trials for that cell, so the task
+cannot be constructed.
+
+**Classification: N/A, not failure and not an interrupted run.** The
+interrupted-run rule (§4.1c) governs runs that *were* measuring and got killed;
+these never began measuring. The §4.4 addendum governs this case: infrastructure
+that cannot start a cell has produced no measurement of the planner, and scoring
+it zero would understate the arm. They are excluded from denominators and
+reported with their count.
+
+One property worth recording: the error is **deterministic**, not a flake. A
+re-run fails identically until the suite data changes, so these three cells are
+permanently unscoreable under the current benchmark payload rather than
+temporarily missing.
+
 ### P1 repeat 3: permanently excluded
 
 The box was rebooted to install the second GPU and repeat 3 died mid-sweep at
