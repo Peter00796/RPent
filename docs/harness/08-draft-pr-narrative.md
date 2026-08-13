@@ -224,10 +224,16 @@ generalised across seeds. On other seeds what remains is a **cross-cell priors
 package** — the repository guides including the 187-constant calibration table,
 plus a freely-written memory library — which is a real advantage over a clean
 room, but a weaker one than a stored solution for the exact cell. A
-ten-by-ten matrix on that harness would have at most **10% of its cells**
-answer-fed, so the fair description of such a result is *"strong model plus a
-cross-cell priors package, mostly without per-cell answers"*, and 90% of its
-cells would be directly comparable against a clean-room matrix of ours.
+ten-by-ten matrix on that harness reads the seed-0 experience for every cell.
+The operator of the group's matrix confirmed the protocol directly (2026-08-13):
+the evaluation *"reads the seed-0 experience and runs seeds 0–10"*. So roughly
+one trial in ten **is** the reference cell — literal replay, the column our t5
+exhibit describes — and the other nine tenths carry the same task's seed-0
+experience as in-context reference. Coordinates do not survive re-randomisation
+but task-level identity facts do, so the fair description is *"strong model plus
+the seed-0 experience as cross-seed reference"*, not *"mostly prior-free"*. A
+clean-room matrix of ours stays comparable on that ~90%, with the asymmetry
+stated: they carry a same-task reference, we carry nothing.
 
 **So the honest arc of this PR**: taking the answer files away costs two cells
 (8 → 6). Winning them back has to be done by a mechanism instead of a lookup —

@@ -674,17 +674,46 @@ seeds 1–9 there is no per-cell answer to read, and what remains is a
 (207 KB). That is still a substantial prior advantage over a clean room, but it
 is a different and weaker kind than a stored solution for the exact cell.
 
-*Why this matters beyond our own arms.* A ten-seeds-by-ten-tasks matrix run on
-the upstream harness has **at most its seed-0 column answer-fed** — 10% of
-cells. The honest characterisation of such a matrix is therefore
-**"strong model plus a cross-cell priors package, mostly without per-cell
-answers"**, which is both sharper and fairer than the seed-0 story, and it makes
-90% of the cells of any clean-room matrix of ours **directly comparable**.
+*Why this matters beyond our own arms — now CONFIRMED by the operator, not
+inferred.* The colleague who ran the group's matrix described the protocol
+directly (via the project owner, 2026-08-13), in translation: *"priors are the
+resources directory — if absent, the code auto-downloads from HuggingFace; the
+prior content is the seed-0 experience; evaluation reads the seed-0 experience
+and runs seeds 0–10, tallying success rate."*
 
-*Caveat pending.* How such a matrix counted a solve is not yet known to us. If
-it counted from agent audit files rather than the environment flag, its numbers
-are **under**-reported — that error cost three of eight solves in our own P1
-sweep. A specification has been requested; this line stays until it arrives.
+Three things follow, and they are firmer and more precise than the reading in
+the previous revision of this section:
+
+1. **Their evaluation includes the reference seed itself.** Roughly one trial in
+   ten of each 100-trial row is the seed-0 cell, where the stored experience is
+   the literal answer — the column our P1 t5 exhibit describes exactly, solved
+   in two policy calls with no perception.
+2. **The remaining ~90% are not prior-free either.** They read the *same task's*
+   seed-0 experience as in-context reference. Coordinates do not survive
+   re-randomisation, but task-level facts do — and per
+   [03-findings](03-findings.md) it is precisely the non-perceptual facts (which
+   of two similar objects satisfies the predicate) that such a reference hands
+   over. So the fair phrase is **"strong model plus the seed-0 experience as
+   cross-seed reference, with one trial in ten being the reference cell
+   itself"** — not "mostly prior-free". The earlier wording in this file
+   under-described that advantage and is corrected here.
+3. **A clean-room matrix of ours is still comparable on the other ~90%**, with
+   the difference stated rather than hidden: they carry a same-task reference,
+   we carry nothing.
+
+*Minor ambiguity, flagged once.* "Seeds 0–10" is either 10 or 11 seeds; the
+`/100` denominators in the shared table imply 10. Noted, not belaboured.
+
+*Counting caveat, still open.* How that matrix counted a solve remains unknown.
+If it counted from agent audit files rather than the environment flag, its
+numbers are **under**-reported — that error cost three of eight solves in our
+own P1 sweep.
+
+*Consequence for our own future protocol.* A protocol-matched few-shot arm is
+now specifiable: grow memory on practice seeds, then examine seeds 0–9
+**including seed 0**. That is legal for us in a way it is not symmetric for
+them — our library is grown clean-room and contains no seed-0 answers — and it
+is the arm that would make a like-for-like matrix comparison possible.
 
 #### The head-to-head the owner asked for
 
