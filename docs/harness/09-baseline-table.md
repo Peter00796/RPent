@@ -978,8 +978,10 @@ running**, and is not an interrupted run at all: generation 1's second GPU
 worker had not finished, and this was its final cell, mid-flight at the moment
 it was inspected. There is no abort provenance because there was no abort. **The
 reported close times (07:45 / 08:24) covered only the first worker**; the
-chronology is corrected here rather than left standing, and generation 1's final
-figure is **45 or 46 of 77** pending that cell.
+chronology is corrected here rather than left standing. That cell has since
+finished and **failed at 32 env steps**, so it is counted as a failure on its
+own merits and **generation 1 stands at 45 of 77** — the figure is final and
+required no revision.
 
 The lesson generalises and belongs beside the others in this file: **a run that
 is dead and a run that is merely slow are indistinguishable from one snapshot of
