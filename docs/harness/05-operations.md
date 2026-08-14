@@ -105,6 +105,33 @@ path.
 
 ## Hard-won gotchas
 
+### ⚠ Two launches of the same cell in the same second collide and corrupt each other
+
+Output directories are named to the **second**. Launching the same
+suite/task/seed twice within one second gives both processes the **same output
+directory**, and they interleave writes into one another's `states.json`,
+`tool_calls.jsonl` and artifacts. The result is not a crash — it is a directory
+full of plausible, mutually corrupted records.
+
+Hit in production on 2026-08-14; the casualty is quarantined at
+`logs/INVALID_collision_18-17-20_10_swap_t2_s51` rather than deleted, so the
+signature stays inspectable. **Nothing in that directory is trustworthy**, and
+no counting rule can repair it — the two runs cannot be separated afterwards.
+
+Stagger parallel launches of the same cell by at least a second, or give each
+worker a distinct output root.
+
+### `source env.sh` must come BEFORE `cd`, and the failure is fast and confusing
+
+`env.sh` ends with `cd $RPENT_REPO_ROOT`. Sourcing it *after* changing directory
+drags the shell to the **upstream** checkout, where the next command imports
+that tree's CLI instead of this one and dies on `argparse` with `rc=2` in about
+a second. Stepped on twice in one day.
+
+The rule is the one already in this file's remote-box section, restated because
+its consequence is now known to be silent-ish: the run does not say "wrong
+repository", it says "unrecognised argument".
+
 ### An exhaustive matrix can be flattened by one uncontrolled confound
 
 `10_task` t4's second resident round ran a systematic placement matrix and got

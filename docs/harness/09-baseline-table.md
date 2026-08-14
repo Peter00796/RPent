@@ -1183,6 +1183,54 @@ instrument reporting against its own interest, unprompted, and they are the
 concrete form of the claim that a loop able to report its own failures is the
 only kind worth believing.
 
+### The t2 playbook validation: 0/3, and the failure is not in the knowledge
+
+The one cell that met the full resident standard was then validated the way the
+owner's rule requires — **single pass, playbook armed, seed 51, three times** —
+before it would be allowed near an exam. It scored **0/3 and does not ship.**
+
+The reproduce gate worked. What the records show underneath it is more useful
+than the verdict.
+
+**The knowledge layer executed perfectly.** All three runs read **5 of 5**
+playbook entries and followed the recipe — stove first, pre-position, geometric
+verification, stop-loss. There is no instance of the procedure being ignored or
+misread.
+
+**Every failure is at the motion layer**, and the pick records show two
+signatures and nothing else:
+
+| run | picks attempted | `min_gripper_opening` seen |
+|---|---|---|
+| `17:46:53` | 10 | 0.0789, 0.0778, 0.0791 … — fingers never close |
+| `18:31:40` | 4 | 0.0020 (closed on air), 0.0623, 0.0799 |
+| `18:31:48` | 3 | 0.0786, 0.0025 (closed on air) |
+
+Either the gripper stays wide on the moka pot's smooth cone (~0.078) or it
+closes on nothing (~0.002). **`pi0` grasping this object is a lottery**: the
+resident session itself fired on 3 of 8 attempts, ≈ 37%. Under that rate,
+**0 of 3 has probability 0.625³ ≈ 24%** — an ordinary draw, not evidence that
+anything regressed.
+
+#### The finding: a playbook transfers *how*, not *reset and try again*
+
+The resident session solved this cell by **resetting and re-rolling** — its
+recipe's real fallback is a fresh episode. **A single-pass exam has no such
+fallback.** The three validation runs retried the pick *within* the episode (10,
+4 and 3 times) exactly as the playbook says, but they could not re-roll the
+episode itself.
+
+So the task playbook transfers the *procedure* and cannot transfer the
+*structure that made the procedure work*. That is a real limit on what
+task-tier knowledge can be expected to do, and it was invisible until a cell
+whose bottleneck is a stochastic motion primitive was put through the gate.
+
+**And the harness separated the two debts cleanly**: knowledge debt (did it know
+what to do?) and motion debt (could the policy execute it?) are distinguishable
+here from the records alone — the playbook-read count answers the first, the
+`min_gripper_opening` distribution answers the second. That separation is what
+the evidence layer exists for, and this is the clearest instance of it yet.
+
 ### Open, and deliberately not decided here
 
 `10_task` t4's distillation has two possible forms: a **pure** version using only
