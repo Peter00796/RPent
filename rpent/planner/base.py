@@ -115,11 +115,16 @@ def build_planner(
     program_file: str | None = None,
     resident: bool = False,
     vision: bool = False,
+    ban_tools: tuple[str, ...] = (),
 ):
     """Build a planner for the given backend, resolving credentials from env vars.
 
     ``resident=True`` (deepagents only — main.py enforces it) selects the
     resident-debug-session surface; see :class:`DeepAgentPlanner`.
+
+    ``ban_tools`` (deepagents only — main.py enforces it) removes the named
+    tools from the surface the model sees: an ablation arm is defined by the
+    absence being mechanical, not prompted.
     """
     # Imports are deferred to avoid a circular import: api_loop / claude_code /
     # codex all import from this module (PlannerResult).
@@ -198,6 +203,7 @@ def build_planner(
             no_images=no_images,
             resident=resident,
             vision=vision,
+            ban_tools=ban_tools,
             dashboard_events=dashboard_events,
         )
     if planner_type == "claude_code":

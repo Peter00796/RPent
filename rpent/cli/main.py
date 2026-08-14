@@ -250,6 +250,13 @@ def _build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--vision-max-tokens", type=int, default=1000,
                     help="Generation budget for one inspect_image reply "
                          "(a budget, never a post-hoc cut; default 1000).")
+    ap.add_argument("--ban-tools", default=None, metavar="NAMES",
+                    help="Comma-separated tool names to REMOVE from the tool "
+                         "surface the model sees (e.g. pi0_pick,pi0_doubled). "
+                         "The ban is mechanical — the tool is not registered, "
+                         "not prompted away — so the run defines a clean "
+                         "ablation arm. Unknown names fail the run at startup. "
+                         "deepagents planner only.")
     ap.add_argument("--resident", action="store_true",
                     help="Resident debug session: one continuous session "
                          "debugs the SAME cell across multiple attempts. "
@@ -312,6 +319,18 @@ def main() -> int:
         logger.info("vision channel armed: %s (base_url=%s)",
                     args.vision_tool, args.vision_base_url or "provider default")
 
+    ban_tools: tuple[str, ...] = ()
+    if args.ban_tools:
+        if args.planner != "deepagents":
+            parser.error("--ban-tools requires --planner deepagents")
+        ban_tools = tuple(
+            n.strip() for n in args.ban_tools.split(",") if n.strip()
+        )
+        if "finish" in ban_tools:
+            parser.error("--ban-tools cannot ban 'finish'; without it the "
+                         "episode has no exit and every run scores as a "
+                         "budget death")
+
     if args.resident:
         # The resident surface (reset_episode, folding) exists only on the
         # deepagents planner, and a reset on a scoring seed would turn an
@@ -364,6 +383,7 @@ def main() -> int:
         program_file=args.program_file,
         resident=args.resident,
         vision=bool(args.vision_tool),
+        ban_tools=ban_tools,
     )
     prompt_bundle = env_spec.prompts
     prompt_vars = {

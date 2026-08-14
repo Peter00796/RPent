@@ -112,6 +112,7 @@ class DeepAgentPlanner:
         no_images: bool = False,
         resident: bool = False,
         vision: bool = False,
+        ban_tools: tuple[str, ...] = (),
         dashboard_events: DashboardEventSink,
     ) -> None:
         """Store the already-constructed chat model.
@@ -131,6 +132,7 @@ class DeepAgentPlanner:
         self._no_images = no_images
         self._resident = resident
         self._vision = vision
+        self._ban_tools = tuple(ban_tools)
         self._dashboard_events = dashboard_events
 
     def solve(
@@ -166,6 +168,18 @@ class DeepAgentPlanner:
         tools = toolkit.langchain_tools(
             no_images=self._no_images, resident=self._resident,
             vision=self._vision)
+        if self._ban_tools:
+            surface = {t.name for t in tools}
+            unknown = [n for n in self._ban_tools if n not in surface]
+            if unknown:
+                # A ban that matches nothing is a mislabelled arm, not a no-op.
+                raise ValueError(
+                    f"--ban-tools names not on the tool surface: {unknown}; "
+                    f"surface is {sorted(surface)}"
+                )
+            tools = [t for t in tools if t.name not in self._ban_tools]
+            logger.info("tool surface bans active: %s (surface %d -> %d)",
+                        sorted(self._ban_tools), len(surface), len(tools))
         # Log the image mode explicitly. It decides which perception channels the
         # agent actually has, so it must be visible in the run log rather than
         # inferred from a flag nobody recorded.
