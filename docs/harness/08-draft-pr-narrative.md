@@ -1032,6 +1032,42 @@ through delivery. **n=3, and t1 was variance-prone historically.**
 
 ---
 
+### 6.4 The full benchmark, and the loop measuring its own scaling limit
+
+The harness was then run across **all eight LIBERO-Pro suites**, tasks 0–9,
+seed 0 — 80 cells, a protocol change to `turns=100` (upstream's own default),
+and a clean-room arm plus the instrument. Three cells are **N/A**: their
+environment server cannot construct the task
+(`ZeroDivisionError` on `seed % trials`, deterministically), so scoring them
+zero would measure infrastructure rather than a planner.
+
+**Generation 0 (no library): 53/77. Generation 1 (grown library): 45/77.**
+
+Adding the library to a first-contact benchmark arm **cost eight cells**, and
+that is the week's thesis in one number: the loop is capable of measuring its
+own scaling limits, which is the property the whole apparatus exists to have.
+
+The consultation cost is now measured rather than inferred — **0 → 9.1 library
+reads per run, and a 16% rise in total tool calls**. But the *predicted* failure
+channel is disconfirmed, and the failure-mode register is what caught it:
+**budget exhaustion did not rise** (19 → 18 failures, falling from 79% to 56% of
+the total). All eight extra failures are other kinds, the largest being **runs
+that called `finish` without having solved — more than doubled**. The mechanism
+is therefore *concluding too early or wrongly*, not *running out of road while
+reading*, which moves the remedy from the perception-budget family to the
+stopping-advice family.
+
+Three things keep this from being a simple failure. **The risk was
+pre-registered**: the night audit flagged the library-size hazard hours before
+the run, which is why the one-line index is now urgent on measured grounds.
+**The knowledge is not poison**: `object_task` went 9/10 → **10/10**, a pure
+gain. And **the remedy already has a small-scale demonstration** — `object_swap`
+dipped in its own generation 1 under a fresh unindexed batch and recovered in
+generation 2 once reading turned selective. The benchmark reproduced a curve the
+single-suite history had already drawn.
+
+---
+
 ---
 
 ## 7. Practice and exam are different regimes, enforced in code

@@ -832,6 +832,88 @@ zero would understate the arm in exactly the way the interrupted-run rule
 (§4.1c) exists to prevent. N/A cells are reported with their count and excluded
 from denominators.
 
+### Generation 1 (full benchmark): 45/77, and the tax is real but not where predicted
+
+Gen-1 ran the same 80 cells with `--sandbox memory` — the grown library, uniform
+across suites, task-tier playbooks deliberately excluded from this arm — same
+instrument, same `turns=100`, same three N/A cells.
+
+| suite | gen 0 | gen 1 | | suite | gen 0 | gen 1 |
+|---|---|---|---|---|---|---|
+| `object_task` | 9/10 | **10/10** | | `goal_task` | 6/10 | 6/10 |
+| `object_swap` | 9/10 | 8/10 | | `goal_swap` | 7/10 | **4/10** |
+| `spatial_task` | 8/8 | 7/8 | | `10_task` | 3/9 | 2/9 |
+| `spatial_swap` | 9/10 | 7/10 | | `10_swap` | 2/10 | 1/10 |
+| | | | | **TOTAL** | **53/77** | **45/77** |
+
+**The dip is real and it ships at full volume.** Adding the grown library to a
+first-contact benchmark arm cost eight cells.
+
+#### The consultation cost, measured for the first time
+
+| | gen 0 (no library) | gen 1 (library) |
+|---|---|---|
+| mean tool calls per run | 84.6 | **98.2** |
+| mean library reads per run | **0.0** | **9.1** |
+| library reads, total | 0 | **701** |
+
+That is the tax, quantified: roughly **nine calls per run spent reading**, and a
+**16% rise in total calls**. Until now the consultation tax had been inferred
+from a ledger; here it is a direct measurement.
+
+#### But the predicted failure channel is disconfirmed
+
+The pre-committed reading was that the tax shows up as budget exhaustion. **The
+records say otherwise**, and the contrast is the point of recording failure
+modes at all:
+
+| failure mode | gen 0 | gen 1 |
+|---|---|---|
+| `reached max_turns` | 19 | **18** |
+| `finish` called, not solved | 3 | **7** |
+| essay-stop (no tool call) | 2 | **4** |
+| no exit marker | 0 | **3** |
+| **total failures** | **24** | **32** |
+
+**Budget exhaustion did not rise. It fell by one, and from 79% of failures to
+56%.** All eight additional failures are of other kinds, and the largest single
+movement is **runs that called `finish` while not having solved — more than
+doubled**.
+
+So the mechanism is **not** "ran out of road while reading". It is **concluded
+too early, or concluded wrongly**. That relocates the remedy: this belongs to
+the stopping-and-self-reporting family ([5f](04-open-issues.md)), not the
+perception-budget family ([5g](04-open-issues.md)). A perception cap would not
+have saved these runs.
+
+#### What survives of the pre-committed reading
+
+- **The library-size risk was flagged before the numbers existed**, in the night
+  audit's closing note, hours ahead of the run. That is pre-registration working
+  as designed, and it is why [issue 5e](04-open-issues.md) is now urgent on
+  *measured* rather than anticipated grounds.
+- **The knowledge is not poison.** `object_task` went **9/10 → 10/10**, the one
+  pure-gain suite. A library that hurt on contact could not do that.
+- **`object_swap`'s own history reproduces at benchmark scale**: its generation
+  1 also dipped under a fresh unindexed batch, and its generation 2 recovered
+  once reading turned selective. The small-scale demonstration of the remedy
+  already exists in this file.
+
+#### New finding: the DeepSeek-400 defect is back at scale
+
+Two of the three no-exit-marker runs died on
+`BadRequestError: 400 — "An assistant me…"` — the orphan-`tool_calls` failure
+that `ToolCallIntegrityMiddleware` was built to repair after the gen-0
+`object_swap` sweep. **Its pre-flight repair does not catch this variant.**
+Counted as failures, not excluded: unlike an external kill, the run built the
+malformed request itself, and a harness crash is a harness result.
+
+The third (`20260814-10:08:06_libero_10_swap_t9_s0`) ends mid-tool-result with
+no error and no marker — the interrupted shape, but **no abort provenance is
+known**, so under the two-condition rule it is *not* excluded. It is counted as
+a failure and flagged: if a kill or reboot at ~10:22 is documented, gen-1
+becomes 45/76 and this line should be revisited.
+
 ### The three E-cells are N/A — classified, with the cause
 
 `libero_spatial_task` t3 and t7, and `libero_10_task` t2, produced no
