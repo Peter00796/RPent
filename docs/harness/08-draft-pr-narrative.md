@@ -1047,15 +1047,41 @@ Adding the library to a first-contact benchmark arm **cost eight cells**, and
 that is the week's thesis in one number: the loop is capable of measuring its
 own scaling limits, which is the property the whole apparatus exists to have.
 
-The consultation cost is now measured rather than inferred — **0 → 9.1 library
-reads per run, and a 16% rise in total tool calls**. But the *predicted* failure
-channel is disconfirmed, and the failure-mode register is what caught it:
-**budget exhaustion did not rise** (19 → 18 failures, falling from 79% to 56% of
-the total). All eight extra failures are other kinds, the largest being **runs
-that called `finish` without having solved — more than doubled**. The mechanism
-is therefore *concluding too early or wrongly*, not *running out of road while
-reading*, which moves the remedy from the perception-budget family to the
-stopping-advice family.
+**Two explanations were proposed and both were wrong**, which is worth
+reporting because the instrument that killed them is the same failure-mode
+register the harness exists to produce. The first was that the library costs
+reading time. The second was that runs conclude too early. Comparing the eleven
+cells that flipped from solved to failed against their own generation-0 twins,
+and against generation 1's successes:
+
+| | gen-0 twins | gen-1 flipped | gen-1 solved |
+|---|---|---|---|
+| library reads | 0.0 | **9.8** | **8.7** |
+| **motion calls** | 15 | **44** | **13** |
+| total calls | 60 | 145 | 71 |
+
+**Reading does not discriminate** — failures read 9.8, successes 8.7. **Motion
+volume discriminates by a factor of three.** The failing runs are not stuck
+reading or looking; they are *doing the task over and over*, and eight of the
+eleven exhaust the turn budget doing it.
+
+The mechanism is **procedural inflation**: thirty-seven individually-correct
+entries — verify with two signals, re-localise after every carry, re-measure the
+offset, retry on a stall — compose into a procedure no single entry prescribes
+and which does not fit a hundred turns. **Every gate check examines one proposal
+in isolation; nothing evaluates what a batch demands collectively.** The one
+budget-awareness entry in the batch was outvoted behaviourally by twenty
+demanding more verification.
+
+Two things keep this from being a simple regression. The **content is not the
+problem**: three cells flipped the other way and `object_task` reached 10/10, so
+the entries work — there are too many applying at once. And the **admission rate
+was the uncontrolled variable**: thirty-seven was too many where roughly fifteen
+would plausibly have kept the gains, a judgement made correctly per-proposal
+against each proposal's own evidence, which is exactly the blind spot. This is
+the second defect of this class the project has found in its own mechanism after
+the stopping licence — true entry-by-entry, harmful in composition — and it
+argues for a sixth check class evaluating composed procedural cost.
 
 Three things keep this from being a simple failure. **The risk was
 pre-registered**: the night audit flagged the library-size hazard hours before

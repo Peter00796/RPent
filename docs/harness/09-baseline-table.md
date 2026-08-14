@@ -861,43 +861,85 @@ That is the tax, quantified: roughly **nine calls per run spent reading**, and a
 **16% rise in total calls**. Until now the consultation tax had been inferred
 from a ledger; here it is a direct measurement.
 
-#### But the predicted failure channel is disconfirmed
+#### The mechanism is PROCEDURAL INFLATION, not a reading tax
 
-The pre-committed reading was that the tax shows up as budget exhaustion. **The
-records say otherwise**, and the contrast is the point of recording failure
-modes at all:
+Two readings were proposed before the records were interrogated, and **both were
+wrong**. The first (the morning's) was that the library costs *reading time*.
+The second (mine, in the previous revision of this section) was that runs
+*conclude too early*. The flipped-cell analysis refutes the first outright and
+demotes the second to a secondary effect.
 
-| failure mode | gen 0 | gen 1 |
-|---|---|---|
-| `reached max_turns` | 19 | **18** |
-| `finish` called, not solved | 3 | **7** |
-| essay-stop (no tool call) | 2 | **4** |
-| no exit marker | 0 | **3** |
-| **total failures** | **24** | **32** |
+Eleven cells solved in generation 0 and failed in generation 1. Comparing those
+eleven against their own generation-0 twins, and against generation 1's solved
+runs:
 
-**Budget exhaustion did not rise. It fell by one, and from 79% of failures to
-56%.** All eight additional failures are of other kinds, and the largest single
-movement is **runs that called `finish` while not having solved — more than
-doubled**.
+| | gen-0 twins | **gen-1 flipped (failed)** | gen-1 solved |
+|---|---|---|---|
+| library reads | 0.0 | **9.8** | **8.7** |
+| total tool calls | 60 | **145** | 71 |
+| **motion calls** | 15 | **44** | **13** |
+| perception calls | 42 | 87 | 44 |
+| calls before first motion | 17 | 33 | 34 |
+| `max_turns` | — | **8 of 11** | — |
 
-So the mechanism is **not** "ran out of road while reading". It is **concluded
-too early, or concluded wrongly**. That relocates the remedy: this belongs to
-the stopping-and-self-reporting family ([5f](04-open-issues.md)), not the
-perception-budget family ([5g](04-open-issues.md)). A perception cap would not
-have saved these runs.
+**Reading does not discriminate.** Failed runs read 9.8 entries, successful runs
+read 8.7 — a difference of one call. Whatever the library costs, it is not
+paid at the point of consultation, and the reading-tax hypothesis is dead.
 
-#### What survives of the pre-committed reading
+**Nor does the slow start.** Calls before the first motion doubled from the
+gen-0 twins (17 → 33), but it is *identical* between generation 1's failures and
+its successes (33 vs 34). It is a property of the arm, not of failing.
 
-- **The library-size risk was flagged before the numbers existed**, in the night
-  audit's closing note, hours ahead of the run. That is pre-registration working
-  as designed, and it is why [issue 5e](04-open-issues.md) is now urgent on
-  *measured* rather than anticipated grounds.
-- **The knowledge is not poison.** `object_task` went **9/10 → 10/10**, the one
-  pure-gain suite. A library that hurt on contact could not do that.
-- **`object_swap`'s own history reproduces at benchmark scale**: its generation
-  1 also dipped under a fresh unindexed batch, and its generation 2 recovered
-  once reading turned selective. The small-scale demonstration of the remedy
-  already exists in this file.
+**Motion volume discriminates, and by a factor of three.** The failing runs
+issue **44** advancing calls against **13** in the runs that succeed under the
+same library. They are not stuck reading and they are not stuck looking — **they
+are doing the task over and over.** Eight of the eleven exhaust the turn budget
+while doing it.
+
+That is the mechanism, and it deserves its own name: **procedural inflation.**
+Thirty-seven individually-correct entries — verify a pick with two independent
+signals, re-localise the container after every carry, re-measure the held offset,
+retry on a stalled motion — **compose** into a procedure no single entry
+prescribes and which does not fit a hundred turns. Each demand is defensible on
+its own evidence. The composition is not, and nothing in the gate evaluates a
+composition: every check in §6 examines one proposal against the records it
+cites, in isolation.
+
+Tellingly, the one budget-awareness entry admitted in the batch lost
+behaviourally to roughly twenty entries demanding more verification. The library
+had an opinion about economy and was outvoted by its own contents.
+
+**Correction to the previous revision of this file.** It stated that the
+mechanism was "concluding too early or wrongly, not running out of road". That
+was over-generalised from the *aggregate* failure-mode composition, which is
+genuinely flat on `max_turns` (19 → 18). But on the cells that actually
+regressed, **8 of 11 are budget exhaustion**. The aggregate and the
+counterfactual subset answer different questions, and the subset is the one that
+speaks to causation. The rise in `finish`-called-while-unsolved (3 → 7) remains
+real and is retained as a **secondary** effect, not the primary one.
+
+#### The content is not the problem — the dosage is
+
+Three cells went the other way, gen-0 failure to gen-1 solve, and
+`object_task` reached **10/10**. A library that were simply harmful could not
+produce a pure-gain suite. The entries work; there are too many of them applying
+at once.
+
+#### The admission rate is the uncontrolled variable
+
+Recorded at the request of the team member who made the call: **the night
+adjudication over-admitted.** Thirty-seven entries entered in one batch;
+roughly fifteen winners would plausibly have kept the gains without the
+inflation. That judgement was made per-proposal, correctly, against each
+proposal's own evidence — which is exactly the blind spot: **the gate has no
+check for what a batch does collectively.**
+
+This is the second defect of this class the project has found in its own
+mechanism, after the stopping-licence hole ([5f](04-open-issues.md)): a rule
+that is true entry-by-entry and harmful in composition. It argues for a **sixth
+check class — composed procedural cost** — and for the admission rate itself to
+be a governed quantity rather than an outcome. The delegation record
+(`night-audit-gen0.md`) plus this result is the case study.
 
 #### New finding: the DeepSeek-400 defect is back at scale
 

@@ -335,6 +335,46 @@ test is a t1-only vision-arm comparison with and without a perception cap,
 n≥5 per side. Roughly 1–2 GPU hours. Not scheduled; GPU is reserved pending the
 owner's decision on the full-matrix question.
 
+## 5h. Procedural inflation, and the admission rate as a governed quantity
+
+Filed 2026-08-14 from the full-benchmark generation 1 result
+([09](09-baseline-table.md)). **Not built.**
+
+Thirty-seven entries admitted in one batch cost eight cells across the
+benchmark. The mechanism is *not* consultation cost — failed and successful runs
+read the same amount (9.8 vs 8.7 entries). It is **procedural inflation**:
+individually-correct entries compose into a procedure that issues **three times
+the motions** (44 vs 13) and exhausts the turn budget in 8 of the 11 regressed
+cells.
+
+**Every gate check examines one proposal in isolation.** Nothing evaluates what
+a batch demands collectively. That is the same class of defect as
+[5f](#5f-a-gated-entry-became-an-excuse): true entry-by-entry, harmful in
+composition.
+
+Remedy directions, none built:
+
+1. **A sixth check class — composed procedural cost.** Before applying a batch,
+   estimate the procedure it prescribes: how many verification obligations does
+   a run now carry, and what is their expected call cost against the turn
+   budget? A batch that raises the floor above the budget is rejected as a
+   batch, whatever its individual merits.
+2. **The admission rate becomes a governed quantity.** It is currently an
+   outcome of per-proposal judgement. It should be a declared parameter with a
+   default and a justification for exceeding it.
+3. **Cost-aware and tiered knowledge.** The deeper need behind
+   [5e](#5e-the-one-line-library-index-with-conditions-as-its-key-and)
+   — which is hereby **demoted from "the remedy" to "part of the remedy"**. An
+   index makes the library cheaper to *consult*; it does nothing about a
+   procedure that is too expensive to *execute*. Entries need a notion of when
+   they are worth their cost, not merely when they apply.
+
+**The experiment that separates dosage from content**: generation 1b, identical
+in every respect but with a **pruned library of the twelve strongest entries**.
+If it recovers toward generation 0's 53 while keeping `object_task`'s gain, the
+finding is dosage. If it does not, the finding is content and the entries
+themselves need revision. Roughly one benchmark pass; owner's call.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —
