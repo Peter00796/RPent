@@ -227,6 +227,12 @@ that is exactly one thing. The package:
   evict signal), and structured preconditions are the long-run bridge
   between text memory and the CaP program library.
 
+**v0 DELIVERED 2026-08-14** as a side effect of the gen-1b constitution
+(`2165d024`): both library READMEs are now one-line WHEN-match indexes — name,
+the condition under which the entry applies, and nothing else. The
+`requires`-filtered generation and the ledger's consumption-quality audit remain
+unbuilt. The urgency note below stands as the reason it happened.
+
 **URGENT as of 2026-08-14** (promoted from queued). The gen-0 distillation
 admitted 37 new entries in one batch, roughly doubling the common tier. A
 library that a run must scan in full is a library whose consultation cost grows
@@ -369,11 +375,16 @@ Remedy directions, none built:
    procedure that is too expensive to *execute*. Entries need a notion of when
    they are worth their cost, not merely when they apply.
 
-**The experiment that separates dosage from content**: generation 1b, identical
-in every respect but with a **pruned library of the twelve strongest entries**.
-If it recovers toward generation 0's 53 while keeping `object_task`'s gain, the
-finding is dosage. If it does not, the finding is content and the entries
-themselves need revision. Roughly one benchmark pass; owner's call.
+**The experiment that would separate dosage from content** was specified here as
+generation 1b, *identical in every respect but with a pruned library*.
+**SUPERSEDED 2026-08-14**: the owner ordered dosage and form fixed together
+(`2165d024` — 41 entries to 15, rewritten to WHEN/RULE/WHY with
+conclusion-licence phrasing banned by construction, plus index READMEs). That is
+a sound engineering decision and a weaker experimental one: **the variables are
+now confounded and a recovery cannot be attributed to dosage alone.** The
+amended criterion is pre-registered in
+[09 §4.5](09-baseline-table.md). A dosage-only arm remains owed if the
+attribution is ever needed.
 
 ## 5i. `ToolCallIntegrityMiddleware` misses a DeepSeek-400 variant
 

@@ -1025,6 +1025,59 @@ n=2 (8, 9), mean 8.5**, and will not be completed.
 
 ---
 
+## 4.5 Generation 1b — amended pre-registration, written before the run
+
+**Amended 2026-08-14, before any gen-1b number exists.** The experiment
+specified in [04 §5h](04-open-issues.md) was *"identical in every respect but
+with a pruned library of the twelve strongest entries"*. **That is not what is
+running, and the difference matters enough to record rather than quietly
+inherit.**
+
+What actually changed, verified at commit `2165d024`:
+
+- **Dosage.** 41 general-tier entries reduced to **15** (10 `common`, 5
+  `libero`); 26 retired via `git rm`, recoverable.
+- **Form.** The survivors were *rewritten* to a uniform **WHEN / RULE / WHY**
+  shape, ≤60 words, verbs restricted to *verify / measure / re-check*, and
+  **conclusion-licence phrasing banned by construction** — the [5f](04-open-issues.md)
+  defect made unexpressible rather than merely corrected.
+- **Access.** Both READMEs became one-line WHEN-match indexes, which delivers
+  **[5e](04-open-issues.md) v0** as a side effect.
+- Net: library body text entering context falls roughly **7,000 → 1,100 words**.
+
+### ⚠ The variables are confounded, deliberately, and the criterion is written accordingly
+
+Gen-1b changes **dosage and form together**. A recovery therefore **cannot**
+attribute the gain to either alone — the clean dosage-only experiment I
+specified was superseded by an owner decision to fix both at once, which is a
+reasonable engineering call and a weaker inferential one. Recording it so that
+no later reading claims the separation was achieved.
+
+**Pre-committed criterion:**
+
+- **Recovery toward 53 with `object_task`'s gain kept** → the *lean and
+  disciplined library* thesis holds, **dosage and form jointly**. Not a dosage
+  finding, and it must not be written as one.
+- **No recovery** → the content itself does not transfer at benchmark scale,
+  and the growth loop needs the [5h](04-open-issues.md) composed-cost check
+  before another admission round is attempted.
+- **Partial recovery** is the likeliest outcome and the least informative; if it
+  lands there, the honest report is that the experiment did not separate its
+  variables and a dosage-only arm is still owed.
+
+### The doctrine in the owner's words
+
+> 入沙箱的内容必须简洁和规范，不得含让 agent 盲目下结论的东西。
+>
+> *What enters the sandbox must be concise and disciplined, and must contain
+> nothing that lets the agent draw conclusions blindly.*
+
+That is the [5f](04-open-issues.md) and [5h](04-open-issues.md) doctrine stated
+before either issue was filed under those numbers, and generation 1b is its
+first enforcement at benchmark scale.
+
+---
+
 ## 5. Single-cell arms — the t6 and t5 case studies
 
 ### 5.1 t6 — *"Pick the butter and place it in the basket"*
