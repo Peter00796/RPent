@@ -375,6 +375,22 @@ If it recovers toward generation 0's 53 while keeping `object_task`'s gain, the
 finding is dosage. If it does not, the finding is content and the entries
 themselves need revision. Roughly one benchmark pass; owner's call.
 
+## 5i. `ToolCallIntegrityMiddleware` misses a DeepSeek-400 variant
+
+Found in full-benchmark generation 1 (2026-08-14). Two runs died on
+`BadRequestError: 400 — "An assistant me…"`, the orphan-`tool_calls` failure the
+middleware was built to repair after the gen-0 `object_swap` sweep. **Its
+pre-flight repair does not catch this variant**, and at benchmark scale that is
+two lost cells per 80 rather than a curiosity.
+
+Counted as failures, not excluded: unlike an external kill, the run constructed
+the malformed request itself, and a harness crash is a harness result — the same
+call made when the original 400 was first recorded.
+
+The middleware already dumps the outbound request on provider rejection, so the
+crime scene for both casualties exists on disk and has not yet been read. That
+is the next step, and it is cheap.
+
 ## 6. `InjectionLedgerMiddleware`
 
 `wrap_model_call`'s `ModelRequest` exposes `messages`, `system_message` and `tools` —

@@ -1065,6 +1065,17 @@ volume discriminates by a factor of three.** The failing runs are not stuck
 reading or looking; they are *doing the task over and over*, and eight of the
 eleven exhaust the turn budget doing it.
 
+Splitting all 32 failures by whether the cell also failed in generation 0 shows
+the batch doing **two** things at once, to two different populations:
+**newly-failing** cells hit the wall (8 of 11 exhaust the budget — procedural
+inflation), while **persistently-failing** cells changed shape, budget
+exhaustion falling 17 → 10 as wrong-conclusion failures doubled 4 → 8 (entries
+read as permission to stop — the stopping-licence family again). The aggregate
+`max_turns` count looks flat only because those movements cancel, +8 against
+−7. An analysis stopping at the aggregate finds no budget story; one stopping at
+the flipped cells misses the licensing. **The reading cost is the smallest of
+the three effects.**
+
 The mechanism is **procedural inflation**: thirty-seven individually-correct
 entries — verify with two signals, re-localise after every carry, re-measure the
 offset, retry on a stall — compose into a procedure no single entry prescribes

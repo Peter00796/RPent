@@ -909,16 +909,39 @@ Tellingly, the one budget-awareness entry admitted in the batch lost
 behaviourally to roughly twenty entries demanding more verification. The library
 had an opinion about economy and was outvoted by its own contents.
 
-**Correction to the previous revision of this file.** It stated that the
-mechanism was "concluding too early or wrongly, not running out of road". That
-was over-generalised from the *aggregate* failure-mode composition, which is
-genuinely flat on `max_turns` (19 → 18). But on the cells that actually
-regressed, **8 of 11 are budget exhaustion**. The aggregate and the
-counterfactual subset answer different questions, and the subset is the one that
-speaks to causation. The rise in `finish`-called-while-unsolved (3 → 7) remains
-real and is retained as a **secondary** effect, not the primary one.
+#### The synthesis: two effects on two populations, hiding in the aggregate
 
-#### The content is not the problem — the dosage is
+Both readings above are right, they describe **different populations of
+failure**, and the aggregate concealed that by letting them cancel. Splitting
+generation 1's 32 failures by whether the cell also failed in generation 0:
+
+| population | | `max_turns` | concluded wrongly | no marker |
+|---|---|---|---|---|
+| **newly failing** (11 flipped) | gen 1 | **8** | 3 | 0 |
+| **persistently failing** (21) | gen 0 | **17** | 4 | 0 |
+| **persistently failing** (21) | gen 1 | **10** | 8 | 3 |
+
+- On **newly-failing** cells the library caused **budget exhaustion**: they now
+  over-execute and hit the wall. That is procedural inflation.
+- On **persistently-failing** cells it changed the *shape* of failure — budget
+  exhaustion fell 17 → 10 while wrong-conclusion shapes doubled 4 → 8. Those
+  runs stop early instead of grinding to the buzzer. That is
+  conclusion-licensing, the [5f](04-open-issues.md) family.
+
+The aggregate `max_turns` count looks flat (19 → 18) **because these two
+movements almost exactly cancel**: +8 from the newly-failing, −7 from the
+persistent. An analysis stopping at the aggregate — as the previous revision of
+this file did — concludes there is no budget story at all. One stopping at the
+flipped cells misses the conclusion-licensing entirely. Both revisions of this
+section were half-right, and the halves are recorded rather than overwritten.
+
+**So the batch did two things at once.** It **inflated procedures** (three times
+the motions, drowning cells that used to finish) and it **licensed conclusions**
+(entries read as permission to stop). The reading cost is real, measured, and
+the *smallest* of the three effects — 9.1 calls per run, statistically identical
+in runs that succeeded (8.7) and failed (9.8).
+
+#### The content is not the problem — the dosage is#### The content is not the problem — the dosage is
 
 Three cells went the other way, gen-0 failure to gen-1 solve, and
 `object_task` reached **10/10**. A library that were simply harmful could not
@@ -950,11 +973,20 @@ that `ToolCallIntegrityMiddleware` was built to repair after the gen-0
 Counted as failures, not excluded: unlike an external kill, the run built the
 malformed request itself, and a harness crash is a harness result.
 
-The third (`20260814-10:08:06_libero_10_swap_t9_s0`) ends mid-tool-result with
-no error and no marker — the interrupted shape, but **no abort provenance is
-known**, so under the two-condition rule it is *not* excluded. It is counted as
-a failure and flagged: if a kill or reboot at ~10:22 is documented, gen-1
-becomes 45/76 and this line should be revisited.
+The third (`20260814-10:08:06_libero_10_swap_t9_s0`) was read while **still
+running**, and is not an interrupted run at all: generation 1's second GPU
+worker had not finished, and this was its final cell, mid-flight at the moment
+it was inspected. There is no abort provenance because there was no abort. **The
+reported close times (07:45 / 08:24) covered only the first worker**; the
+chronology is corrected here rather than left standing, and generation 1's final
+figure is **45 or 46 of 77** pending that cell.
+
+The lesson generalises and belongs beside the others in this file: **a run that
+is dead and a run that is merely slow are indistinguishable from one snapshot of
+its log.** Two readers classified it from a single read and both got it wrong.
+The two-condition exclusion rule demands abort *provenance* precisely to stop
+this, and honouring it is what kept the cell counted instead of silently
+dropped.
 
 ### The three E-cells are N/A — classified, with the cause
 
