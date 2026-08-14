@@ -1,8 +1,10 @@
 ---
-title: Grasp with pi0 from 6 cm above, then verify geometrically
+title: Grasp with pi0 from 6 cm above, then verify geometrically (fallback)
 type: technique
 scope: task
-conditions: When the stove is on and the moka pot must be lifted.
+conditions: FALLBACK only — use the handle-bar hook first (geometric catch,
+  deterministic). Reach for pi0 only if the handle is occluded or the hook
+  has failed twice.
 support: 3
 provenance:
 - action: add
