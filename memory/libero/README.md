@@ -1,17 +1,8 @@
-# memory/libero — LIBERO environment memory
+# Library index (libero) — read this first
+One line per entry; open on WHEN-match only.
 
-Environment-specific knowledge for LIBERO: embodiment invariants measured
-once (e.g. which eef axis the fingers close along vs `rotate_wrist`), fixture
-behaviours, environment-wide conventions no tool reports. Anything true
-across environments belongs in `memory/common/`; anything specific to one
-task cell (a coordinate, an object identification, a `max_chunks` that
-worked) is never admitted at all.
-
-Same governance as `memory/common/`: agents write proposals to
-`{output_dir}/memory_proposals/`, only the promotion gate writes here, every
-entry carries provenance frontmatter, refuted entries are evicted. See
-`memory/common/README.md` and `docs/harness/02-decisions.md`.
-
-Deliberately decoupled from `resources/libero/` (the upstream priors payload,
-now synced to `.staging/` only under `--sandbox full`): this library holds
-what the harness grew and can defend with measurements, nothing inherited.
+- termination_can_fire_during_a_closed_gripper_descent_do_not_ — success & stopping
+- after_release_verify_placement_geometry_a_release_call_is_no — silent flag after release
+- discard_held_object_point_clouds_contaminated_by_the_contain — held reads near containers
+- re_localize_the_basket_after_every_carry_identity_warning_me — stale destination anchors
+- treat_large_remaining_distance_on_move_to_as_a_stall_retreat — low-z / base stalls

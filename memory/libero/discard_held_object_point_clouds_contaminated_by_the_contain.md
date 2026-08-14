@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Discard held-object point clouds contaminated by the container near the basket
 type: failure_mode
 scope: env
@@ -52,4 +53,8 @@ provenance:
   counter_evidence: []
 ---
 
-A held-object query taken with the wrist over the basket returns container-contaminated clouds: shape_warning, large span, or interior points. These are unusable for release coordinates. Capture the held-object offset once in open air after the grasp; if an over-basket query is contaminated, reuse the clean offset and compute the release from a fresh basket re-segmentation. Do not repeatedly re-query over the basket.
+WHEN: held_object near a container or surface.
+RULE: clouds there mix in container points or vanish. Measure the held
+offset once in open air right after the pick and reuse it for the whole
+carry; never compute release coordinates from an over-container reading.
+WHY: contaminated spans and vanishing clouds measured repeatedly.

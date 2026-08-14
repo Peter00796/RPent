@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Verify every pi0 pick geometrically before transport
 type: failure_mode
 scope: common
@@ -84,4 +85,9 @@ provenance:
   counter_evidence: []
 ---
 
-The pi0_pick status string is not a contact report. A success can be an air grasp that leaves the object in place (t6); a success can also displace the object into the destination without a verified grasp (t7); and repeated failures can leave the object untouched until a scripted grasp is used (t8). After every pick, check both the origin box and the destination/held-object state. If the object moved without a grasp, do not treat the pick as failed for task purposes: advance the state, re-localize, and continue.
+WHEN: after every pi0_pick, success or failure alike.
+RULE: before transporting or releasing, require two independent geometric
+signals — origin-box voxel removal AND held-object/wrist evidence. The
+status string is not a contact report: a success can be an air grasp, and
+a failure can still have moved the object.
+WHY: measured across five suites (t6 0.002 air grasp; t7 displacement).

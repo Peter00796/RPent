@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Do not conclude emptiness from a single tight occupancy box
 type: failure_mode
 scope: common
@@ -57,4 +58,8 @@ provenance:
   counter_evidence: []
 ---
 
-A zero-point occupancy answer obtained while the EEF is over the queried box is not evidence of emptiness: the arm-exclusion sphere can cover the object itself. Do not start a re-pick or declare a location empty from such a reading. Re-query with the arm clear, shrink/disable the arm exclusion, or verify with a camera/segment before acting on the zero.
+WHEN: an occupancy or compare box reads zero or newly empty.
+RULE: a zero taken with the arm in or near the box is not emptiness — the
+arm-exclusion sphere can hide the object itself. Move the arm clear or
+disable the exclusion, re-query once, then decide.
+WHY: false re-picks of still-held objects measured.

@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Treat large remaining distance on move_to as a stall; retreat and re-approach
 type: failure_mode
 scope: env
@@ -30,6 +31,9 @@ provenance:
   counter_evidence: []
 ---
 
-A move_to can report completion while lagging the requested target; a large remaining distance means the position controller did not arrive. Continuing to send small corrections from a pinned or wall-adjacent pose wastes steps. Retreat to clear space, re-localize the object and container, and plan a segmented approach; use a direct pose move for the final descent into the basket.
----
-
+WHEN: stalls at low z or near the robot base.
+RULE: avoid low-z move_to near the base; step in small increments
+(especially along -y); use a pitched move_pose for final descents. After
+any stall, verify position before acting from it.
+WHY: reachability boundaries measured; releases from stalled poses
+missed.

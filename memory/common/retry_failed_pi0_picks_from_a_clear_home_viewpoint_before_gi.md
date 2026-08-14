@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Retry failed Pi0 picks from a clear/home viewpoint before giving up
 type: technique
 scope: common
@@ -70,4 +71,10 @@ provenance:
   - run:20260813-11:07:52_libero_goal_task_t4_s0#seq=21
 ---
 
-A pi0_pick "success" is not a completed grasp. Do not repeat the same pick from the same stale pre-position: failed attempts can nudge a table object, so re-measure its footprint from a clean view before retrying. The retry should be launched from home or from a fresh pre-position over the re-measured center; returning home with an unchanged prompt is not enough. For flat or lying targets, add a spatial qualifier to the pick prompt (e.g. "lying on the table", "on the table"). Verify the retry by gripper width matching the target and by a hand-height camera view before transport.
+WHEN: a pick failed or air-grasped.
+RULE: retry once, properly: re-localize the fresh footprint (a miss moves
+things), take a new pre-position above it, adjust the prompt with a shape
+or spatial qualifier. If the object's support changed, change the
+approach. After two failed policy picks, switch to a scripted
+descend-close-lift and verify it.
+WHY: identical re-picks measured never to recover.

@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: VLM scene and state verdicts are not ground truth; decide from geometry
 type: invariant
 scope: common
@@ -28,4 +29,10 @@ provenance:
   counter_evidence: []
 ---
 
-A VLM answer is one vote, not a measurement. When the same VLM changes its answer across calls while occupancy/back-projection geometry stays stable, the geometric reading wins. Do not start a recovery or a verification loop from a VLM "missing", "held", or "open" verdict alone; first check an occupancy box, a handle slot, or a hand-height camera view.
+WHEN: a VLM answer — identity, state, or pixel — is about to decide an
+action.
+RULE: it is one vote. Back-project pixel claims and reject any that leave
+the support surface. When a VLM verdict conflicts with geometry, geometry
+wins: re-measure rather than re-ask.
+WHY: measured misfires — pixels at the wrong object's height,
+self-contradicting state claims.

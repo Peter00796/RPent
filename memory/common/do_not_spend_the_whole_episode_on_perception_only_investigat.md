@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Do not spend the whole episode on perception-only investigation
 type: failure_mode
 scope: common
@@ -70,4 +71,8 @@ provenance:
   counter_evidence: []
 ---
 
-A run that never leaves the early environment steps cannot succeed. Set a hard budget: a bounded set of name variants per camera, one wrist pass, one low-z occupancy enumeration. After the budget is exhausted, act on the best candidate and verify the result geometrically. Moving the arm to inspect a new viewpoint is still perception; if it is not followed by a manipulation attempt, the episode is lost.
+WHEN: many perception calls and no motion yet.
+RULE: the budget is one ladder per target plus one enumeration. Then
+commit: act on the best candidate and verify by the result. Investigation
+that outlives its budget is itself the failure, not caution.
+WHY: whole episodes measured dying at step 0-2 with perfect maps.

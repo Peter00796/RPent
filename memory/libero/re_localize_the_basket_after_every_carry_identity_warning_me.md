@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Re-localize the basket after every carry; identity_warning means movement,
   not noise
 type: technique
@@ -68,4 +69,8 @@ provenance:
   counter_evidence: []
 ---
 
-The step-0 basket segment goes stale as soon as the arm moves. After the pick is verified, re-segment the basket from agentview and derive the rim opening from the fresh mask. Use the fresh reading, not the stored interior-median, for the carry and release pose. Repeating the same stale basket anchor produces release targets that stall on the rim.
+WHEN: before the carry and before the release.
+RULE: re-segment the destination after the pick — any anchor from step 0
+is stale once the arm has moved. Aim at the fresh opening centre, never
+the stored interior median.
+WHY: stale anchors measured to produce rim-stall releases.

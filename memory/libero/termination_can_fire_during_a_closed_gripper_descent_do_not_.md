@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Termination can fire during a closed-gripper descent; do not require a release
 type: invariant
 scope: env
@@ -55,23 +56,11 @@ provenance:
   counter_evidence: []
 ---
 
-Keep the existing fact that termination can fire during a closed-gripper
-descent and that a release call is not required, and keep the requirement of
-at least two independent physical checks (origin box emptied, held/table
-absence, basket-interior occupancy, or a lowered wrist view). REPLACE the
-old closing licence ("treat the task as complete"): if the checks pass and
-termination has STILL not fired, you have a CONTRADICTION between your own
-verification and the environment's scoring authority — and the flag is the
-authority. Presence checks cannot detect a wrong-object placement: putting
-the WRONG object in the basket passes every one of them while the checker
-rightly stays silent. Before stopping, verify the IDENTITY of the object
-actually inside the basket (read its label via the vision channel if armed,
-or match its measured geometry against the target's signature) — not merely
-that something you placed is present. If the identity check fails, treat the
-run as a wrong-object failure and recover. Only if the verified TARGET is
-inside and the flag is still silent may checker flakiness be considered:
-record the contradiction explicitly in the audit and finish with an honest
-status describing it — never an unqualified success. Do not keep re-seating
-the object with closed-gripper descents in either case.
-
-Gen-0 full-benchmark additions (batch gen0full_night, manual merge; evidence: run:20260813 object_swap/goal sweeps): the flag also will NOT fire while the placed object still protrudes above the container rim — a non-firing flag with a protruding object is a seating problem, not checker flakiness. And a fire DURING a closed-gripper descent or before the arm retreats still counts: the episode is over the moment it fires; do not issue further motions after it.
+WHEN: deciding success, or deciding to stop.
+RULE: the flag is the only success authority. It may fire during a
+closed-gripper descent — then the episode is over; stop moving. If your
+checks pass while the flag stays silent, that is a contradiction: verify
+the IDENTITY of the placed object (label or geometry), fix seating or
+protrusion, and never finish as success on a silent flag.
+WHY: wrong-object placements pass every presence check (measured twice);
+protruding objects do not fire.

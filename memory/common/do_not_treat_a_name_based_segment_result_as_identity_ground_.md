@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Do not treat a name-based segment result as identity ground truth
 type: invariant
 scope: common
@@ -39,4 +40,10 @@ provenance:
   counter_evidence: []
 ---
 
-A `found=true` for a name prompt is a hypothesis about identity, never proof. If two names bind to the same mask, or one generic name is called twice and returns one mask, the run has not found two objects. Do not assign task names to masks under those conditions. Separate the candidates with at least one independent channel before committing a pick: color/shape prompts, crop-label reading via VLM, splitting a merged mask by pixel columns, wrist close-up reads, or geometric enumeration. For identity that remains ambiguous after separation, use task-checker feedback as the final oracle; do not pick under an unverified name.
+WHEN: identity comes from a text prompt.
+RULE: found=true is a hypothesis, found=false is not absence, and two
+prompts landing on one mask are one object. Before a pick that depends on
+identity, confirm with one independent channel: a label read or geometry
+against a task anchor.
+WHY: SAM3 collapse measured at 39% on hard scenes; the unique-bottle
+inference picked the distractor twice.

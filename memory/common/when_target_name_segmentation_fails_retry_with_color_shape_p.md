@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: When target-name segmentation fails, retry with color/shape prompts before
   declaring the object absent
 type: technique
@@ -31,4 +32,10 @@ provenance:
   counter_evidence: []
 ---
 
-Name-prompt segmentation is a vote, not ground truth. A target can be visible and graspable while every SAM3 name variant returns found=false. After bounded rephrasing on both cameras, switch to geometric localization, then segment by an explicit point prompt on the confirmed pixel. A point-prompt mask at a geometrically confirmed location is a valid working target even if the name never grounds. Do not keep expanding the wording loop.
+WHEN: the target name fails to ground.
+RULE: climb each rung once, then act: (1) two-three rephrases including
+color/shape; (2) the other camera; (3) VLM pixel, back-projected — reject
+it if z leaves the support surface; (4) point-prompt or low-z occupancy
+elimination. After the ladder, act on the best-supported candidate.
+WHY: this sweep's successful localizations came from leaving the naming
+loop, not extending it.

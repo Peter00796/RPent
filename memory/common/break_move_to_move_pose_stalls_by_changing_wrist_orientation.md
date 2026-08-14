@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Break move_to/move_pose stalls by changing wrist orientation; do not repeat
   the same stalled move
 type: technique
@@ -27,4 +28,9 @@ provenance:
   counter_evidence: []
 ---
 
-A stalled move with a large residual is often an IK/configuration lock, not a distance problem. Repeating the same command in the same wrist pose will not make progress. Change the configuration: add explicit pitch/yaw targets to move_pose, rotate the wrist by about 90 degrees, back away to a higher z and approach again. Use a move_pose that co-varies position with wrist tilt when the arm is jammed near a low surface.
+WHEN: move_to/move_pose ends far from its target.
+RULE: a stall is a configuration problem, not a distance problem.
+Never repeat the identical command. Change configuration: explicit
+pitch/yaw via move_pose, retreat to higher z, re-approach on a new path
+in smaller steps.
+WHY: identical repeats measured to stall identically.

@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: Pre-position pi0 from the agentview anchor when wrist and agentview disagree
 type: technique
 scope: common
@@ -31,4 +32,10 @@ provenance:
   counter_evidence: []
 ---
 
-Do not issue pi0_pick from home or from a hover far from the target. First move the EEF directly above the geometrically confirmed object position, then issue the pick prompt. If a wrist read and the agentview anchor disagree, trust the agentview-derived anchor. Pi0 picks that connect are the ones launched from directly above the intended object. Verify every pick geometrically after issuing it.
+WHEN: before pi0_pick or any contact policy.
+RULE: first move the open gripper directly above the confirmed target
+(about 0.15 above), then call the policy. Launched from home or a far
+hover, the policy acts on the wrong thing. When wrist and agentview
+disagree, the agentview anchor wins.
+WHY: grasp-width signatures 0.002 (from home) vs 0.039 (pre-positioned),
+reproduced on two cells.

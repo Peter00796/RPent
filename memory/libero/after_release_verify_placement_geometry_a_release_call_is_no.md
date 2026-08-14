@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: After release, verify placement geometry; a release call is not task success
 type: failure_mode
 scope: env
@@ -61,4 +62,10 @@ provenance:
   counter_evidence: []
 ---
 
-Placement verification establishes physics, not task success. Once occupancy or a clear view confirms the object is physically inside the destination, believe that verification. If libero_terminated still does not fire, read that as negative task-level feedback: the placed instance may be the wrong one, or the task needs an additional state change. Try the remaining candidate or re-read the task; do not burn the episode re-verifying the same placement or knocking objects off the destination.
+WHEN: after a release with the flag silent.
+RULE: verify from a clear view: right object, inside, seated — not
+perched or protruding. If placement verifies correct and the flag is
+still silent, keep working (seat it, or re-read the task); silence is
+feedback, not permission to conclude.
+WHY: rim-perch and wrong-instance placements measured behind silent
+flags.

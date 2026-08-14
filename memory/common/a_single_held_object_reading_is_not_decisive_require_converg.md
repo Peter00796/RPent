@@ -1,4 +1,5 @@
 ---
+curated: gen1b_owner_order 2026-08-14
 title: A single held-object reading is not decisive; require convergent evidence
 type: failure_mode
 scope: common
@@ -49,4 +50,10 @@ provenance:
   counter_evidence: []
 ---
 
-held_object has hardware-like biases: a clamp wider than roughly 0.06 m can be read as "open", a small held item can produce no cluster, and a check taken with the EEF inside the queried volume can return table/container points. Do not let a single false or true decide a grasp. After every pick, compare origin-box voxel removal at a clearance pose and add a wrist-camera close-up. For small objects, origin-box emptiness is the primary signal because held_object may never see them.
+WHEN: any single held_object / occupancy / camera reading is about to
+decide an action.
+RULE: one reading is a vote. If votes disagree, take exactly one more
+independent channel (wrist close-up or origin diff) and act with the
+majority. Do not loop verification past two rounds — act.
+WHY: held_object has measured false negatives (width gate, small objects,
+container contamination).
