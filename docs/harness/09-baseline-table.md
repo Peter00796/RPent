@@ -1130,6 +1130,46 @@ first enforcement at benchmark scale.
 
 ---
 
+## 4.5b Generation 0 replicated: 46/77 against 53/77, and what that means
+
+The clean-room full-benchmark arm was re-run in full under the same
+configuration. **Original 53/77 (68.8%); replication 46/77 (59.7%).** Per cell,
+56 of 77 agree (73%), with 14 lost and 7 gained, and the three N/A cells
+reproduce in exactly the same positions.
+
+Seven suites move by 0–2 cells (net −2). One does not: **`goal_swap` alone
+accounts for −5** (7/10 → 2/10). Investigation found **no infrastructure error**
+(zero tracebacks, zero VLA or SAM3 failures), **no code drift** (only docs and
+memory commits landed between the runs), and an ordinary death mix (6
+`max_turns`, 1 essay-stop).
+
+**The elimination is sound, and the arithmetic backs it rather than merely
+permitting it:**
+
+- **The overall difference is not distinguishable from run-to-run variance.**
+  McNemar's exact test on the 14/7 discordant pairs gives **p = 0.19**. Two
+  measurements of the same arm differing by seven cells out of 77 is an
+  unremarkable event.
+- **Even `goal_swap` survives scrutiny once the search is accounted for.**
+  Taken alone, 7/10 versus 2/10 is Fisher-exact **p = 0.070** — suggestive. But
+  it is the *most extreme of eight suites*, and it is being examined *because*
+  it is extreme. Correcting for that, the probability that some suite shows a
+  swing this large is **≈ 0.08**. Unremarkable again.
+
+> **Reporting rule from here on: generation 0 is quoted as a range, never as a
+> point.** Two measurements, 68.8% and 59.7%, mean **≈ 64%**, with a
+> **±4–5 cell error bar on any single full-benchmark total**. Every earlier
+> comparison in this file that used the single figure 53/77 must be read with
+> that error bar attached.
+
+**This is the most valuable thing the replication bought.** Before it, every
+full-benchmark number in this document was a single sample presented without any
+notion of its own noise. The generational differences discussed above — 53 → 45
+on totals, and 40 → 34 → 34 on matched cells — now have a scale to be judged
+against. **The paired comparisons survive that scale; comparisons of single
+totals largely do not.** That is an argument for the matched-cell method, and it
+arrived from a replication run rather than from an opinion.
+
 ## 4.6 The resident campaign on four `10_*` cells — separate measurement
 
 Run 2026-08-14 after generation 1b closed, on the four cells generation 1b had

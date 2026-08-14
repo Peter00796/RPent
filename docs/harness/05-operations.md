@@ -105,6 +105,20 @@ path.
 
 ## Hard-won gotchas
 
+### Intermediate analysis artifacts need a version stamp, or they outlive their correctness
+
+A per-cell JSON grid cached mid-analysis (`tools_staging/gen0_percell.json`) was
+generated **before** a run-window correction and carried three wrong cells. It
+was caught by hand during a later calculation and repaired — but it had already
+been written to a shared staging path, where it looks exactly like a current
+artifact.
+
+**A derived file that does not record which inputs and which rules produced it
+becomes a trap the moment either changes.** Regenerate intermediate grids rather
+than reusing them across a correction, or stamp them with the window and ruleset
+they were built under. Same class as the stale LaTeX cross-references: correct
+when written, silently wrong later.
+
 ### ⚠ Two launches of the same cell in the same second collide and corrupt each other
 
 Output directories are named to the **second**. Launching the same
