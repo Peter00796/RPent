@@ -105,6 +105,40 @@ path.
 
 ## Hard-won gotchas
 
+### ⚠ The same cell name exists in every sweep — the time window IS the arm
+
+`logs/` is flat and run directories are named
+`{timestamp}_{suite}_t{task}_s{seed}`. **The arm appears nowhere in the name.**
+By 2026-08-14, `libero_object_swap_t5_s0` had four directories — one each from
+the 50-turn generation 7 sweep, full-benchmark gen 0, gen 1, and gen 1b — plus
+separate `run_rep_*` repeat logs for other arms entirely.
+
+**Selecting by cell name alone silently gives you a different arm's result.**
+This cost a two-person cross-check a two-cell disagreement on gen 0 (38 vs the
+correct 40) before it was traced: one side's glob had swept in `run_rep_none*`
+directories, which overwrote the real cells by name.
+
+Rules that avoid it:
+
+- **Filter by time window first, then by name.** Each sweep's window is its
+  boundary: gen 0 is 08-13 09:29 onward; gen 1 begins at its first cell,
+  `20260814-02:23:08`. Confirm the window's edges against the neighbouring
+  sweep's first and last directory rather than assuming.
+- **Confirm the arm from `sandbox.json`**, not from the plan or the folder name.
+  It records the profile and the source hash actually in force.
+- **Assert no duplicates before counting.** Strip the timestamp, sort, and check
+  for repeats; a duplicate cell inside one arm's set means the window is wrong
+  or a cell was re-run, and either way the count is not yet trustworthy.
+
+This is the same failure class as the wiped `/tmp` that made a mining step
+silently no-op, the editable install that resolved imports to the wrong tree,
+and the hardcoded LaTeX cross-references that were correct when written and
+wrong later: **all of them return a plausible answer instead of an error.** The
+only defence that has ever worked here is checking an artifact rather than
+trusting that a step did what it was named for.
+
+
+
 - **`agent_tools.py` must not gain `from __future__ import annotations`.** It breaks
   `ToolRuntime` injection silently, and only at dispatch time. See `02-decisions.md`.
 - **A turn's tool calls run concurrently in one process.** Anything doing
