@@ -1130,6 +1130,68 @@ first enforcement at benchmark scale.
 
 ---
 
+## 4.6 The resident campaign on four `10_*` cells — separate measurement
+
+Run 2026-08-14 after generation 1b closed, on the four cells generation 1b had
+just flipped. **Practice seed 51, practice sandbox, vision arm, two rounds of
+150 then 300 turns.** These are *practice-seed debugging sessions, not exam
+cells*: they share no denominator with anything in §4 and must never be pooled
+with a benchmark row.
+
+| cell | task | checker fired | notes | status | outcome |
+|---|---|---|---|---|---|
+| `10_swap` t2 | stove + moka pot | **attempts 1, 4, 6** | yes | `success` | **solved and reproduced twice** — the only cell meeting the full standard |
+| `10_task` t4 | dual mug | attempt 7 (round 1) | yes | `stuck` | solved once, round 2 could not reproduce |
+| `10_task` t3 | bottle into drawer | attempt 4 | yes | `failure` | solved once, reproduction failed, **self-downgraded** |
+| `10_swap` t1 | cheese + butter | **never** | **none** | — | 450 turns, four-layer failure chain, died with the budget |
+
+### Four cells, four distinct pathologies, no repeats
+
+That is the finding, and it explains the benchmark result structurally rather
+than statistically. `10_swap` t2 needed a firing order; `10_task` t4 is defeated
+by an OSC placement-drag singularity; `10_task` t3 turned on a closing-drawer
+actuation depth (`pi0_doubled` needs 50-chunk × 2 — 30 chunks does not push the
+drawer home); `10_swap` t1 fails in a four-link chain, misidentification through
+to knocking the first object out while placing the second.
+
+**No two share a cause.** A general-tier library entry is, by construction, a
+claim that applies across cells — and there is no cross-cell regularity here to
+capture. That is why the general library cannot rescue the `10_*` suites, and it
+is a better explanation than "the entries were bad".
+
+### The instrument came out clean
+
+Three of the four cells had the environment's checker fire at least once, and
+**there were no cases of the checker wrongly refusing a genuine solve.** After
+the t5 flaky-checker episode — where two of three suspected failures turned out
+to be the *wrong object placed*, and the checker was right — this matters:
+across a campaign specifically designed to stress hard cells, the scoring
+authority was not the problem.
+
+`10_task` t4's round 2 is the sharpest case. An exhaustive placement matrix came
+back uniformly false, which looks like a broken checker. It was adjudicated
+otherwise: the checker is innocent and the round died on an uncontrolled OSC
+placement-drag confound. The cell is **hard, not broken**, and no denominator
+moved.
+
+### Two pieces of honesty evidence worth naming
+
+`10_task` t3 solved once, failed to reproduce, and **filed `status=failure`**
+rather than claiming the solve. `10_task` t4's round 2 **reported `stuck`**
+rather than manufacturing a result from an exhausted matrix. Both are the
+instrument reporting against its own interest, unprompted, and they are the
+concrete form of the claim that a loop able to report its own failures is the
+only kind worth believing.
+
+### Open, and deliberately not decided here
+
+`10_task` t4's distillation has two possible forms: a **pure** version using only
+this project's own attempt-7 evidence, or one that **imports an upstream tilted-lever
+entry** with its external provenance labelled. That is a call about what may enter
+a clean-room library and it belongs to the project owner, not to this file.
+
+---
+
 ## 5. Single-cell arms — the t6 and t5 case studies
 
 ### 5.1 t6 — *"Pick the butter and place it in the basket"*

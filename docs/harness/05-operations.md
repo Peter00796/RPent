@@ -105,6 +105,32 @@ path.
 
 ## Hard-won gotchas
 
+### An exhaustive matrix can be flattened by one uncontrolled confound
+
+`10_task` t4's second resident round ran a systematic placement matrix and got
+**uniformly false** back. The natural reading — the checker is broken — was
+wrong. The matrix was flattened by an uncontrolled variable: an OSC
+placement-drag singularity displacing the object 4–5 cm during release, which
+affected *every* cell of the matrix equally and therefore looked like no signal
+at all rather than like interference.
+
+**A uniform negative across a systematic sweep is evidence of a confound at
+least as often as it is evidence of absence.** Before concluding "nothing
+works", check whether something is acting on every arm of the sweep alike.
+
+### 150 turns is systematically short for long-horizon resident work, and budget death costs the notes
+
+Across three of the four cells in the resident campaign, the first 150-turn
+round produced no solve and — more expensively — **no `resident_notes.md`**,
+because notes are written near the end and a run that dies on its budget dies
+before writing them. The 300-turn second rounds produced both solves and notes.
+
+The consequence is worse than a lost cell: **the distillation material is gone
+too.** What survives a budget death is only the `reset_episode` reasons and the
+raw transcript, not the model's own curated recipe. Budget long-horizon resident
+sessions at 300 turns, and treat notes-before-budget-exhaustion as the thing
+being protected.
+
 ### ⚠ The same cell name exists in every sweep — the time window IS the arm
 
 `logs/` is flat and run directories are named

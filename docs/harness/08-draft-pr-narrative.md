@@ -1139,6 +1139,30 @@ first place; a loop that could not report this would not be worth having.
 The pre-committed consequence is now owed: the composed-cost check
 ([issue 5h](04-open-issues.md)) before any further general-tier admission.
 
+**And a resident campaign on four of the cells that generation 1b flipped
+explains the benchmark result structurally.** Two rounds each, practice seed,
+300 turns: one cell solved and reproduced twice, two solved once without
+reproducing, one never solved across 450 turns. What matters is not the tally —
+these are practice-seed debugging sessions and share no denominator with any
+benchmark row — but that **four cells produced four distinct pathologies with no
+overlap**: a firing order, an OSC placement-drag singularity, a closing-drawer
+actuation depth, and a four-link chain from misidentification to knocking the
+first object out while placing the second.
+
+A general-tier entry is by construction a claim that generalises across cells.
+**There is no cross-cell regularity here to capture.** That is a better
+explanation of why the general library cannot rescue these suites than "the
+entries were poor", and it is the kind of explanation only per-call records can
+support.
+
+Two details from that campaign belong to the honesty argument rather than the
+results. One cell solved once, failed to reproduce, and filed `status=failure`
+rather than claiming the solve. Another met an exhaustive placement matrix that
+returned uniformly false — which looks exactly like a broken checker — and
+reported `stuck`; adjudication found the checker innocent and an uncontrolled
+confound flattening the matrix. **The instrument reported against its own
+interest, twice, unprompted.**
+
 ---
 
 ---
