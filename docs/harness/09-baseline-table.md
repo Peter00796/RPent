@@ -1067,6 +1067,56 @@ no later reading claims the separation was achieved.
   lands there, the honest report is that the experiment did not separate its
   variables and a dosage-only arm is still owed.
 
+### RESULT (2026-08-15): the constitution did not recover the score
+
+Generation 1b was **stopped by owner decision after 53 scorable cells** and is
+recorded as **one complete, independent measurement** — not a partial sweep
+awaiting resumption. The 24 unrun cells are simply not part of it.
+
+The informative comparison is not gen-1b's own percentage. It is the **same
+cells across all three generations**, which is exactly the comparison that
+survives an incomplete run, because the missing cells are missing identically
+from every arm:
+
+| arm | library | same 53 cells |
+|---|---|---|
+| generation 0 | none | **40** |
+| generation 1 | 41 entries | **34** |
+| generation 1b | 15-entry constitution + index | **34** |
+
+> ⚠ **Do not confuse two 53s.** The *paired subset* is 53 cells. Generation 0's
+> *full-benchmark score* is also 53 (of 77). They are unrelated numbers that
+> happen to coincide. On the paired subset gen-0 scores **40**, not 53.
+
+**Verdict, per the criterion pre-registered in §4.5 before the run:** this is
+the **"no recovery"** branch.
+
+- The constitution — **dosage and form jointly**, 41 entries to 15 plus the
+  WHEN/RULE/WHY rewrite with conclusion-licences banned by construction — **did
+  not recover the score**. 34 against generation 1's 34 is flat, and both sit
+  six cells below the no-library arm.
+- **General-tier library content does not transfer at benchmark scale.** Three
+  library configurations have now been measured against a clean room on
+  matched cells, and all three lose to it.
+- **The `object_task` anchor holds**: 9/10 in generation 1b. Entries work
+  **inside the suite they were mined from**. What fails is the generalisation,
+  not the knowledge.
+- **Consequence, pre-committed and now owed**: the [5h](04-open-issues.md)
+  composed-cost check is required before another general-tier admission round.
+  Admitting more entries without it would repeat a measured failure.
+
+Because dosage and form moved together, this result **cannot** attribute the
+non-recovery to either alone — and it does not need to. The claim it supports is
+narrower and firmer: *neither pruning to a third nor rewriting to a disciplined
+form, nor both at once, made the general library net-positive at benchmark
+scale.*
+
+**Reporting rule for gen-1b's own numbers.** Its single-pass figures (34 of 53,
+64.2%; 66% on an earlier partial read) may appear only when labelled
+**"stopped at 53 of 77 cells — not a full benchmark"**, and must never sit bare
+beside a row with a 77 denominator. A partial numerator against a full-benchmark
+column is a comparison nobody made.
+
 ### The doctrine in the owner's words
 
 > 入沙箱的内容必须简洁和规范，不得含让 agent 盲目下结论的东西。

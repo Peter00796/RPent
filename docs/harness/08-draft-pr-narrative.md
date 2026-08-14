@@ -1105,6 +1105,42 @@ single-suite history had already drawn.
 
 ---
 
+### 6.5 Generation 1b: the constitution did not recover the score
+
+The library was then **constitutionalised**: 41 general-tier entries cut to 15,
+the survivors rewritten to a uniform WHEN / RULE / WHY form under 60 words with
+conclusion-licence phrasing **banned by construction**, and both indexes reduced
+to one line per entry. Library text entering context fell roughly 7,000 → 1,100
+words. The criterion was pre-registered before the run, including the
+acknowledgement that dosage and form were moving together and could not be
+separated afterwards.
+
+Stopped by owner decision after 53 scorable cells and recorded as one complete
+measurement, compared on the cells all three generations ran:
+
+| arm | library | same 53 cells |
+|---|---|---|
+| generation 0 | none | **40** |
+| generation 1 | 41 entries | 34 |
+| generation 1b | 15-entry constitution | **34** |
+
+**This is the pre-registered "no recovery" branch.** Flat against generation 1,
+six cells below the clean room. Three library configurations have now been
+measured against no library on matched cells and **all three lose to it**.
+
+What survives is narrower and sturdier than the thing that failed. `object_task`
+holds at 9/10 — **entries work inside the suite they were mined from** — so the
+failure is of *generalisation*, not of the knowledge itself. That is the honest
+shape of the result: this project can grow knowledge that cracks a specific wall
+(t6: 0/11 → 5/6) and has not yet grown knowledge that transfers across a
+benchmark. Saying so is the point of building the measurement apparatus in the
+first place; a loop that could not report this would not be worth having.
+
+The pre-committed consequence is now owed: the composed-cost check
+([issue 5h](04-open-issues.md)) before any further general-tier admission.
+
+---
+
 ---
 
 ## 7. Practice and exam are different regimes, enforced in code
