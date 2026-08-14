@@ -1163,6 +1163,33 @@ reported `stuck`; adjudication found the checker innocent and an uncontrolled
 confound flattening the matrix. **The instrument reported against its own
 interest, twice, unprompted.**
 
+#### The one cell that went all the way, and what invented the fix
+
+That campaign's single full-standard cell then produced the project's most
+complete arc: a resident-invented recipe that **failed validation 0/3**, because
+its grasp is a ~37% lottery and its real fallback — re-rolling the episode —
+does not exist on an exam surface; then a **tool-ban arm** that invented an
+entirely different solution, hooking the pot by its handle rather than gripping
+it; then that technique into the library with the old grasp demoted to fallback;
+then **2/3** on validation — the first single-pass solves in the cell's history
+— and **6/10 across ten seeds**, with all ten runs reading the full playbook.
+
+The instructive part is not the 6/10. Two samples ran under the same ban on the
+same cell. One invented handle hooking. The other found a **back door** — a
+sibling tool the ban had not named — and used it to do exactly what was banned.
+They differed in one early random outcome: the back door happened to work first
+for one sample, so it never needed to invent anything. **A stochastic failure,
+not the mechanism, is what produced the invention.** A ban written as a list of
+names is a fence with a gate in it; forcing geometric reasoning means
+constraining *capabilities*, not *names* — the same mechanism-over-discipline
+lesson that produced the sandbox, arriving somewhere new.
+
+Two conditions bind the 6/10 and travel with it everywhere: **there is no
+ten-seed control arm** — the baseline is three single-pass runs at ~1/3 — so the
+improvement is **not a paired conclusion**; and the exam ran the `practice`
+sandbox on scoring seeds, making it a **declared playbook arm**, listed apart
+from zero-knowledge results.
+
 ---
 
 ---

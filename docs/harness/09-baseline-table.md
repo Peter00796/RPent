@@ -1271,6 +1271,64 @@ here from the records alone — the playbook-read count answers the first, the
 `min_gripper_opening` distribution answers the second. That separation is what
 the evidence layer exists for, and this is the clearest instance of it yet.
 
+### The t2 chain, end to end: 0/3 → 6/10, and how the fix was invented
+
+The cell that failed its first validation became the project's most complete
+arc. Five stages, each with its own records:
+
+1. **Resident session invents a `pi0`-based recipe** — solved and reproduced
+   twice (§4.6).
+2. **Playbook validation: 0/3.** Knowledge transferred perfectly (5/5 entries
+   read every run); the grasp is a ~37% lottery and the recipe's real fallback,
+   re-rolling the episode, does not exist on an exam surface.
+3. **A `--ban-tools pi0_pick` arm invents a different solution**: hooking the
+   moka pot by its handle — geometric engagement rather than friction grip.
+4. **Hooking enters the library** as the primary grasp with `pi0` demoted to
+   fallback (`f0a894a7`). Three-run validation on the full tool surface:
+   **2/3** — the first single-pass solves in this cell's history, at 7–8 minutes.
+5. **Ten-seed exam: 6/10.**
+
+| seed | s0 | s1 | s2 | s3 | s4 | s5 | s6 | s7 | s8 | s9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✗ | ✓ | ✗ |
+
+All ten runs read **6 of 6** playbook entries — knowledge is present in every
+cell, including every failure. The four failures attempted the hook heavily
+(41–84 attempts) and lost at the engagement, not at the plan: they burn more
+calls (112–142 vs 58–137) and more motion (32–39 vs 15–32) than the solves.
+Three failed with an honest `FINISH`; one exhausted its budget.
+
+#### The invention was contingent on a coin flip — and that is the finding
+
+Two samples ran under the **same ban, on the same cell**. One invented handle
+hooking. The other found a **literal back door**: `pi0_doubled`, which the ban
+did not name, and used it to do exactly what the banned tool would have done.
+
+The two samples differed in **one early random outcome**. The back door happened
+to work first for sample b, so it never needed to invent anything; it had a
+cheaper path and took it. Sample a's back door attempt failed, and only then did
+it reason about geometry and arrive at the handle.
+
+**The mechanism did not select for invention. A stochastic failure did.** A ban
+expressed as a name list is a fence with a gate in it, and whether the agent
+climbs the fence or walks through the gate is decided by luck. If the intent is
+to force geometric reasoning, the constraint has to be expressed over
+*capabilities* rather than over *tool names* — which is the same
+mechanism-over-discipline argument that produced the sandbox, arriving here in a
+new place.
+
+> ⚠ **Two honesty conditions on the 6/10, both binding.**
+>
+> **There is no ten-seed control arm.** The comparison baseline is three
+> single-pass runs on s0 at roughly 1/3. **The improvement is therefore not a
+> paired conclusion** and must not be written as one. A no-playbook ten-seed arm
+> is owed; the owner decides whether it runs.
+>
+> **This exam used the `practice` sandbox on scoring seeds**, which makes it a
+> **declared playbook arm** — legitimate, since the knowledge is clean-room and
+> contains no seed answers, but it belongs in its own row and must never be
+> listed beside zero-knowledge results.
+
 ### Open, and deliberately not decided here
 
 `10_task` t4's distillation has two possible forms: a **pure** version using only
