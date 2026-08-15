@@ -1190,6 +1190,40 @@ improvement is **not a paired conclusion**; and the exam ran the `practice`
 sandbox on scoring seeds, making it a **declared playbook arm**, listed apart
 from zero-knowledge results.
 
+#### Removing the policy: what a blind planner invents when it must
+
+The ban was then widened to both learned-policy primitives and run across
+thirteen hard cells. Two solved and reproduced, three solved once, seven not
+solved — and five techniques invented that existed in no library: handle
+hooking, a pitch-0.49 oblique entry, wrist tilting, knock-over-then-grasp with
+placement branching on carry pose, and wall-braced pinching. **Three of the five
+converge independently on tilting** — a solution family emerging from a
+constraint rather than from instruction.
+
+**One cell inverts the expected order.** `task t7` defeated the VLA arm and fell
+to the arm without it, solved *and* reproduced. The cause is that `pi0` refuses
+to grasp a lying object, and the only route through that cell is *knock it over,
+then grasp*. The policy's capability boundary was **pruning the solution space
+before the planner could reason about it** — a different and more troubling
+failure than unreliability, because nothing in the tool result announces that a
+class of action has been silently declined.
+
+Across the thirteen, **eleven fall to at least one arm and only two defeat
+both**. That locates the learned policy's value precisely rather than assuming
+it: it owns grasping of wide or featureless bodies — cup, bowl, bottle, where
+the pure-LLM arm fails every one — while placement precision and strategic
+invention are stronger without it. A hybrid that selects its tool surface per
+situation is now an inference from a measured 2×2 rather than a design taste.
+
+And the failures point at missing *instruments* rather than missing
+intelligence: contact feedback, a guarded descend-to-contact move, full-DOF
+orientation control, articulated-object primitives, and held-pose as a
+first-class reading — each with its evidence in the records. **Invention
+terminates exactly where measurability terminates.** The planner kept inventing
+until it needed a quantity no tool reports, and stopped there. That is
+ASPIRE's evidence-engine ablation seen from the other side, and the two
+cross-validate: capability follows measurement.
+
 ---
 
 ---

@@ -1338,6 +1338,100 @@ a clean-room library and it belongs to the project owner, not to this file.
 
 ---
 
+## 4.7 The pure-LLM arm: 13 hard cells with the VLA mechanically removed
+
+`--ban-tools pi0_pick,pi0_doubled` — both learned-policy primitives removed at
+the tool-surface level, not discouraged in a prompt. Thirteen hard cells,
+resident sessions, 300 turns, seed 51. **Resident conditions are identical to
+the VLA arm's in every respect except those two tools.**
+
+| outcome | cells |
+|---|---|
+| **solved and reproduced** | `task t7`, `swap t5` |
+| **solved once** | `swap t2`, `task t4`, `swap t8` |
+| solved by luck, **self-disqualified** | `task t6` |
+| not solved | `task t3`, `task t5`, `task t9`, `swap t1`, `swap t3`, `swap t4`, `swap t9` |
+
+Excluded from every denominator and kept on disk under explicit prefixes:
+`KILLED_*`, `ABORTED_*`, `INVALID_*` — including a third instance of the
+DeepSeek-400 defect ([issue 5i](04-open-issues.md)), now `ABORTED_api400_…`.
+
+### What it invented
+
+Five techniques, none of which existed in any library:
+
+- **handle hooking** (`swap t2`) — geometric engagement instead of friction grip;
+- **pitch-0.49 oblique entry** (`task t4`) — a value arrived at independently
+  that lands on the 0.5 an upstream entry needed twelve attempts to find;
+- **wrist tilting** (`swap t8`);
+- **knock-over-then-grasp, with placement branching on carry pose** (`task t7`);
+- **wall-braced pinching** (`task t5`, `task t6`).
+
+**Three of the five converge independently on tilting.** A family of solutions
+emerged from a constraint rather than from instruction — which is the strongest
+evidence in this project that the planner reasons about geometry rather than
+retrieving procedure.
+
+### `task t7`: the arm without the policy beat the arm with it
+
+The VLA arm could not crack `task t7`. The pure-LLM arm solved **and reproduced**
+it. The cause is specific and it inverts the usual framing:
+
+**`pi0` refuses to grasp a lying object.** The only viable route through this
+cell is *knock it over, then grasp it* — and the policy's refusal removed that
+route from consideration entirely. The VLA was not merely failing to execute the
+solution; **its capability boundary was pruning the solution space before the
+planner could reason about it.**
+
+That is a different and more troubling failure mode than "the policy is
+unreliable". A tool that silently declines a class of action shapes what the
+planner will even consider, and nothing in the tool result announces the
+pruning.
+
+### Complementarity: the two arms are not competitors
+
+Across the same thirteen cells, **eleven are solved by at least one arm.** Only
+two — both microwave rotating doors — defeat both.
+
+**The VLA's value is now precisely located rather than assumed.** It owns
+grasping of wide or featureless bodies: the cup (`task t5`), the bowl
+(`swap t3`), the bottle — **the VLA arm solves all of these and the pure-LLM arm
+fails all of them.** Conversely, placement precision and strategic innovation
+are *stronger* without it.
+
+The natural inference is a hybrid arm that selects its tool surface per
+situation rather than carrying both unconditionally — and that is now an
+inference from a measured 2×2, not a design preference.
+
+### Where invention stops is where measurement stops
+
+The failures point at missing *instruments*, not missing intelligence. Each gap
+below has its evidence attached in the run records:
+
+| missing capability | evidence |
+|---|---|
+| `grasp_state` contact feedback | repeated blind re-grips |
+| guarded move — descend until contact | over- and under-shoot on approach |
+| full-DOF `move_pose` | the session's own words: `rotate_pitch` controls world-X only (`swap t8`) |
+| articulated-object primitives | both arms fail both rotating doors |
+| `held_pose` as a first-class reading | `task t7` hand-rolled it from a z-span branch |
+
+**Invention terminates exactly where measurability terminates.** The planner
+kept inventing until it needed a quantity no tool reports, and then stopped.
+That is the same result ASPIRE's evidence-engine ablation reports from the other
+direction — their largest single effect came from *adding* the trace engine —
+and the two findings cross-validate: capability follows measurement.
+
+### Recorded because governance is part of the claim
+
+The path here was not clean. The main session drifted toward an exam line and
+VLA-armed production runs; **the project owner corrected course three times**
+before the arm was cleared and redirected. That history is recorded rather than
+tidied away, because a document arguing that a loop must be able to report its
+own failures cannot quietly omit the times its operators had to be redirected.
+
+---
+
 ## 5. Single-cell arms — the t6 and t5 case studies
 
 ### 5.1 t6 — *"Pick the butter and place it in the basket"*
