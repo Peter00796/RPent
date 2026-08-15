@@ -50,7 +50,7 @@ def check(cond: bool, msg: str) -> None:
         FAILURES.append(msg)
 
 
-# The full model-facing tool surface: 14 LIBERO + 5 common, plus the two
+# The full model-facing tool surface: 15 LIBERO + 5 common, plus the two
 # resident-session tools (reset_episode, view_attempt_call) that ship only
 # under --resident. Kept by hand so a rename or removal breaks this test
 # visibly instead of leaving dangling references in descriptions.
@@ -63,6 +63,7 @@ KNOWN_TOOL_NAMES = {
     "pi0_pick", "pi0_doubled",
     # perception
     "view_camera_meta", "segment", "back_project", "world_extent", "compare_extent",
+    "plan_grasp",
     # resident session (conditional surface)
     "reset_episode",
     # common
