@@ -245,10 +245,27 @@ class DeepAgentPlanner:
                     nudges + 1, nudge_budget,
                 )
                 nudge = _TRUNCATION_NUDGE if truncated else _ESSAY_NUDGE
-                state = agent.invoke(
-                    {"messages": [*messages, ("user", nudge)]},
-                    **invoke_kwargs,
-                )
+                try:
+                    state = agent.invoke(
+                        {"messages": [*messages, ("user", nudge)]},
+                        **invoke_kwargs,
+                    )
+                except Exception as nudge_err:  # noqa: BLE001
+                    # 2026-08-15: three runs died on a provider-side 400
+                    # ("tool_calls must be followed by tool messages") on the
+                    # re-invoke right after a nudge, while the integrity dump
+                    # of the same request shows a fully paired history — the
+                    # corruption is below the middleware's horizon (client
+                    # payload conversion or provider-side validation). Until
+                    # that is root-caused, a failed nudge downgrades to a
+                    # graceful stop: the session keeps its transcript, recipe
+                    # and score instead of losing the run.
+                    logger.error(
+                        "nudge re-invoke failed (%s: %s) — stopping the "
+                        "session gracefully instead of crashing the run",
+                        type(nudge_err).__name__, nudge_err,
+                    )
+                    break
                 nudges += 1
             if recorder.finish_result is not None:
                 logger.info("FINISH called: %s", recorder.finish_result)
