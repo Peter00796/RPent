@@ -43,6 +43,7 @@ from robots.libero.tools.agent_tools import (
     move_to,
     pi0_doubled,
     pi0_pick,
+    plan_grasp,
     release,
     rotate_pitch,
     rotate_wrist,

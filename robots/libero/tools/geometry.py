@@ -851,3 +851,198 @@ def world_extent(
                         "occupied voxels at eef z=0.29, +2% at z=0.075, because "
                         "the gripper occludes the wrist view at close range.")
     return result
+
+
+# ---------------------------------------------------------------------------
+# plan_grasp — antipodal candidate synthesis on the fused cloud
+# ---------------------------------------------------------------------------
+
+#: Jaw travel ceiling with margin. Measured openings across runs: 0.073-0.080;
+#: a span at 0.075+ closes on air or pops out, so candidates are cut at 0.072.
+_GRIPPER_MAX_OPEN = 0.072
+#: Finger pad thickness used for the approach-clearance sweep volumes.
+_FINGER_THICKNESS = 0.012
+#: Clearance gap between an open finger pad and the candidate surface.
+_FINGER_CLEAR_GAP = 0.006
+#: Fingertips end ~1.3 cm below the commanded eef point (robot constant,
+#: measured on the moka-pot and dual-mug sessions; does not vary by instance).
+_FINGERTIP_BELOW_EEF = 0.013
+
+
+def _plan_grasp_from_points(
+    pts: np.ndarray,
+    max_width: float = _GRIPPER_MAX_OPEN,
+    band_h: float = 0.02,
+    yaw_steps: int = 18,
+    top_k: int = 5,
+    voxel: float = 0.005,
+) -> dict:
+    """Pure antipodal-candidate synthesis over an object's world points.
+
+    Sweeps closing-axis directions (yaw, 0..pi) and horizontal bands from the
+    object's top down. Within each band, points are clustered along the
+    closing axis; a cluster whose span fits inside the jaw, with free sweep
+    volumes for both finger pads and a clear straddle from above, becomes a
+    candidate. Scores prefer wide jaw margin, high bands and clean clearance.
+    Deterministic: same cloud, same candidates.
+    """
+    if pts.shape[0] < 20:
+        return {"error": f"only {pts.shape[0]} points in the query box "
+                         "(need >= 20 for grasp synthesis)"}
+    # Voxel downsample so dense clouds do not dominate the span estimates.
+    keys = np.floor(pts / voxel).astype(np.int64)
+    _, idx = np.unique(keys, axis=0, return_index=True)
+    pts = pts[np.sort(idx)]
+
+    z = pts[:, 2]
+    z_top, z_bot = float(z.max()), float(z.min())
+    candidates: list[dict] = []
+    narrowest = None  # (span, yaw, band_top) — honest answer when nothing fits
+
+    for theta in np.linspace(0.0, np.pi, yaw_steps, endpoint=False):
+        c, s = float(np.cos(theta)), float(np.sin(theta))
+        u = pts[:, 0] * c + pts[:, 1] * s          # closing-axis coordinate
+        v = -pts[:, 0] * s + pts[:, 1] * c         # along-finger coordinate
+        band_top = z_top
+        while band_top > z_bot + band_h * 0.25:
+            in_band = (z <= band_top) & (z > band_top - band_h)
+            if int(in_band.sum()) >= 8:
+                ub, vb = u[in_band], v[in_band]
+                order = np.argsort(ub)
+                ubs = ub[order]
+                gaps = np.where(np.diff(ubs) > 0.02)[0]
+                bounds = [0, *list(gaps + 1), len(ubs)]
+                for k in range(len(bounds) - 1):
+                    seg = ubs[bounds[k]:bounds[k + 1]]
+                    if seg.shape[0] < 5:
+                        continue
+                    # Localise along the fingers: fingers are ~5 cm deep, so
+                    # the span that matters is within that window around the
+                    # cluster's own v-centre.
+                    m_seg = (ub >= seg[0]) & (ub <= seg[-1])
+                    v_ctr = float(np.median(vb[m_seg]))
+                    local = in_band.copy()
+                    local[in_band] = m_seg & (np.abs(vb - v_ctr) < 0.025)
+                    if int(local.sum()) < 5:
+                        continue
+                    u_lo, u_hi = float(u[local].min()), float(u[local].max())
+                    span = u_hi - u_lo
+                    if narrowest is None or span < narrowest[0]:
+                        narrowest = (span, theta, band_top)
+                    if span > max_width:
+                        continue
+                    # Finger sweep volumes must be free of points.
+                    zone = ((np.abs(v - v_ctr) < 0.03)
+                            & (z > band_top - band_h) & (z < band_top + 0.06))
+                    lo_pad = zone & (u > u_lo - _FINGER_CLEAR_GAP
+                                     - _FINGER_THICKNESS) \
+                                  & (u < u_lo - _FINGER_CLEAR_GAP)
+                    hi_pad = zone & (u > u_hi + _FINGER_CLEAR_GAP) \
+                                  & (u < u_hi + _FINGER_CLEAR_GAP
+                                     + _FINGER_THICKNESS)
+                    blocked = int(lo_pad.sum()) + int(hi_pad.sum())
+                    # Straddle from above: the column over the cluster must be
+                    # clear or the descent lands on the object first.
+                    overhead = ((u >= u_lo) & (u <= u_hi)
+                                & (np.abs(v - v_ctr) < 0.025)
+                                & (z > band_top + 0.005))
+                    n_over = int(overhead.sum())
+                    if blocked > 4 or n_over > 6:
+                        continue
+                    x_ctr = float(((u_lo + u_hi) / 2) * c - v_ctr * s)
+                    y_ctr = float(((u_lo + u_hi) / 2) * s + v_ctr * c)
+                    score = ((max_width - span)
+                             + 0.4 * (band_top - z_bot)
+                             - 0.004 * blocked - 0.002 * n_over)
+                    candidates.append({
+                        "center_xyz": [round(x_ctr, 4), round(y_ctr, 4),
+                                       round(band_top - band_h / 2, 4)],
+                        "close_axis_yaw_world": round(float(theta), 3),
+                        "expected_width": round(span, 4),
+                        "band_z": [round(band_top - band_h, 4),
+                                   round(band_top, 4)],
+                        "eef_z_hint": round(band_top - 0.005
+                                            + _FINGERTIP_BELOW_EEF, 4),
+                        "pad_points_blocking": blocked,
+                        "overhead_points": n_over,
+                        "score": round(float(score), 4),
+                    })
+            band_top -= 0.01
+
+    candidates.sort(key=lambda d: -d["score"])
+    kept: list[dict] = []
+    for cand in candidates:
+        dup = False
+        for other in kept:
+            d_ctr = float(np.linalg.norm(
+                np.asarray(cand["center_xyz"]) - np.asarray(other["center_xyz"])))
+            d_yaw = abs(cand["close_axis_yaw_world"]
+                        - other["close_axis_yaw_world"])
+            d_yaw = min(d_yaw, np.pi - d_yaw)
+            if d_ctr < 0.02 and d_yaw < 0.35:
+                dup = True
+                break
+        if not dup:
+            kept.append(cand)
+        if len(kept) >= top_k:
+            break
+
+    out: dict = {
+        "n_points_used": int(pts.shape[0]),
+        "object_z_range": [round(z_bot, 4), round(z_top, 4)],
+        "max_width": max_width,
+        "candidates": kept,
+    }
+    if not kept:
+        out["no_feasible_grasp"] = True
+        if narrowest is not None:
+            out["narrowest_span_found"] = round(narrowest[0], 4)
+            out["narrowest_span_yaw"] = round(float(narrowest[1]), 3)
+            out["note"] = ("no antipodal span fits the jaw; the narrowest "
+                           "local span found is reported — if it exceeds "
+                           "max_width the object body is ungraspable and a "
+                           "protrusion (handle, rim, bar) or a re-orientation "
+                           "is required")
+    return out
+
+
+def plan_grasp(
+    x_range: list | None = None,
+    y_range: list | None = None,
+    z_range: list | None = None,
+    step: int | None = None,
+    max_width: float = _GRIPPER_MAX_OPEN,
+    top_k: int = 5,
+    exclude_arm_radius: float = 0.12,
+) -> dict:
+    """Synthesise antipodal grasp candidates for the points inside a box.
+
+    Read-only geometry over the already-written world maps, the same data
+    world_extent reads: no environment step, no new render. Every returned
+    number is a measurement-derived quantity citable as evidence.
+    """
+    from robots.libero.tools.state import _latest_step
+
+    latest = _latest_step()
+    nn = latest if step is None else int(step)
+    if nn is None:
+        return {"error": "no world-map files available"}
+    pts, used, missing = _step_cloud(nn, "fused")
+    if pts is None:
+        return {"error": f"no world map loadable for step {nn} "
+                         f"(missing: {missing})"}
+    eef = _step_eef(nn)
+    if eef is not None and exclude_arm_radius > 0:
+        pts = pts[np.linalg.norm(pts - eef[None, :], axis=1)
+                  > exclude_arm_radius]
+    for rng, axis in ((x_range, 0), (y_range, 1), (z_range, 2)):
+        if rng is not None:
+            if len(rng) != 2:
+                return {"error": "each range must be [min, max]"}
+            pts = pts[(pts[:, axis] >= float(rng[0]))
+                      & (pts[:, axis] <= float(rng[1]))]
+    result = _plan_grasp_from_points(pts, max_width=max_width, top_k=top_k)
+    result["step"] = nn
+    result["cameras_used"] = used
+    result["box"] = {"x": x_range, "y": y_range, "z": z_range}
+    return result

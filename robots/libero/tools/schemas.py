@@ -403,3 +403,32 @@ class ResetEpisodeInput(BaseModel):
             "differently. Recorded verbatim in the archive's attempt.json."
         ),
     )
+
+
+class PlanGraspInput(BaseModel):
+    """A world-frame box holding ONE object's points, to synthesise grasps for."""
+
+    x_range: list[float] | None = Field(
+        default=None, min_length=2, max_length=2,
+        description="[min, max] world x bound in metres around the object.")
+    y_range: list[float] | None = Field(
+        default=None, min_length=2, max_length=2,
+        description="[min, max] world y bound in metres around the object.")
+    z_range: list[float] | None = Field(
+        default=None, min_length=2, max_length=2,
+        description="[min, max] world z bound in metres. Exclude the table "
+                    "plane or its points will read as part of the object.")
+    step: int | None = Field(
+        default=None,
+        description="World-map step to read. Default: the latest step.")
+    max_width: float = Field(
+        default=0.072,
+        description="Jaw span ceiling in metres. Default 0.072 (measured "
+                    "0.073-0.080 travel minus pop-out margin).")
+    top_k: int = Field(
+        default=5, ge=1, le=10,
+        description="Maximum number of candidates to return.")
+    exclude_arm_radius: float = Field(
+        default=0.12,
+        description="Drop points within this radius of the eef so the arm "
+                    "does not read as part of the object.")

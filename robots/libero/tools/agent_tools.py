@@ -37,6 +37,7 @@ from robots.libero.tools.schemas import (
     MoveToInput,
     Pi0DoubledInput,
     Pi0PickInput,
+    PlanGraspInput,
     ReleaseInput,
     ResetEpisodeInput,
     RotatePitchInput,
@@ -392,6 +393,31 @@ def compare_extent(
     )
 
 
+@tool(
+    args_schema=PlanGraspInput,
+    description=tool_docs.render_description("plan_grasp"),
+)
+def plan_grasp(
+    x_range: list[float] | None = None,
+    y_range: list[float] | None = None,
+    z_range: list[float] | None = None,
+    step: int | None = None,
+    max_width: float = 0.072,
+    top_k: int = 5,
+    exclude_arm_radius: float = 0.12,
+) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    return geometry.plan_grasp(
+        x_range=x_range,
+        y_range=y_range,
+        z_range=z_range,
+        step=step,
+        max_width=max_width,
+        top_k=top_k,
+        exclude_arm_radius=exclude_arm_radius,
+    )
+
+
 # ---------------------------------------------------------------------------
 # resident debug session — NOT part of LIBERO_TOOLS; the toolkit appends it
 # only when the run is a resident practice session, so exam runs never see it
@@ -421,7 +447,7 @@ STATE_TOOLS = [view_driver_state]
 MOTION_TOOLS = [move_to, move_pose, rotate_wrist, rotate_pitch, release, set_gripper]
 VLA_TOOLS = [pi0_pick, pi0_doubled]
 PERCEPTION_TOOLS = [view_camera_meta, segment, back_project, world_extent,
-                    compare_extent]
+                    compare_extent, plan_grasp]
 
 #: Tools that advance the environment. Anything here mutates world state, so a
 #: gate or a fresh-observation obligation belongs on this set, not on the rest.

@@ -262,6 +262,38 @@ four, because an object perched on the rim registers like a seated one. Only
 the environment's own checker establishes success; use this to confirm that
 something moved where you intended, then check libero_terminated separately.""",
     },
+    "plan_grasp": {
+        "what": (
+            "Synthesise antipodal grasp candidates for the object inside a "
+            "world-frame box: closing-axis directions and height bands are "
+            "swept over the fused point cloud, and every local span that fits "
+            "the jaw with free finger-sweep volumes and a clear straddle from "
+            "above becomes a scored candidate. Read-only geometry over the "
+            "already-written world maps — no environment step, no new render, "
+            "and deterministic: the same cloud yields the same candidates."
+        ),
+        "returns": (
+            "Up to top_k candidates, each with center_xyz (grasp point), "
+            "close_axis_yaw_world (align the finger-close axis with this "
+            "world-frame angle; verify the wrist convention with one wrist "
+            "image if unsure), expected_width, band_z, eef_z_hint (fingertips "
+            "sit ~1.3 cm below the commanded eef) and a score. When nothing "
+            "fits, no_feasible_grasp=true with the narrowest span found — a "
+            "span above max_width everywhere means the body is ungraspable "
+            "and a protrusion (handle, rim, bar) or a re-orientation is "
+            "required, which is a plan-level decision, not a retry."
+        ),
+        "when": (
+            "BEFORE any scripted grasp: box the object (tight, excluding the "
+            "table plane via z_range), read the candidates, and take the top "
+            "one instead of deriving a pinch from raw extents. Also use it as "
+            "an instrument: 'is this object graspable at all' becomes one "
+            "call instead of a trial-and-error episode."
+        ),
+        "failure_modes": """⚠ The box must isolate ONE object. Two objects in the box read as one cluster with gaps; candidates may bridge them.
+⚠ Candidates are geometry, not physics: a fit span on a frictionless taper can still slip under lift load. Verify every executed grasp (held_object) exactly as before.
+⚠ Occlusion thins the cloud: a handle the cameras cannot see yields no candidate there. If the expected protrusion is missing, re-view before concluding it does not exist.""",
+    },
     # -- resident session (conditional: practice debug sessions only) --------
     "reset_episode": {
         "what": (
