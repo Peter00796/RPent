@@ -292,7 +292,8 @@ something moved where you intended, then check libero_terminated separately.""",
         ),
         "failure_modes": """⚠ The box must isolate ONE object. Two objects in the box read as one cluster with gaps; candidates may bridge them.
 ⚠ Candidates are geometry, not physics: a fit span on a frictionless taper can still slip under lift load. Verify every executed grasp (held_object) exactly as before.
-⚠ Occlusion thins the cloud: a handle the cameras cannot see yields no candidate there. If the expected protrusion is missing, re-view before concluding it does not exist.""",
+⚠ Occlusion thins the cloud: a handle the cameras cannot see yields no candidate there. If the expected protrusion is missing, re-view before concluding it does not exist.
+⚠ A no_feasible verdict on a well-measured box is STABLE — the synthesis is deterministic, so re-querying with a nudged box does not change the physics. One run burned 84 calls re-asking about a featureless bottle. Two consistent no_feasible reads mean the object needs a re-orientation or is unpickable: change strategy, not the box.""",
     },
     # -- resident session (conditional: practice debug sessions only) --------
     "reset_episode": {
