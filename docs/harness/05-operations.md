@@ -105,6 +105,22 @@ path.
 
 ## Hard-won gotchas
 
+### Counting tool calls in a resident run: read the ARCHIVED attempts too
+
+`tool_calls.jsonl` at the run root holds only the **current** attempt. A resident
+session rotates every earlier attempt into `attempt_NN/`, taking its call log
+with it. A count that reads only the live log therefore sees a fraction of the
+session — and the fraction varies with how many resets happened.
+
+This nearly produced a spectacular false alarm: counting only live logs showed
+**zero** calls to a newly-shipped tool in the two cells that had just flipped to
+solved, which reads as "the tool cannot be the cause". Counting across archived
+attempts showed 14 and 1. The correct figures confirmed the attribution the
+live-only figures appeared to destroy.
+
+Always glob `attempt_*/tool_calls.jsonl` alongside the root log. The same applies
+to `states.json`, which is why the solve rule already says so.
+
 ### Intermediate analysis artifacts need a version stamp, or they outlive their correctness
 
 A per-cell JSON grid cached mid-analysis (`tools_staging/gen0_percell.json`) was

@@ -1395,9 +1395,16 @@ two — both microwave rotating doors — defeat both.
 
 **The VLA's value is now precisely located rather than assumed.** It owns
 grasping of wide or featureless bodies: the cup (`task t5`), the bowl
-(`swap t3`), the bottle — **the VLA arm solves all of these and the pure-LLM arm
-fails all of them.** Conversely, placement precision and strategic innovation
-are *stronger* without it.
+(`swap t3`), the bottle — the VLA arm solves all of these and the pure-LLM arm
+fails all of them. Conversely, placement precision and strategic innovation are
+*stronger* without it.
+
+> **⚠ CORRECTED the following day (§4.8).** The sentence above said the learned
+> policy is necessary for those bodies. It is not. Two of the three fell to the
+> pure-LLM arm within a day, once a geometric grasp solver existed. The accurate
+> claim is **"necessary in the absence of a geometry solver"** — a statement
+> about a missing tool, not about a capability only a learned policy can supply.
+> The original wording is left standing above so the correction is visible.
 
 The natural inference is a hybrid arm that selects its tool surface per
 situation rather than carrying both unconditionally — and that is now an
@@ -1429,6 +1436,62 @@ VLA-armed production runs; **the project owner corrected course three times**
 before the arm was cleared and redirected. That history is recorded rather than
 tidied away, because a document arguing that a loop must be able to report its
 own failures cannot quietly omit the times its operators had to be redirected.
+
+---
+
+## 4.8 `plan_grasp`: one tool, two cells, zero collateral damage
+
+The tool-gap analysis in §4.7 became a build order — `plan_grasp`,
+`grasp_state` + `move_until_contact`, an SE(3) repair, `plan_place`,
+`articulation_probe` — justified by the project's own admission rule: a quantity
+that **varies with the instance** and **can be computed** belongs in a tool, not
+in a prompt and not in a library entry.
+
+The first item shipped (`79898e45`, `2a569df`): antipodal candidate synthesis,
+yaw × height-band × finger-sweep clearance, and — importantly — a report of the
+**narrowest span found** when no grasp is feasible. Tool surface 22 → 23, with
+unit tests on synthetic clouds, both doc registries updated, and the e2e suite
+passing.
+
+**Validation: the pure-LLM arm plus the new tool, against the same arm the day
+before, on its four grasp-failure cells.**
+
+| cell | before | after | `plan_grasp` calls | what happened |
+|---|---|---|---|---|
+| `swap t3` bowl | ✗ | **✓✓** | 1, returning **no-feasible** | the tool said the bowl body has no solution; the agent invented a finger-spread brace against the inner wall |
+| `task t5` cup | ✗ | **✓✓** | 14 | the 0.014 m handle ring was computed as a candidate |
+| `swap t1` | ✗ | ✗ | 1, no-feasible | grounded-wall cell — negative control |
+| `task t3` bottle | ✗ | ✗ | 34 | no purchase physically available — negative control |
+
+**One tool, +2 cells at the full solved-and-reproduced standard, zero
+regressions, and both negative controls landing exactly where the wall
+classification predicted they would.**
+
+### The bowl is the interesting one: the tool helped by refusing
+
+`swap t3` used `plan_grasp` **once**, and the answer was **no feasible grasp**.
+That single negative redirected the agent away from grasping the body and into
+inventing a brace against the inner wall. A tool that reports "there is nothing
+here" is doing precisely what this project's doctrine asks of an instrument —
+**report, do not decide** — and it turns out that a well-formed negative is
+worth as much as a candidate list. The tool did not solve the cell; it stopped
+the agent from spending the episode on something impossible.
+
+### The pathology the same batch exposed
+
+`task t3` called `plan_grasp` **34 times** and never got a no-feasible verdict —
+it kept re-asking a deterministic question and re-receiving candidates it could
+not act on. **Re-querying a deterministic solver cannot change its answer**, and
+the lesson has been written back into the tool's own documentation rather than
+left as an observation.
+
+### What this corrects
+
+§4.7 concluded that the learned policy owns wide and featureless grasping. Two
+of those three cells fell within a day to the pure-LLM arm once a geometry
+solver existed. **The VLA is necessary where a geometric solver is missing** —
+which relocates the finding from a claim about learned policies to a claim about
+our own tool coverage, and makes it actionable rather than merely descriptive.
 
 ---
 
