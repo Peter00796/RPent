@@ -1495,6 +1495,72 @@ our own tool coverage, and makes it actionable rather than merely descriptive.
 
 ---
 
+## 4.9 The full-body pure-LLM exam: parity with the baseline, by different cells
+
+The arm is three deliberate substitutions, listed individually because the
+comparison only means something if they are:
+
+1. **The learned policy removed** — `--ban-tools pi0_pick,pi0_doubled`, at the
+   tool surface (21 → 19 tools, visible in the run logs).
+2. **A geometric solver added** — `plan_grasp` (§4.8).
+3. **Task playbooks available** — `practice` sandbox, so a *declared* knowledge
+   arm, plus the vision instrument.
+
+Seed 0, single pass, 100 turns, all 19 runnable `10_*` cells.
+
+| | result |
+|---|---|
+| `10_task` | **4/9** — t5, t6, t7, t8 |
+| `10_swap` | **2/10** — t5, t7 |
+| **total** | **6/19** |
+| gen-0 original (VLA, no library) | 5/19 |
+| gen-0 replication | 6/19 |
+
+**Parity.** Six against five and six — inside the baseline's own variance band
+(§4.5b). The headline is not the number.
+
+### The composition is the finding
+
+**The three cells gained** — `10_task` t5 (cup handle ring), `10_task` t6
+(plate-centre semantics), `10_swap` t5 (basket middle column) — are **all
+resident inventions plus playbook entries cashing out on a scoring seed**. That
+includes `10_task` t5, the cup that this file called *VLA-necessary* two days
+ago and corrected yesterday (§4.8). The chain from resident session → gated
+entry → seed-0 solve is now closed end to end on three cells.
+
+**The cells lost** are routine pick-and-place well inside `pi0`'s training
+distribution (`10_task` t0), or cells where the invented technique is harder in
+the seed-0 layout — most pointedly **`10_swap` t2, the moka pot**: the cell that
+handle hooking was invented *for*, lost here because the s0 arrangement makes
+hooking harder than it was at s51. **An invention is not a capability; it is a
+capability under a layout.**
+
+### What this licenses, and what it does not
+
+**Licensed:** *removing the learned policy entirely, replacing it with one
+geometric solver and a set of text recipes, reaches the original baseline* — and
+the gains and losses sort **precisely by capability surface**, not randomly.
+
+**Not licensed:** any claim that the pure-LLM arm is stronger. It is level, and
+it is level *by trading one set of cells for another*.
+
+**What the composition actually argues for is a hybrid.** Taking, per cell,
+whichever arm can solve it gives an upper bound of roughly **9/19** — and that is
+an *upper bound on a selector that does not exist yet*, not a measured arm. The
+value of the pure-LLM result is that it makes the selector's job specifiable:
+the two arms fail in different places, and those places are describable in
+advance.
+
+### Supplement to issue 5i
+
+Cases four and five of the DeepSeek-400 defect occurred during this sweep, and
+the stop-gap patch **held twice out of two** — `logs/plx_gpu1.out` records two
+`stopping the session gracefully` events. Transcript and score survived, and the
+sweep did not break. The underlying defect remains open; the bleeding is
+stopped.
+
+---
+
 ## 5. Single-cell arms — the t6 and t5 case studies
 
 ### 5.1 t6 — *"Pick the butter and place it in the basket"*

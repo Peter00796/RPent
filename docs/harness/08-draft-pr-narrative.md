@@ -1224,6 +1224,30 @@ until it needed a quantity no tool reports, and stopped there. That is
 ASPIRE's evidence-engine ablation seen from the other side, and the two
 cross-validate: capability follows measurement.
 
+That claim was then tested at full scale. With the learned policy **removed
+entirely**, one geometric solver added, and the grown task playbooks available,
+the arm scored **6 of 19** on the hard suites at seed 0 — against the original
+VLA baseline's 5 and its replication's 6. **Parity**, inside the baseline's own
+variance band.
+
+The composition matters more than the tie. The three cells *gained* are all
+resident inventions plus gated entries cashing out on a scoring seed — including
+the cup this document twice called VLA-necessary before correcting itself. The
+cells *lost* are routine pick-and-place inside the policy's training
+distribution, or cells where the invented technique is simply harder in that
+seed's layout — most pointedly the moka pot, the cell handle-hooking was
+invented *for*, lost because the seed-0 arrangement makes hooking harder.
+**An invention is not a capability; it is a capability under a layout.**
+
+What this licenses is narrow and worth stating exactly: *removing the learned
+policy and replacing it with one solver plus text recipes reaches the original
+baseline, and the gains and losses sort by capability surface rather than
+randomly.* What it does **not** license is any claim that the blind arm is
+stronger — it is level, and level by trading one set of cells for another. The
+composition argues for a **hybrid** that selects its tool surface per cell, whose
+upper bound is about 9 of 19 — an upper bound on a selector that does not exist
+yet, not a measured result.
+
 ---
 
 ---
