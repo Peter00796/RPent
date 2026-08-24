@@ -208,6 +208,93 @@ world-z band (z_min, z_max). Use it for the center of a container cavity or
 flat region, where a single-pixel or mask-median estimate is biased toward an
 edge/rim.""",
     },
+    "world_extent": {
+        "what": (
+            "Query occupied space inside a world-frame box, fusing both "
+            "cameras. Both world maps already hold WORLD coordinates, so "
+            "fusing them is a concatenation with no registration step "
+            "(measured agreement on the shared table plane is ~3 mm). This is "
+            "read-only and never advances the environment or renders a new "
+            "view, the same as back_project."
+        ),
+        "when": (
+            "Use mode='occupancy' to locate a container wall or check "
+            "reachable space before a move -- it reports the nearest occupied "
+            "surface along each axis from the box centre, which is what a "
+            "container's wall position looks like in this representation. Use "
+            "mode='held_object' after a pick, before a release, to get the "
+            "grasped object's actual offset from the end-effector: move_to "
+            "commands the end-effector, not the object, and that offset is not "
+            "a fixed constant across grasps."
+        ),
+    },
+    "compare_extent": {
+        "what": (
+            "Diff the occupied space inside a world-frame box between two "
+            "steps. Read-only: never advances the environment and never "
+            "renders a new view."
+        ),
+        "returns": (
+            "Voxels are compared as SETS, so added and removed space are "
+            "reported separately: a single net count can be zero while "
+            "everything inside moved."
+        ),
+        "when": """Use this to VERIFY that an action did what you intended, without going through segmentation. Every step's world map is already on disk, so "did anything change here" is a geometry question, not a recognition one — it does not depend on SAM3 grounding a noun, and it works when you cannot inspect the images yourself.
+What it answers well:
+- did the object I released actually land inside the container? Box the
+  container's interior and compare the step before the release with the step
+  after; look for voxels_added there.
+- did the object I meant to pick actually leave the table? Box where it was
+  and look for voxels_removed.
+- did I disturb something I was not aiming at? Box that thing and check that
+  the delta is near zero.""",
+        "failure_modes": """⚠ Compare ADJACENT steps, not step 0 against the end. Across a full episode the point count inside one fixed box swung 50x on real runs purely because the wrist camera ended up closer, so the voxel counts tracked how much the cameras saw rather than what was there. Adjacent steps share a viewpoint and the diff is stable.
+⚠ Occlusion is the other trap. Space empties either because the object left, or
+because the arm now stands between the camera and it, and no diff of two clouds
+can separate those. Check n_points_in_box at both steps first: a large drop
+there alongside a large voxels_removed is as consistent with a new occlusion as
+with a moved object. Treat a removal as evidence only when the point count held
+up.
+⚠ A change here is NOT task success — those are different claims. On four real
+releases the signature was indistinguishable between runs that solved the task
+and runs that never terminated: matter arrived in the container box in all
+four, because an object perched on the rim registers like a seated one. Only
+the environment's own checker establishes success; use this to confirm that
+something moved where you intended, then check libero_terminated separately.""",
+    },
+    "plan_grasp": {
+        "what": (
+            "Synthesise antipodal grasp candidates for the object inside a "
+            "world-frame box: closing-axis directions and height bands are "
+            "swept over the fused point cloud, and every local span that fits "
+            "the jaw with free finger-sweep volumes and a clear straddle from "
+            "above becomes a scored candidate. Read-only geometry over the "
+            "already-written world maps — no environment step, no new render, "
+            "and deterministic: the same cloud yields the same candidates."
+        ),
+        "returns": (
+            "Up to top_k candidates, each with center_xyz (grasp point), "
+            "close_axis_yaw_world (align the finger-close axis with this "
+            "world-frame angle; verify the wrist convention with one wrist "
+            "image if unsure), expected_width, band_z, eef_z_hint (fingertips "
+            "sit ~1.3 cm below the commanded eef) and a score. When nothing "
+            "fits, no_feasible_grasp=true with the narrowest span found — a "
+            "span above max_width everywhere means the body is ungraspable "
+            "and a protrusion (handle, rim, bar) or a re-orientation is "
+            "required, which is a plan-level decision, not a retry."
+        ),
+        "when": (
+            "BEFORE any scripted grasp: box the object (tight, excluding the "
+            "table plane via z_range), read the candidates, and take the top "
+            "one instead of deriving a pinch from raw extents. Also use it as "
+            "an instrument: 'is this object graspable at all' becomes one "
+            "call instead of a trial-and-error episode."
+        ),
+        "failure_modes": """⚠ The box must isolate ONE object. Two objects in the box read as one cluster with gaps; candidates may bridge them.
+⚠ Candidates are geometry, not physics: a fit span on a frictionless taper can still slip under lift load. Verify every executed grasp (held_object) exactly as before.
+⚠ Occlusion thins the cloud: a handle the cameras cannot see yields no candidate there. If the expected protrusion is missing, re-view before concluding it does not exist.""",
+    },
+    # -- resident session (conditional: practice debug sessions only) --------
 }
 
 

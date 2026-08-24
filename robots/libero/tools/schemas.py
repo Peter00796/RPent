@@ -262,3 +262,142 @@ class BackProjectInput(BaseModel):
         default=None,
         description="Region mode: keep only pixels with world z <= z_max.",
     )
+
+
+class CompareExtentInput(BaseModel):
+    """A world-frame box, and the two steps to compare occupancy between."""
+
+    x_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world x bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    y_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world y bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    z_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world z bound in metres. Default excludes the table.",
+        min_length=2,
+        max_length=2,
+    )
+    step_a: int | None = Field(
+        default=None,
+        description="Earlier step to compare from. Default 0, the initial scene.",
+    )
+    step_b: int | None = Field(
+        default=None,
+        description="Later step to compare to. Default is the latest step.",
+    )
+    cameras: Literal["fused", "agentview", "wrist"] = Field(
+        default="fused",
+        description=(
+            "Which camera's world map(s) to compare. 'fused' concatenates both "
+            "clouds with no registration step (they already share the world "
+            "frame)."
+        ),
+    )
+    voxel: float = Field(
+        default=0.01,
+        description="Voxel edge length in metres for the comparison (0.002-0.05).",
+    )
+    exclude_arm_radius: float = Field(
+        default=0.12,
+        description=(
+            "Drop points within this many metres of that step's end-effector "
+            "position before comparing, so the manipulator's own body is not "
+            "counted as a change. Applied per step with each step's own pose."
+        ),
+    )
+
+
+class WorldExtentInput(BaseModel):
+    """A world-frame box to query for occupied space, fusing both cameras."""
+
+    x_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world x bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    y_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world y bound in metres. Default is wide-open.",
+        min_length=2,
+        max_length=2,
+    )
+    z_range: list[float] | None = Field(
+        default=None,
+        description="[min, max] world z bound in metres. Default excludes the table.",
+        min_length=2,
+        max_length=2,
+    )
+    step: int | None = Field(
+        default=None,
+        description="World-map step to use (default latest). 0 for initial.",
+    )
+    cameras: Literal["fused", "agentview", "wrist"] = Field(
+        default="fused",
+        description=(
+            "Which camera's world map(s) to query. 'fused' concatenates both "
+            "clouds with no registration step (they already share the world "
+            "frame); use it unless you have a reason to isolate one camera."
+        ),
+    )
+    voxel: float = Field(
+        default=0.01,
+        description="Voxel edge length in metres for occupancy counting (0.002-0.05).",
+    )
+    exclude_arm_radius: float = Field(
+        default=0.12,
+        description=(
+            "Drop points within this many metres of the current end-effector "
+            "position before counting occupancy, so the manipulator's own body "
+            "is not reported as an obstacle."
+        ),
+    )
+    mode: Literal["occupancy", "held_object"] = Field(
+        default="occupancy",
+        description=(
+            "'occupancy': voxel-count the box and report the nearest occupied "
+            "surface along each axis from the box centre -- use this to locate "
+            "a container wall or check reachable space before a move. "
+            "'held_object': estimate the grasped object's centroid and its xy "
+            "offset from the end-effector -- use this before releasing, since "
+            "move_to commands the end-effector, not the object it is holding, "
+            "and the offset is not a fixed constant."
+        ),
+    )
+
+
+class PlanGraspInput(BaseModel):
+    """A world-frame box holding ONE object's points, to synthesise grasps for."""
+
+    x_range: list[float] | None = Field(
+        default=None, min_length=2, max_length=2,
+        description="[min, max] world x bound in metres around the object.")
+    y_range: list[float] | None = Field(
+        default=None, min_length=2, max_length=2,
+        description="[min, max] world y bound in metres around the object.")
+    z_range: list[float] | None = Field(
+        default=None, min_length=2, max_length=2,
+        description="[min, max] world z bound in metres. Exclude the table "
+                    "plane or its points will read as part of the object.")
+    step: int | None = Field(
+        default=None,
+        description="World-map step to read. Default: the latest step.")
+    max_width: float = Field(
+        default=0.072,
+        description="Jaw span ceiling in metres. Default 0.072 (measured "
+                    "0.073-0.080 travel minus pop-out margin).")
+    top_k: int = Field(
+        default=5, ge=1, le=10,
+        description="Maximum number of candidates to return.")
+    exclude_arm_radius: float = Field(
+        default=0.12,
+        description="Drop points within this radius of the eef so the arm "
+                    "does not read as part of the object.")

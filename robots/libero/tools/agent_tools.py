@@ -28,14 +28,16 @@ langchain-core 1.5.3 / langgraph 1.2.10. Keep the annotations eager here —
 
 from langchain.tools import ToolRuntime, tool
 
-from robots.libero.tools import catalog, perception, state, tool_docs
+from robots.libero.tools import catalog, geometry, perception, state, tool_docs
 from robots.libero.tools.context import LiberoContext
 from robots.libero.tools.schemas import (
     BackProjectInput,
+    CompareExtentInput,
     MovePoseInput,
     MoveToInput,
     Pi0DoubledInput,
     Pi0PickInput,
+    PlanGraspInput,
     ReleaseInput,
     RotatePitchInput,
     RotateWristInput,
@@ -43,6 +45,7 @@ from robots.libero.tools.schemas import (
     SetGripperInput,
     ViewCameraMetaInput,
     ViewDriverStateInput,
+    WorldExtentInput,
 )
 
 
@@ -333,6 +336,85 @@ def back_project(
     )
 
 
+@tool(
+    args_schema=WorldExtentInput,
+    description=tool_docs.render_description("world_extent"),
+)
+def world_extent(
+    x_range: list[float] | None = None,
+    y_range: list[float] | None = None,
+    z_range: list[float] | None = None,
+    step: int | None = None,
+    cameras: str = "fused",
+    voxel: float = 0.01,
+    exclude_arm_radius: float = 0.12,
+    mode: str = "occupancy",
+) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    return geometry.world_extent(
+        x_range=x_range,
+        y_range=y_range,
+        z_range=z_range,
+        step=step,
+        cameras=cameras,
+        voxel=voxel,
+        exclude_arm_radius=exclude_arm_radius,
+        mode=mode,
+    )
+
+
+@tool(
+    args_schema=CompareExtentInput,
+    description=tool_docs.render_description("compare_extent"),
+)
+def compare_extent(
+    x_range: list[float] | None = None,
+    y_range: list[float] | None = None,
+    z_range: list[float] | None = None,
+    step_a: int | None = None,
+    step_b: int | None = None,
+    cameras: str = "fused",
+    voxel: float = 0.01,
+    exclude_arm_radius: float = 0.12,
+) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    return geometry.compare_extent(
+        x_range=x_range,
+        y_range=y_range,
+        z_range=z_range,
+        step_a=step_a,
+        step_b=step_b,
+        cameras=cameras,
+        voxel=voxel,
+        exclude_arm_radius=exclude_arm_radius,
+    )
+
+
+@tool(
+    args_schema=PlanGraspInput,
+    description=tool_docs.render_description("plan_grasp"),
+)
+def plan_grasp(
+    x_range: list[float] | None = None,
+    y_range: list[float] | None = None,
+    z_range: list[float] | None = None,
+    step: int | None = None,
+    max_width: float = 0.072,
+    top_k: int = 5,
+    exclude_arm_radius: float = 0.12,
+) -> dict:
+    """Model-facing text renders from ``tool_docs`` — edit it there."""
+    return geometry.plan_grasp(
+        x_range=x_range,
+        y_range=y_range,
+        z_range=z_range,
+        step=step,
+        max_width=max_width,
+        top_k=top_k,
+        exclude_arm_radius=exclude_arm_radius,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Collections, grouped by kind
 # ---------------------------------------------------------------------------
@@ -340,7 +422,8 @@ def back_project(
 STATE_TOOLS = [view_driver_state]
 MOTION_TOOLS = [move_to, move_pose, rotate_wrist, rotate_pitch, release, set_gripper]
 VLA_TOOLS = [pi0_pick, pi0_doubled]
-PERCEPTION_TOOLS = [view_camera_meta, segment, back_project]
+PERCEPTION_TOOLS = [view_camera_meta, segment, back_project, world_extent,
+                    compare_extent, plan_grasp]
 
 #: Tools that advance the environment. Anything here mutates world state, so a
 #: gate or a fresh-observation obligation belongs on this set, not on the rest.

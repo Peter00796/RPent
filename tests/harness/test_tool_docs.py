@@ -50,7 +50,7 @@ def check(cond: bool, msg: str) -> None:
         FAILURES.append(msg)
 
 
-# The full model-facing tool surface: 12 LIBERO + 5 common. Kept by hand so a
+# The full model-facing tool surface: 15 LIBERO + 5 common. Kept by hand so a
 # rename or removal breaks this test visibly instead of leaving dangling
 # references in descriptions.
 KNOWN_TOOL_NAMES = {
@@ -61,7 +61,9 @@ KNOWN_TOOL_NAMES = {
     # vla
     "pi0_pick", "pi0_doubled",
     # perception
-    "view_camera_meta", "segment", "back_project",
+    "view_camera_meta", "segment", "back_project", "world_extent", "compare_extent",
+    # geometry
+    "plan_grasp",
     # common
     "read_text_file", "write_text_file", "list_dir", "finish", "read_image",
 }
