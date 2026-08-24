@@ -11,6 +11,8 @@ from functools import partial
 from typing import Any
 
 from robots.libero import tools as libero_tools
+from robots.libero.tools import perception as libero_perception
+from robots.libero.tools import state as libero_state
 from rpent.dashboard.events import DashboardEventSink, ToolResultEvent
 from rpent.tools.toolkit import ToolCancelled, Toolkit
 from rpent.utils.logging import get_logger, get_output_dir
@@ -19,9 +21,10 @@ from rpent.utils.logging import get_logger, get_output_dir
 class LiberoToolkit(Toolkit):
     """Toolkit for the LIBERO environment."""
 
-    # Tool schemas keyed by name (built once from the canonical ordered list
-    # in libero_tools.TOOLS_SPEC) so each tool registers with its own spec.
-    _SPECS = {spec["name"]: spec for spec in libero_tools.TOOLS_SPEC}
+    # Tool schemas keyed by name. Derived from the native LangChain tools via
+    # the legacy shim, so this pre-LangChain path shows the model exactly the
+    # same schemas as the LangChain planner does.
+    _SPECS = {spec["name"]: spec for spec in libero_tools.legacy_tool_specs()}
 
     def __init__(
         self,
@@ -43,10 +46,13 @@ class LiberoToolkit(Toolkit):
         specs = self._SPECS
         # Inspection tools do not advance environment state. Most are stateless
         # module functions; segment is bound to the primitives-owned SAM3 client.
+        # Plain handler functions, not the ``@tool``-wrapped versions exported
+        # from ``libero_tools`` — those are StructuredTool objects for the
+        # LangChain planner and are not directly callable with kwargs.
         inspection_handlers = {
-            "view_driver_state": libero_tools.view_driver_state,
-            "view_camera_meta": libero_tools.view_camera_meta,
-            "back_project": libero_tools.back_project,
+            "view_driver_state": libero_state.view_driver_state,
+            "view_camera_meta": libero_perception.view_camera_meta,
+            "back_project": libero_perception.back_project,
             "segment": self._primitives.segment,
         }
         for name, handler in inspection_handlers.items():
@@ -97,7 +103,7 @@ class LiberoToolkit(Toolkit):
             step_idx=step_idx,
             log={"command": command, "result": result_dict, "elapsed_s": elapsed},
         )
-        out = libero_tools.view_driver_state(step_idx)
+        out = libero_state.view_driver_state(step_idx)
         out["agent_elapsed_s"] = elapsed
         if result_dict.get("interrupted"):
             out.update(result_dict)
@@ -133,7 +139,7 @@ class LiberoToolkit(Toolkit):
         self._dashboard_events.emit(
             ToolResultEvent(
                 name="view_driver_state",
-                result=libero_tools.view_driver_state(0),
+                result=libero_state.view_driver_state(0),
             )
         )
 

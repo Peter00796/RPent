@@ -4,16 +4,16 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from rpent.tools.tool_docs import render_description
 from rpent.utils.config import get_repo_root
 from rpent.utils.logging import get_output_dir
 
+# Descriptions render from rpent/tools/tool_docs.py — edit them there, never
+# inline. The native LangChain surface renders from the same source.
 TOOLS_SPEC: list[dict] = [
     {
         "name": "read_text_file",
-        "description": (
-            "Read a UTF-8 text file. Use for past recipe JSONLs, audit JSONs, "
-            "and memory files. Large files are truncated."
-        ),
+        "description": render_description("read_text_file"),
         "input_schema": {
             "type": "object",
             "properties": {
@@ -25,11 +25,7 @@ TOOLS_SPEC: list[dict] = [
     },
     {
         "name": "write_text_file",
-        "description": (
-            "Write a UTF-8 text file (creates parent dirs). Use this to save "
-            "the working recipe JSONL and the final audit JSON at the end of "
-            "a successful run."
-        ),
+        "description": render_description("write_text_file"),
         "input_schema": {
             "type": "object",
             "properties": {
@@ -41,11 +37,7 @@ TOOLS_SPEC: list[dict] = [
     },
     {
         "name": "list_dir",
-        "description": (
-            "List files in a directory (non-recursive). Default = {{output_dir}}. "
-            "Use to inspect the working directory or to discover existing "
-            "recipes in resources/libero/results_*_pert/."
-        ),
+        "description": render_description("list_dir"),
         "input_schema": {
             "type": "object",
             "properties": {
@@ -55,10 +47,7 @@ TOOLS_SPEC: list[dict] = [
     },
     {
         "name": "finish",
-        "description": (
-            "Call when the task is complete or unrecoverable. Halts the agent "
-            "loop. Save any artifacts (recipe, audit) BEFORE calling finish."
-        ),
+        "description": render_description("finish"),
         "input_schema": {
             "type": "object",
             "properties": {
